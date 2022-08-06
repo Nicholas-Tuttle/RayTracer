@@ -3,7 +3,6 @@
 #include <Camera.h>
 #include <Vectors.h>
 
-using RayTracer::Vector2;
 using RayTracer::Vector3;
 using RayTracer::Camera;
 using RayTracer::ImageResolution;

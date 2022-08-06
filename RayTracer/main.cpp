@@ -14,7 +14,6 @@
 #include <PresetScenes.h>
 
 using RayTracer::IScene;
-using RayTracer::Vector2;
 using RayTracer::Vector3;
 using RayTracer::Camera;
 using RayTracer::Scene;

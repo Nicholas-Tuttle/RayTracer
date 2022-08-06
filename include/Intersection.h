@@ -19,12 +19,12 @@ namespace RayTracer
 			return depth; 
 		}
 
-		virtual Vector3<float> Location() const
+		virtual const Vector3<float> &Location() const
 		{
 			return location;
 		}
 
-		virtual Vector3<float> Normal() const
+		virtual const Vector3<float> &Normal() const
 		{
 			return normal;
 		}

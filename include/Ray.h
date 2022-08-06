@@ -15,12 +15,12 @@ namespace RayTracer
 		Ray() :origin(), direction() {}
 		Ray(const Ray &ray) : origin(ray.origin), direction(ray.direction) {}
 
-		Vector3<float> Origin() const override
+		const Vector3<float> &Origin() const override
 		{
 			return origin;
 		}
 
-		Vector3<float> Direction() const override
+		const Vector3<float> &Direction() const override
 		{
 			return direction;
 		}

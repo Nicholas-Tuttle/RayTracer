@@ -8,16 +8,16 @@ namespace RayTracer
 	class IRay
 	{
 	public:
-		virtual Vector3<float> Origin() const = 0;
-		virtual Vector3<float> Direction() const = 0;
+		virtual const Vector3<float> &Origin() const = 0;
+		virtual const Vector3<float> &Direction() const = 0;
 	};
 
 	class IIntersection
 	{
 	public:
 		virtual float Depth() const = 0;
-		virtual Vector3<float> Location() const = 0;
-		virtual Vector3<float> Normal() const = 0;
+		virtual const Vector3<float> &Location() const = 0;
+		virtual const Vector3<float> &Normal() const = 0;
 	};
 
 	class IIntersectable
