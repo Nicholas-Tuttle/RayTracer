@@ -25,7 +25,7 @@ using RayTracer::Color;
 using RayTracer::IImage;
 using RayTracer::Image;
 
-static IMaterial *GetMaterial(const IScene *scene, int materialIndex)
+static const IMaterial *GetMaterial(const IScene *scene, int materialIndex)
 {
 	const auto& materials = scene->Materials();
 	if (materialIndex < 0 || materialIndex >= materials.size())
@@ -42,7 +42,8 @@ static void TraceRay(const Ray &ray, const IScene *scene, Color &ray_color)
 {
 	const unsigned int max_bounces = 10;
 
-	bool at_least_one_intersected = false;
+	bool at_least_one_intersected = false; 
+	bool emissive_material_intersected = false;
 	unsigned int total_bounces = 0;
 	Ray traced_ray = ray;
 
@@ -54,7 +55,7 @@ static void TraceRay(const Ray &ray, const IScene *scene, Color &ray_color)
 		float min_depth = std::numeric_limits<float>::infinity();
 		Ray min_depth_ray{};
 		Color min_depth_color{};
-
+		
 		// Check for object intersections
 		for (const auto &intersectable : scene->Objects())
 		{
@@ -67,7 +68,9 @@ static void TraceRay(const Ray &ray, const IScene *scene, Color &ray_color)
 				{
 					min_depth = intersection->Depth();
 					min_depth_ray = Ray::ReflectionRay(traced_ray, intersection);
-					min_depth_color = GetMaterial(scene, intersectable->MaterialIndex())->SurfaceColor();
+					const IMaterial *mat = GetMaterial(scene, intersectable->MaterialIndex());
+					min_depth_color = mat->SurfaceColor();
+					emissive_material_intersected = mat->Emissive();
 				}
 
 				object_intersected_this_ray = true;
@@ -98,7 +101,7 @@ static void TraceRay(const Ray &ray, const IScene *scene, Color &ray_color)
 			break;
 		}
 	} 
-	while (at_least_one_intersected);
+	while (at_least_one_intersected && !emissive_material_intersected);
 }
 
 bool CPURenderer::Render(const Camera &camera, unsigned int samples, const IScene *scene, IImage *&out_image)

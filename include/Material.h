@@ -11,18 +11,24 @@ namespace RayTracer
 	private:
 		Color color;
 		float roughness;
+		bool emissive;
 	public:
-		Material(const Color &color, const float roughness)
-			: color(color), roughness(roughness) {}
+		Material(const Color &color, const float roughness, const bool emissive)
+			: color(color), roughness(roughness), emissive(emissive) {}
 
 		const Color SurfaceColor() const override
 		{
 			return color;
 		}
 
-		const float Roughness() const override
+		float Roughness() const override
 		{
 			return roughness;
+		}
+
+		bool Emissive() const override
+		{
+			return emissive;
 		}
 
 		static Material DefaultMaterial;

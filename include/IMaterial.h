@@ -9,6 +9,7 @@ namespace RayTracer
 	{
 	public:
 		virtual const Color SurfaceColor() const = 0;
-		virtual const float Roughness() const = 0;
+		virtual float Roughness() const = 0;
+		virtual bool Emissive() const = 0;
 	};
 }

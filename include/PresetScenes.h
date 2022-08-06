@@ -28,21 +28,25 @@ namespace RayTracer
         // Build a scene to render
         Scene *scene = new Scene();
 
-        scene->AddMaterial(new Material(RandomColor(), RandomRoughness(0.0f, 0.3f)));
-        scene->AddMaterial(new Material(RandomColor(), RandomRoughness(0.0f, 0.3f)));
-        scene->AddMaterial(new Material(RandomColor(), RandomRoughness(0.0f, 0.3f)));
-        scene->AddMaterial(new Material(RandomColor(), RandomRoughness(0.0f, 0.3f)));
-        scene->AddMaterial(new Material(RandomColor(), RandomRoughness(0.0f, 0.3f)));
-        scene->AddMaterial(new Material(RandomColor(), RandomRoughness(0.0f, 0.3f)));
-        scene->AddMaterial(new Material(RandomColor(), RandomRoughness(0.0f, 0.3f)));
+        scene->AddMaterial(new Material(RandomColor(), RandomRoughness(0.0f, 0.3f), false));
+        scene->AddMaterial(new Material(RandomColor(), RandomRoughness(0.0f, 0.3f), false));
 
-        scene->AddObject(new Sphere(Vector3<float>(9, 0, -3), 1.0f, 0));
-        scene->AddObject(new Sphere(Vector3<float>(14, 0, -3), 1.0f, 1));
-        scene->AddObject(new Sphere(Vector3<float>(10, 0, -0), 1.0f, 2));
-        scene->AddObject(new Sphere(Vector3<float>(14, 0, 1), 1.0f, 3));
-        scene->AddObject(new Sphere(Vector3<float>(18, 0, 2), 1.0f, 4));
-        scene->AddObject(new Sphere(Vector3<float>(12, 0, 4), 1.0f, 5));
-        scene->AddObject(new Sphere(Vector3<float>(16, 0, 4), 1.0f, 6));
+        scene->AddMaterial(new Material(Color(1.0f, 0.5f, 0.5f, 1.0f), RandomRoughness(0.0f, 0.3f), false));
+        scene->AddMaterial(new Material(Color(0.5f, 1.0f, 0.5f, 1.0f), RandomRoughness(0.0f, 0.3f), false));
+        scene->AddMaterial(new Material(Color(0.5f, 0.5f, 1.0f, 1.0f), RandomRoughness(0.0f, 0.3f), false));
+
+        scene->AddMaterial(new Material(RandomColor(), RandomRoughness(0.0f, 0.3f), false));
+        scene->AddMaterial(new Material(Color(1.0f, 0.0f, 1.0f, 1.0f), 1.0f, true));
+
+        scene->AddObject(new Sphere(Vector3<float>(  9,    0,    -3),   1.0f,   0));
+        scene->AddObject(new Sphere(Vector3<float>( 14,    1,    -3),   1.0f,   1));
+
+        scene->AddObject(new Sphere(Vector3<float>( 10,   -1,     0),   1.0f,   2));
+        scene->AddObject(new Sphere(Vector3<float>( 14,    0,     1),   1.0f,   3));
+        scene->AddObject(new Sphere(Vector3<float>( 18,    1,     2),   1.0f,   4));
+
+        scene->AddObject(new Sphere(Vector3<float>( 16,   -1,     4),   1.0f,   5));
+        scene->AddObject(new Sphere(Vector3<float>( 12,    0,     4),   1.0f,   6));
 
         out_scene = scene;
 	}
@@ -56,7 +60,7 @@ namespace RayTracer
 
         // Build a scene to render
         Scene *scene = new Scene(); 
-        scene->AddMaterial(new Material(Color(1.0f, 1.0f, 1.0f, 1.0f), 0.1f));
+        scene->AddMaterial(new Material(Color(1.0f, 1.0f, 1.0f, 1.0f), 0.1f, false));
 
         for (float i = 0; i < sphere_array_count; i++)
         {
