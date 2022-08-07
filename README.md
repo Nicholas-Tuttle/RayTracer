@@ -1,5 +1,5 @@
 # Ray Tracer
-This project is a CPU and GPU ray tracer using the Vulkan API
+This project is a CPU and GPU ray tracer using the Vulkan API. It is a heavy work-in-progress and lots of features need to be implemented (materials, anything other than spheres being rendered, lights, etc.). The CPU and GPU rendering outputs are not always in sync as things are being added.
 ## CPU Rendering Example:
 ![image](./demo_cpu.png)
 ## GPU Rendering Example:
