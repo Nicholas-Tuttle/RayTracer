@@ -11,7 +11,7 @@ namespace RayTracer
 		Vector3<float> direction;
 
 	public:
-		Ray(Vector3<float> origin, Vector3<float> direction) : origin(origin), direction(direction) {}
+		Ray(const Vector3<float> &origin, const Vector3<float> &direction) : origin(origin), direction(direction) {}
 		Ray() :origin(), direction() {}
 		Ray(const Ray &ray) : origin(ray.origin), direction(ray.direction) {}
 
@@ -25,7 +25,7 @@ namespace RayTracer
 			return direction;
 		}
 
-		void SetDirection(Vector3<float> direction)
+		void SetDirection(const Vector3<float> &direction)
 		{
 			this->direction = direction;
 		}

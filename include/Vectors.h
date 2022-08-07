@@ -10,28 +10,28 @@ namespace RayTracer
 	{
 	public:
 		Vector3() : Vector3<T>((T)1.0, (T)1.0, (T)1.0) {};
-		Vector3(T x, T y, T z) : X(x), Y(y), Z(z), 
+		Vector3(const T &x, const T &y, const T &z) : X(x), Y(y), Z(z), 
 			CalculatedNormalized(false), XNormalized(0), YNormalized(0), ZNormalized(0) {};
 		T X;
 		T Y;
 		T Z;
 
-		inline T Dot(const Vector3<T> vector) const
+		inline T Dot(const Vector3<T> &vector) const
 		{
 			return X * vector.X + Y * vector.Y + Z * vector.Z;
 		}
 
-		inline Vector3<T> operator-(const Vector3<T> vector) const
+		inline Vector3<T> operator-(const Vector3<T> &vector) const
 		{
 			return Vector3<T>(X - vector.X, Y - vector.Y, Z - vector.Z);
 		}
 
-		inline Vector3<T> operator+(const Vector3<T> vector) const
+		inline Vector3<T> operator+(const Vector3<T> &vector) const
 		{
 			return Vector3<T>(X + vector.X, Y + vector.Y, Z + vector.Z);
 		}
 
-		void operator=(const Vector3<T>& vector)
+		void operator=(const Vector3<T> &vector)
 		{
 			X = vector.X;
 			Y = vector.Y;
@@ -47,7 +47,7 @@ namespace RayTracer
 			return Vector3<T>((T)(X * scalar), (T)(Y * scalar), (T)(Z * scalar));
 		}
 
-		inline bool operator==(const Vector3<T>& vector) const
+		inline bool operator==(const Vector3<T> &vector) const
 		{
 			return vector.X == X && vector.Y == Y && vector.Z == Z;
 		}
@@ -74,7 +74,7 @@ namespace RayTracer
 			}
 		}
 
-		Vector3<T> Cross(const Vector3<T> other) const
+		Vector3<T> Cross(const Vector3<T> &other) const
 		{
 			return Vector3<T>(
 				((Y * other.Z) - (Z * other.Y)),

@@ -54,6 +54,7 @@
     <ClCompile Include="GPURenderer.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="Shaders\RayIntersection.cpp" />
+    <ClCompile Include="World.cpp" />
     <ClInclude Include="..\include\Camera.h" />
     <ClInclude Include="..\include\Color.h" />
     <ClInclude Include="..\include\CPURenderer.h" />

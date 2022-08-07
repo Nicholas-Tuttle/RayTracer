@@ -7,11 +7,11 @@ namespace RayTracer
 	class Intersection : public IIntersection
 	{
 	private:
-		float depth;
-		Vector3<float> normal;
-		Vector3<float> location;
+		const float depth;
+		const Vector3<float> normal;
+		const Vector3<float> location;
 	public:
-		Intersection(float depth, Vector3<float> normal, Vector3<float> location)
+		Intersection(float depth, const Vector3<float> &normal, const Vector3<float> &location)
 			: depth(depth), normal(normal), location(location) {};
 
 		virtual float Depth() const 

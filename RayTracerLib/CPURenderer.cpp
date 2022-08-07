@@ -25,7 +25,7 @@ using RayTracer::Color;
 using RayTracer::IImage;
 using RayTracer::Image;
 
-static const IMaterial *GetMaterial(const IScene *scene, int materialIndex)
+static const IMaterial *GetMaterial(const std::unique_ptr<IScene> &scene, int materialIndex)
 {
 	const auto& materials = scene->Materials();
 	if (materialIndex < 0 || materialIndex >= materials.size())
@@ -38,7 +38,7 @@ static const IMaterial *GetMaterial(const IScene *scene, int materialIndex)
 	}
 }
 
-static void TraceRay(const Ray &ray, const IScene *scene, Color &ray_color)
+static void TraceRay(const Ray &ray, const std::unique_ptr<IScene> &scene, Color &ray_color)
 {
 	const unsigned int max_bounces = 10;
 
@@ -59,7 +59,7 @@ static void TraceRay(const Ray &ray, const IScene *scene, Color &ray_color)
 		// Check for object intersections
 		for (const auto &intersectable : scene->Objects())
 		{
-			IIntersection *intersection = nullptr;
+			std::unique_ptr<IIntersection> intersection = nullptr;
 			bool intersected = intersectable->IntersectsRay(&traced_ray, intersection);
 
 			if (intersected)
@@ -67,14 +67,13 @@ static void TraceRay(const Ray &ray, const IScene *scene, Color &ray_color)
 				if (intersection->Depth() < min_depth)
 				{
 					min_depth = intersection->Depth();
-					min_depth_ray = Ray::ReflectionRay(traced_ray, intersection);
+					min_depth_ray = Ray::ReflectionRay(traced_ray, intersection.get());
 					const IMaterial *mat = GetMaterial(scene, intersectable->MaterialIndex());
 					min_depth_color = mat->SurfaceColor();
 					emissive_material_intersected = mat->Emissive();
 				}
 
 				object_intersected_this_ray = true;
-				delete intersection;
 			}
 		}
 
@@ -104,7 +103,7 @@ static void TraceRay(const Ray &ray, const IScene *scene, Color &ray_color)
 	while (at_least_one_intersected && !emissive_material_intersected);
 }
 
-bool CPURenderer::Render(const Camera &camera, unsigned int samples, const IScene *scene, IImage *&out_image)
+bool CPURenderer::Render(const Camera &camera, unsigned int samples, const std::unique_ptr<IScene> &scene, std::unique_ptr<IImage> &out_image)
 {
 	auto time = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double, std::milli> cpuTime;
@@ -149,7 +148,7 @@ do \
 
 	PRINT_TIME("[RENDER TIME]");
 
-	out_image = output_image;
+	out_image = std::unique_ptr<IImage>(output_image);
 
 	return true;
 }

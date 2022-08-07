@@ -9,7 +9,7 @@ namespace RayTracer
 	class CPURenderer
 	{
 	public:
-		bool Render(const Camera& camera, unsigned int samples, const IScene* scene, IImage*& out_image);
+		bool Render(const Camera& camera, unsigned int samples, const std::unique_ptr<IScene> &scene, std::unique_ptr<IImage> &out_image);
 	};
 }
 

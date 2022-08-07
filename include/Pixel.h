@@ -24,7 +24,7 @@ namespace RayTracer
 
 		Ray currentSeededRay;
 	public:
-		Pixel(Vector3<float> origin, Vector3<float> centralRayDirection, size_t x, size_t y, float widthM, float heightM)
+		Pixel(const Vector3<float> &origin, const Vector3<float> &centralRayDirection, size_t x, size_t y, float widthM, float heightM)
 			: output(), origin(origin), centralRayDirection(centralRayDirection), accumulatedSamples(0),
 			xCoordinate(x), yCoordinate(y), widthM(widthM), heightM(heightM), currentSeededRay(origin, centralRayDirection)
 		{

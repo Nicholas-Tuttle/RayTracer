@@ -17,7 +17,8 @@ namespace RayTracer
 		const float focalLengthMM;
 		const float sensorWidthMM;
 	public:
-		Camera(ImageResolution resolution, Vector3<float> position, Vector3<float> forwardVector, float focalLength, float sensorWidthMM) :
+		Camera(const ImageResolution &resolution, const Vector3<float> &position, 
+			const Vector3<float> &forwardVector, float focalLength, float sensorWidthMM) :
 			resolution(resolution), position(position), forwardVector(forwardVector.Normalize()), 
 			focalLengthMM(focalLength), sensorWidthMM(sensorWidthMM)
 		{

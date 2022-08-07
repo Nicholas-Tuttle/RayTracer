@@ -13,7 +13,7 @@ namespace RayTracer
 		float roughness;
 		bool emissive;
 	public:
-		Material(const Color &color, const float roughness, const bool emissive)
+		Material(const Color &color, float roughness, bool emissive)
 			: color(color), roughness(roughness), emissive(emissive) {}
 
 		const Color SurfaceColor() const override

@@ -2,6 +2,7 @@
 x64
 *.vsidx
 *.pdb
+*.vcxproj.user
 bin
 lib
 packages
