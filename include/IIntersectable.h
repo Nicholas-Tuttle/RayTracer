@@ -23,7 +23,7 @@ namespace RayTracer
 	class IIntersectable
 	{
 	public:
-		virtual bool IntersectsRay(const IRay *incoming_ray, std::unique_ptr<IIntersection> &out_intersection_info) const = 0;
+		virtual bool IntersectsRay(const std::unique_ptr<IRay> &incoming_ray, std::unique_ptr<IIntersection> &out_intersection_info) const = 0;
 		virtual int MaterialIndex() const = 0;
 	};
 }

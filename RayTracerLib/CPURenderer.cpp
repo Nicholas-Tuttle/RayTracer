@@ -14,7 +14,7 @@
 
 using RayTracer::CPURenderer;
 using RayTracer::Ray;
-using RayTracer::Ray;
+using RayTracer::IRay;
 using RayTracer::Camera;
 using RayTracer::IWorld;
 using RayTracer::IIntersection;
@@ -38,58 +38,56 @@ static const IMaterial *GetMaterial(const std::unique_ptr<IScene> &scene, int ma
 	}
 }
 
-static void TraceRay(const Ray &ray, const std::unique_ptr<IScene> &scene, Color &ray_color)
+static void TraceRay(std::unique_ptr<IRay> &ray, const std::unique_ptr<IScene> &scene, Color &ray_color)
 {
 	const unsigned int max_bounces = 10;
 
-	bool at_least_one_intersected = false; 
-	bool emissive_material_intersected = false;
+	bool at_least_one_intersected = false;
 	unsigned int total_bounces = 0;
-	Ray traced_ray = ray;
+	std::unique_ptr<IRay> &traced_ray = ray;
 
 	/* Keep going while an intersection happens
 	* and the bounces is less than max bounce count */
 	do
 	{
-		bool object_intersected_this_ray = false;
+		at_least_one_intersected = false;
 		float min_depth = std::numeric_limits<float>::infinity();
-		Ray min_depth_ray{};
 		Color min_depth_color{};
+		std::unique_ptr<IRay> reflected_ray = nullptr;
 		
 		// Check for object intersections
 		for (const auto &intersectable : scene->Objects())
 		{
 			std::unique_ptr<IIntersection> intersection = nullptr;
-			bool intersected = intersectable->IntersectsRay(&traced_ray, intersection);
+			bool intersected = intersectable->IntersectsRay(traced_ray, intersection);
 
 			if (intersected)
 			{
 				if (intersection->Depth() < min_depth)
 				{
 					min_depth = intersection->Depth();
-					min_depth_ray = Ray::ReflectionRay(traced_ray, intersection.get());
 					const IMaterial *mat = GetMaterial(scene, intersectable->MaterialIndex());
 					min_depth_color = mat->SurfaceColor();
-					emissive_material_intersected = mat->Emissive();
+					mat->GetResultantRay(intersection, traced_ray, reflected_ray);
 				}
 
-				object_intersected_this_ray = true;
+				at_least_one_intersected = true;
 			}
 		}
 
-		at_least_one_intersected = object_intersected_this_ray;
+		// TODO: the surfaces should modulate with the color, not just multiply (add specular reflections)
 
-		if (object_intersected_this_ray)
+		if (at_least_one_intersected)
 		{
-			traced_ray = min_depth_ray;
+			traced_ray.swap(reflected_ray);
 			ray_color *= min_depth_color;
 		}
 		else
 		{
 			// Intersect with the world
 			const IWorld *world = scene->World();
-			ray_color *= world->SurfaceColor(traced_ray.Direction());
-			break;
+			ray_color *= world->SurfaceColor(traced_ray->Direction());
+			traced_ray = nullptr;
 		}
 
 		total_bounces++;
@@ -100,7 +98,7 @@ static void TraceRay(const Ray &ray, const std::unique_ptr<IScene> &scene, Color
 			break;
 		}
 	} 
-	while (at_least_one_intersected && !emissive_material_intersected);
+	while (nullptr != traced_ray);
 }
 
 bool CPURenderer::Render(const Camera &camera, unsigned int samples, const std::unique_ptr<IScene> &scene, std::unique_ptr<IImage> &out_image)
@@ -115,40 +113,30 @@ do \
     std::cout << message << ": line " << __LINE__ << ": time (ms): " << cpuTime.count() << std::endl ;    \
 } while(0)
 
-	Image *output_image = new Image(camera.Resolution());
+	out_image = std::make_unique<Image>(camera.Resolution());
 
 	std::vector<Pixel> pixels = camera.GetOutgoingPixels();
 
 	PRINT_TIME("\t[SETUP]: Getting outgoing pixels");
 
-	size_t pixel_number = 1; // Start at 1 so that 0% doesn't print
-	size_t ten_percent = pixels.size() / 10;
+	std::cout << "[RENDERING]" << std::endl;
 
 	// For each sample in each pixel, trace its ray
+	// TODO: Threading
 	for (auto &pixel : pixels)
 	{
-		if (0 == pixel_number % ten_percent)
-		{
-			std::string message = "\t[RENDERING]: " + std::to_string(pixel_number / ten_percent * 10) + "% rendered";
-			PRINT_TIME(message);
-		}
-
 		for (unsigned int i = 0; i < samples; i++)
 		{
 			Color current_sample_color(1.0f, 1.0f, 1.0f, 1.0f);
-			Ray ray = pixel.GetNextRay();
+			std::unique_ptr<IRay> ray = pixel.GetNextRay();
 			TraceRay(ray, scene, current_sample_color);
 			pixel.AccumulateColorSample(current_sample_color);
 		}
 
-		output_image->SetPixelColor(pixel.XCoordinate(), pixel.YCoordinate(), pixel.OutputColor());
-
-		pixel_number++;
+		out_image->SetPixelColor(pixel.XCoordinate(), pixel.YCoordinate(), pixel.OutputColor());
 	}
 
 	PRINT_TIME("[RENDER TIME]");
-
-	out_image = std::unique_ptr<IImage>(output_image);
 
 	return true;
 }

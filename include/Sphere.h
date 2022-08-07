@@ -33,7 +33,7 @@ namespace RayTracer
 			return material_index;
 		}
 
-		bool IntersectsRay(const IRay *incoming_ray, std::unique_ptr<IIntersection> &out_intersection_info) const override
+		bool IntersectsRay(const std::unique_ptr<IRay> &incoming_ray, std::unique_ptr<IIntersection> &out_intersection_info) const override
 		{
 			Vector3<float> line_origin_to_sphere_center_O_minus_C(position - incoming_ray->Origin());
 			float u_dot = line_origin_to_sphere_center_O_minus_C.Dot(incoming_ray->Direction().Normalize());

@@ -22,11 +22,10 @@ namespace RayTracer
 		float widthM;
 		float heightM;
 
-		Ray currentSeededRay;
 	public:
 		Pixel(const Vector3<float> &origin, const Vector3<float> &centralRayDirection, size_t x, size_t y, float widthM, float heightM)
 			: output(), origin(origin), centralRayDirection(centralRayDirection), accumulatedSamples(0),
-			xCoordinate(x), yCoordinate(y), widthM(widthM), heightM(heightM), currentSeededRay(origin, centralRayDirection)
+			xCoordinate(x), yCoordinate(y), widthM(widthM), heightM(heightM)
 		{
 			if (centralRayDirection == Vector3<float>(0, 1, 0))
 			{
@@ -79,16 +78,15 @@ namespace RayTracer
 			return centralRayDirection;
 		}
 
-		const Ray GetNextRay()
+		std::unique_ptr<IRay> GetNextRay()
 		{
 			//Get 2 random floats -0.5 <= float <= 0.5
 			float random1 = (float)(rand() - (RAND_MAX / 2)) / RAND_MAX;
 			float random2 = (float)(rand() - (RAND_MAX / 2)) / RAND_MAX;
 
 			Vector3<float> jitteredRayDirection = centralRayDirection + (rightVector * random1 * widthM) + (upVector * random2 * heightM);
-			currentSeededRay.SetDirection(jitteredRayDirection);
 
-			return currentSeededRay;
+			return std::make_unique<Ray>(origin, jitteredRayDirection);
 		}
 
 		size_t XCoordinate() const

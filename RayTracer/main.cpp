@@ -83,20 +83,31 @@ static void parse_command_line_arguments(int argc, char** argv, CommandLineArgum
     bool render_cpu = parser.CommandOptionExists("-c");
     bool render_gpu = parser.CommandOptionExists("-g");
     bool gpu_debug = parser.CommandOptionExists("-dg");
+    
     const std::string samples_string = parser.GetCommandOption("-s");
-    unsigned int samples = (unsigned int)std::stoul(samples_string);
+    if (0 != samples_string.compare(""))
+    {
+        unsigned int samples = (unsigned int)std::stoul(samples_string);
+        arguments.Samples = samples;
+    }
     
     const std::string resolution_x_string = parser.GetCommandOption("-x");
-    size_t resolution_x = (size_t)std::stoul(resolution_x_string);
+    if (0 != resolution_x_string.compare(""))
+    {
+        size_t resolution_x = (size_t)std::stoul(resolution_x_string);
+        arguments.ResolutionX = resolution_x;
+    }
+
     const std::string resolution_y_string = parser.GetCommandOption("-y");
-    size_t resolution_y = (size_t)std::stoul(resolution_y_string);
+    if (0 != resolution_y_string.compare(""))
+    {
+        size_t resolution_y = (size_t)std::stoul(resolution_y_string);
+        arguments.ResolutionY = resolution_y;
+    }
 
     arguments.RenderCPU = render_cpu;
     arguments.RenderGPU = render_gpu;
     arguments.GPUDebugEnabled = gpu_debug;
-    arguments.Samples = samples;
-    arguments.ResolutionX = resolution_x;
-    arguments.ResolutionY = resolution_y;
 }
 
 static Color RandomColor()
