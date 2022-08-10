@@ -14,13 +14,9 @@
 #include <PresetScenes.h>
 
 using RayTracer::IScene;
-using RayTracer::Vector3;
 using RayTracer::Camera;
-using RayTracer::Scene;
 using RayTracer::CPURenderer;
 using RayTracer::GPURenderer;
-using RayTracer::Sphere;
-using RayTracer::Material;
 using RayTracer::ImageResolution;
 using RayTracer::IImage;
 using RayTracer::Color;
@@ -108,19 +104,6 @@ static void parse_command_line_arguments(int argc, char** argv, CommandLineArgum
     arguments.RenderCPU = render_cpu;
     arguments.RenderGPU = render_gpu;
     arguments.GPUDebugEnabled = gpu_debug;
-}
-
-static Color RandomColor()
-{
-    float random1 = (float)rand() / RAND_MAX;
-    float random2 = (float)rand() / RAND_MAX;
-    float random3 = (float)rand() / RAND_MAX;
-    return Color(random1, random2, random3, 1.0f);
-}
-
-static float RandomRoughness(float min, float max)
-{
-    return RayTracer::Lerp<float>(min, max, (float)rand() / RAND_MAX);
 }
 
 static bool write_png_file(const std::string &file_name, const std::vector<std::vector<png_byte>> &color_values)

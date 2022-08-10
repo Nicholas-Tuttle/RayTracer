@@ -2,12 +2,12 @@
 
 #include "Color.h"
 #include "IMaterial.h"
-#include "Vectors.h"
+#include "Vector3.h"
 #include "Ray.h"
 
 namespace RayTracer
 {
-	// TODO: Split this class into multiple classes
+	// TODO: Split this class into multiple classes, and probably delete this file
 	class Material : public IMaterial
 	{
 	private:

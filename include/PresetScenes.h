@@ -4,6 +4,9 @@
 #include <Camera.h>
 #include <Scene.h>
 #include <Material.h>
+#include <EmissiveBSDF.h>
+#include <GlossyBSDF.h>
+#include <DiffuseBSDF.h>
 #include <Sphere.h>
 
 namespace RayTracer
@@ -28,23 +31,19 @@ namespace RayTracer
         // Build a scene to render
         Scene *scene = new Scene();
 
-        scene->AddMaterial(new Material(RandomColor(), RandomRoughness(0.0f, 0.3f), false));
-        scene->AddMaterial(new Material(RandomColor(), RandomRoughness(0.0f, 0.3f), false));
-
-        scene->AddMaterial(new Material(Color(1.0f, 0.5f, 0.5f, 1.0f), RandomRoughness(0.0f, 0.3f), false));
-        scene->AddMaterial(new Material(Color(0.5f, 1.0f, 0.5f, 1.0f), RandomRoughness(0.0f, 0.3f), false));
-        scene->AddMaterial(new Material(Color(0.5f, 0.5f, 1.0f, 1.0f), RandomRoughness(0.0f, 0.3f), false));
-
-        scene->AddMaterial(new Material(RandomColor(), RandomRoughness(0.0f, 0.3f), false));
-        scene->AddMaterial(new Material(Color(1.0f, 0.0f, 1.0f, 1.0f), 1.0f, true));
+        scene->AddMaterial(new GlossyBSDF(Color(0.8f, 0.8f, 0.8f, 1.0f), 0.2f));
+        scene->AddMaterial(new GlossyBSDF(Color(0.8f, 0.8f, 0.8f, 1.0f), 0.3f));
+        scene->AddMaterial(new DiffuseBSDF(Color(1.0f, 0.5f, 0.5f, 1.0f), RandomRoughness(0.0f, 0.3f)));
+        scene->AddMaterial(new DiffuseBSDF(Color(0.5f, 1.0f, 0.5f, 1.0f), RandomRoughness(0.0f, 0.3f)));
+        scene->AddMaterial(new DiffuseBSDF(Color(0.5f, 0.5f, 1.0f, 1.0f), RandomRoughness(0.0f, 0.3f)));
+        scene->AddMaterial(new DiffuseBSDF(RandomColor(), RandomRoughness(0.0f, 0.3f)));
+        scene->AddMaterial(new EmissiveBSDF(Color(1.0f, 0.0f, 1.0f, 1.0f)));
 
         scene->AddObject(new Sphere(Vector3<float>(  9,    0,    -3),   1.0f,   0));
         scene->AddObject(new Sphere(Vector3<float>( 14,    1,    -3),   1.0f,   1));
-
         scene->AddObject(new Sphere(Vector3<float>( 10,   -1,     0),   1.0f,   2));
         scene->AddObject(new Sphere(Vector3<float>( 14,    0,     1),   1.0f,   3));
         scene->AddObject(new Sphere(Vector3<float>( 18,    1,     2),   1.0f,   4));
-
         scene->AddObject(new Sphere(Vector3<float>( 16,   -1,     4),   1.0f,   5));
         scene->AddObject(new Sphere(Vector3<float>( 12,    0,     4),   1.0f,   6));
 
@@ -61,7 +60,7 @@ namespace RayTracer
 
         // Build a scene to render
         Scene *scene = new Scene(); 
-        scene->AddMaterial(new Material(Color(1.0f, 1.0f, 1.0f, 1.0f), 0.1f, false));
+        scene->AddMaterial(new DiffuseBSDF(Color(1.0f, 1.0f, 1.0f, 1.0f), 0.1f));
 
         for (float i = 0; i < sphere_array_count; i++)
         {

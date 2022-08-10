@@ -227,22 +227,23 @@ VkResult GPURenderer::CreateHeadlessVulkanInstance(VkInstance & instance)
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pApplicationInfo = &applicationInfo;
 
-#if ENABLE_SHADER_PRINTF
-    createInfo.enabledLayerCount = static_cast<uint32_t>(requiredInstanceLayers.size());
-    createInfo.ppEnabledLayerNames = requiredInstanceLayers.data();
-    createInfo.enabledExtensionCount = static_cast<uint32_t>(requiredInstanceExtensions.size());
-    createInfo.ppEnabledExtensionNames = requiredInstanceExtensions.data();
+    if (GPUDebugEnabled)
+    {
+        createInfo.enabledLayerCount = static_cast<uint32_t>(requiredInstanceLayers.size());
+        createInfo.ppEnabledLayerNames = requiredInstanceLayers.data();
+        createInfo.enabledExtensionCount = static_cast<uint32_t>(requiredInstanceExtensions.size());
+        createInfo.ppEnabledExtensionNames = requiredInstanceExtensions.data();
 
-    VkValidationFeatureEnableEXT enabled = VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT;
-    VkValidationFeaturesEXT features = {};
-    features.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
-    features.disabledValidationFeatureCount = 0;
-    features.enabledValidationFeatureCount = 1;
-    features.pDisabledValidationFeatures = nullptr;
-    features.pEnabledValidationFeatures = &enabled;
+        VkValidationFeatureEnableEXT enabled = VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT;
+        VkValidationFeaturesEXT features = {};
+        features.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
+        features.disabledValidationFeatureCount = 0;
+        features.enabledValidationFeatureCount = 1;
+        features.pDisabledValidationFeatures = nullptr;
+        features.pEnabledValidationFeatures = &enabled;
 
-    createInfo.pNext = &features;
-#endif
+        createInfo.pNext = &features;
+    }
 
     result =  vkCreateInstance(&createInfo, nullptr, &instance);
     return result;
@@ -321,7 +322,7 @@ VkResult GPURenderer::CreateDevice(VkPhysicalDevice physicalDevice, uint32_t que
     return vkCreateDevice(physicalDevice, &deviceCreateInfo, 0, &device);
 }
 
-bool GPURenderer::Render(const Camera& camera, unsigned int samples, const std::unique_ptr<IScene> &scene, std::unique_ptr<IImage> &out_image)
+void GPURenderer::Render(const Camera& camera, unsigned int samples, const std::unique_ptr<IScene> &scene, std::unique_ptr<IImage> &out_image)
 {
     auto time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> cpuTime;
@@ -335,21 +336,22 @@ do \
 
     if (!VerifyInstanceLayers())
     {
-        return false;
+        return;
     }
 
     if (!VerifyInstanceExtensions())
     {
-        return false;
+        return;
     }
 
     VkInstance instance = nullptr;
     EXIT_ON_BAD_RESULT(CreateHeadlessVulkanInstance(instance));
 
-#if ENABLE_SHADER_PRINTF
     VkDebugUtilsMessengerEXT debugMessenger = {};
-    EXIT_ON_BAD_RESULT(CreateDebugMessenger(instance, &debugMessenger));
-#endif
+    if (GPUDebugEnabled)
+    {
+        EXIT_ON_BAD_RESULT(CreateDebugMessenger(instance, &debugMessenger));
+    }
 
     PRINT_TIME("\t[SETUP]: Create headless vulkan instance");
 
@@ -359,7 +361,7 @@ do \
 
     if (0 == physicalDeviceCount)
     {
-        return false;
+        return;
     }
 
     PRINT_TIME("\t[SETUP]: Enumerate devices");
@@ -474,11 +476,10 @@ do \
     
     PRINT_TIME("\t[TEARDOWN]: Unmap memory");
 
-#if ENABLE_SHADER_PRINTF
-    DestroyDebugMessenger(instance, debugMessenger);
-#endif
-
-	return true;
+    if (GPUDebugEnabled)
+    {
+        DestroyDebugMessenger(instance, debugMessenger);
+    }
 }
 
 #undef EXIT_ON_BAD_RESULT

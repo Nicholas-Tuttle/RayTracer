@@ -48,7 +48,7 @@ static void TraceRay(std::unique_ptr<IRay> &ray, const std::unique_ptr<IScene> &
 
 	/* Keep going while an intersection happens
 	* and the bounces is less than max bounce count */
-	do
+	while (nullptr != traced_ray)
 	{
 		at_least_one_intersected = false;
 		float min_depth = std::numeric_limits<float>::infinity();
@@ -97,11 +97,10 @@ static void TraceRay(std::unique_ptr<IRay> &ray, const std::unique_ptr<IScene> &
 			ray_color *= world->AmbientColor();
 			break;
 		}
-	} 
-	while (nullptr != traced_ray);
+	}
 }
 
-bool CPURenderer::Render(const Camera &camera, unsigned int samples, const std::unique_ptr<IScene> &scene, std::unique_ptr<IImage> &out_image)
+void CPURenderer::Render(const Camera &camera, unsigned int samples, const std::unique_ptr<IScene> &scene, std::unique_ptr<IImage> &out_image)
 {
 	auto time = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double, std::milli> cpuTime;
@@ -137,6 +136,4 @@ do \
 	}
 
 	PRINT_TIME("[RENDER TIME]");
-
-	return true;
 }

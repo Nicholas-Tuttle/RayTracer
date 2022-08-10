@@ -1,7 +1,7 @@
 
 #include "gtest/gtest.h"
 #include <Camera.h>
-#include <Vectors.h>
+#include <Vector3.h>
 
 using RayTracer::Vector3;
 using RayTracer::Camera;

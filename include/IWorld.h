@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Color.h"
-#include "Vectors.h"
+#include "Vector3.h"
 
 namespace RayTracer
 {

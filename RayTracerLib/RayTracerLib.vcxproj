@@ -51,13 +51,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DiffuseBSDF.cpp" />
+    <ClCompile Include="EmissiveBSDF.cpp" />
+    <ClCompile Include="GlossyBSDF.cpp" />
     <ClCompile Include="GPURenderer.cpp" />
     <ClCompile Include="Material.cpp" />
+    <ClCompile Include="PrincipledBSDF.cpp" />
     <ClCompile Include="Shaders\RayIntersection.cpp" />
     <ClCompile Include="World.cpp" />
     <ClInclude Include="..\include\Camera.h" />
     <ClInclude Include="..\include\Color.h" />
     <ClInclude Include="..\include\CPURenderer.h" />
+    <ClInclude Include="..\include\DiffuseBSDF.h" />
+    <ClInclude Include="..\include\EmissiveBSDF.h" />
+    <ClInclude Include="..\include\GlossyBSDF.h" />
     <ClInclude Include="..\include\GPURenderer.h" />
     <ClInclude Include="..\include\IImage.h" />
     <ClInclude Include="..\include\IIntersectable.h" />
@@ -69,11 +76,12 @@
     <ClInclude Include="..\include\Material.h" />
     <ClInclude Include="..\include\Pixel.h" />
     <ClInclude Include="..\include\PresetScenes.h" />
+    <ClInclude Include="..\include\PrincipledBSDF.h" />
     <ClInclude Include="..\include\Ray.h" />
     <ClInclude Include="..\include\Scene.h" />
     <ClInclude Include="..\include\Sphere.h" />
     <ClInclude Include="..\include\Utilities.h" />
-    <ClInclude Include="..\include\Vectors.h" />
+    <ClInclude Include="..\include\Vector3.h" />
     <ClInclude Include="..\include\World.h" />
     <ClInclude Include="Shaders\RayIntersection.h" />
   </ItemGroup>

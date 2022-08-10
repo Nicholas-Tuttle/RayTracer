@@ -91,6 +91,22 @@ namespace RayTracer
 			return Vector3<T>(x_lerp, y_lerp, z_lerp).Normalize();
 		}
 
+		// Based on https://raytracing.github.io/books/RayTracingInOneWeekend.html#diffusematerials/asimplediffusematerial
+		static Vector3<T> RandomInUnitSphere()
+		{
+			while (true)
+			{
+				T x = (T)rand() / RAND_MAX * 2 - 1;
+				T y = (T)rand() / RAND_MAX * 2 - 1;
+				T z = (T)rand() / RAND_MAX * 2 - 1;
+				Vector3<T> vec(x, y, z);
+				if (vec.MagnitudeSquared() < 1)
+				{
+					return vec;
+				}
+			}
+		}
+
 	private:
 		mutable bool CalculatedNormalized;
 		mutable T XNormalized;

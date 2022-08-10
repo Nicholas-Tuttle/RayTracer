@@ -3,7 +3,7 @@
 #include <IIntersectable.h>
 #include <Sphere.h>
 #include <Ray.h>
-#include <Vectors.h>
+#include <Vector3.h>
 
 using RayTracer::Sphere;
 using RayTracer::Ray;

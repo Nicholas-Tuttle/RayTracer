@@ -12,6 +12,12 @@
     <Filter Include="Shader Files">
       <UniqueIdentifier>{cb722c92-ecba-492d-9ac8-bee9a3b6f909}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Materials">
+      <UniqueIdentifier>{3a5213b3-2e1d-4ad0-a3cb-890dd13629cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Materials">
+      <UniqueIdentifier>{9bd4023e-08fa-4b01-a77f-8fee317d45f6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Shaders\RayIntersection.h">
@@ -38,9 +44,6 @@
     <ClInclude Include="..\include\Image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\IMaterial.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\Intersection.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -48,9 +51,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\IWorld.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\Material.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\Pixel.h">
@@ -71,11 +71,29 @@
     <ClInclude Include="..\include\Utilities.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\Vectors.h">
+    <ClInclude Include="..\include\Vector3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\World.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\Material.h">
+      <Filter>Header Files\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\IMaterial.h">
+      <Filter>Header Files\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\DiffuseBSDF.h">
+      <Filter>Header Files\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\EmissiveBSDF.h">
+      <Filter>Header Files\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\GlossyBSDF.h">
+      <Filter>Header Files\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\PrincipledBSDF.h">
+      <Filter>Header Files\Materials</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -88,11 +106,23 @@
     <ClCompile Include="Shaders\RayIntersection.cpp">
       <Filter>Shader Files</Filter>
     </ClCompile>
-    <ClCompile Include="Material.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="World.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Material.cpp">
+      <Filter>Source Files\Materials</Filter>
+    </ClCompile>
+    <ClCompile Include="PrincipledBSDF.cpp">
+      <Filter>Source Files\Materials</Filter>
+    </ClCompile>
+    <ClCompile Include="DiffuseBSDF.cpp">
+      <Filter>Source Files\Materials</Filter>
+    </ClCompile>
+    <ClCompile Include="GlossyBSDF.cpp">
+      <Filter>Source Files\Materials</Filter>
+    </ClCompile>
+    <ClCompile Include="EmissiveBSDF.cpp">
+      <Filter>Source Files\Materials</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
