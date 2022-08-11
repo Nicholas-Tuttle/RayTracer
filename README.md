@@ -4,6 +4,8 @@ This project is a CPU and GPU ray tracer using the Vulkan API. It is a heavy wor
 ![image](./demo_cpu.png)
 ## GPU Rendering Example:
 ![image](./demo_gpu.png)
+## Roadmap:
+![image](./doc/Roadmap.png)
 # Dependencies:
 ## LibPNG:
 http://www.libpng.org/pub/png/libpng.html
