@@ -251,8 +251,8 @@ int main(int argc, char **argv)
     ImageResolution resolution(arguments.ResolutionX, arguments.ResolutionY);
 
     // Build a scene to render
-    std::unique_ptr<IScene> scene = nullptr;
-    std::unique_ptr<Camera> camera = nullptr;
+    std::shared_ptr<IScene> scene = nullptr;
+    std::shared_ptr<Camera> camera = nullptr;
 
     CreatePresetScene1(scene, camera, resolution);
 
@@ -262,7 +262,7 @@ int main(int argc, char **argv)
         CPURenderer cpu_renderer;
 
         // Provide an output pointer for the CPU image
-        std::unique_ptr<IImage> out_cpu_image = nullptr;
+        std::shared_ptr<IImage> out_cpu_image = nullptr;
 
         // Render on the CPU
         auto tm0 = std::chrono::high_resolution_clock::now();
@@ -282,7 +282,7 @@ int main(int argc, char **argv)
         gpu_renderer.GPUDebugEnabled = arguments.GPUDebugEnabled;
 
         // Provide an output pointer for the GPU image
-        std::unique_ptr<IImage> out_gpu_image = nullptr;
+        std::shared_ptr<IImage> out_gpu_image = nullptr;
 
         // Render on the GPU
         auto tm2 = std::chrono::high_resolution_clock::now();

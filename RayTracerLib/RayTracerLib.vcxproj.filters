@@ -12,11 +12,23 @@
     <Filter Include="Shader Files">
       <UniqueIdentifier>{cb722c92-ecba-492d-9ac8-bee9a3b6f909}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Materials">
+    <Filter Include="Source Files\CPU Rendering">
+      <UniqueIdentifier>{049fc58c-1d31-414e-94fc-10c97dfbaafb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\CPU Rendering\Materials">
+      <UniqueIdentifier>{9bd4023e-08fa-4b01-a77f-8fee317d45f6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GPU Rendering">
+      <UniqueIdentifier>{187a4f3a-6da2-4281-a709-6ffc488eaf94}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\CPU Rendering">
+      <UniqueIdentifier>{558df0ba-f002-4c5c-be97-2b11dae9d9b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\CPU Rendering\Materials">
       <UniqueIdentifier>{3a5213b3-2e1d-4ad0-a3cb-890dd13629cd}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Materials">
-      <UniqueIdentifier>{9bd4023e-08fa-4b01-a77f-8fee317d45f6}</UniqueIdentifier>
+    <Filter Include="Header Files\GPU Rendering">
+      <UniqueIdentifier>{db030e6d-07ae-4b6e-b5f4-90ea7887f8f0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -32,25 +44,13 @@
     <ClInclude Include="..\include\CPURenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\GPURenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\IImage.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\IIntersectable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\Image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\Intersection.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\IScene.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\IWorld.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\Pixel.h">
@@ -74,55 +74,79 @@
     <ClInclude Include="..\include\Vector3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\World.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\Material.h">
-      <Filter>Header Files\Materials</Filter>
+      <Filter>Header Files\CPU Rendering\Materials</Filter>
     </ClInclude>
     <ClInclude Include="..\include\IMaterial.h">
-      <Filter>Header Files\Materials</Filter>
+      <Filter>Header Files\CPU Rendering\Materials</Filter>
     </ClInclude>
     <ClInclude Include="..\include\DiffuseBSDF.h">
-      <Filter>Header Files\Materials</Filter>
+      <Filter>Header Files\CPU Rendering\Materials</Filter>
     </ClInclude>
     <ClInclude Include="..\include\EmissiveBSDF.h">
-      <Filter>Header Files\Materials</Filter>
+      <Filter>Header Files\CPU Rendering\Materials</Filter>
     </ClInclude>
     <ClInclude Include="..\include\GlossyBSDF.h">
-      <Filter>Header Files\Materials</Filter>
+      <Filter>Header Files\CPU Rendering\Materials</Filter>
     </ClInclude>
     <ClInclude Include="..\include\PrincipledBSDF.h">
-      <Filter>Header Files\Materials</Filter>
+      <Filter>Header Files\CPU Rendering\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\GPURenderer.h">
+      <Filter>Header Files\GPU Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\IIntersectable.h">
+      <Filter>Header Files\CPU Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\Intersection.h">
+      <Filter>Header Files\CPU Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\IWorld.h">
+      <Filter>Header Files\CPU Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\World.h">
+      <Filter>Header Files\CPU Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\ThreadPool.h">
+      <Filter>Header Files\CPU Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\PixelRenderTask.h">
+      <Filter>Header Files\CPU Rendering</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CPURenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GPURenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Shaders\RayIntersection.cpp">
       <Filter>Shader Files</Filter>
     </ClCompile>
-    <ClCompile Include="World.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Material.cpp">
-      <Filter>Source Files\Materials</Filter>
+      <Filter>Source Files\CPU Rendering\Materials</Filter>
     </ClCompile>
     <ClCompile Include="PrincipledBSDF.cpp">
-      <Filter>Source Files\Materials</Filter>
+      <Filter>Source Files\CPU Rendering\Materials</Filter>
     </ClCompile>
     <ClCompile Include="DiffuseBSDF.cpp">
-      <Filter>Source Files\Materials</Filter>
+      <Filter>Source Files\CPU Rendering\Materials</Filter>
     </ClCompile>
     <ClCompile Include="GlossyBSDF.cpp">
-      <Filter>Source Files\Materials</Filter>
+      <Filter>Source Files\CPU Rendering\Materials</Filter>
     </ClCompile>
     <ClCompile Include="EmissiveBSDF.cpp">
-      <Filter>Source Files\Materials</Filter>
+      <Filter>Source Files\CPU Rendering\Materials</Filter>
+    </ClCompile>
+    <ClCompile Include="CPURenderer.cpp">
+      <Filter>Source Files\CPU Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="World.cpp">
+      <Filter>Source Files\CPU Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="GPURenderer.cpp">
+      <Filter>Source Files\GPU Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="ThreadPool.cpp">
+      <Filter>Source Files\CPU Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="PixelRenderTask.cpp">
+      <Filter>Source Files\CPU Rendering</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

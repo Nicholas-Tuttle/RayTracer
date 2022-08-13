@@ -7,10 +7,13 @@
 #include "IWorld.h"
 #include "IMaterial.h"
 #include "Material.h"
+#include "ThreadPool.h"
+#include "PixelRenderTask.h"
 #include <chrono>
 #include <iostream>
 #include <limits>
 #include <string>
+#include <thread>
 
 using RayTracer::CPURenderer;
 using RayTracer::Ray;
@@ -24,6 +27,7 @@ using RayTracer::Material;
 using RayTracer::Color;
 using RayTracer::IImage;
 using RayTracer::Image;
+using RayTracer::PixelRenderTask;
 
 static const IMaterial *GetMaterial(const std::unique_ptr<IScene> &scene, int materialIndex)
 {
@@ -100,7 +104,7 @@ static void TraceRay(std::unique_ptr<IRay> &ray, const std::unique_ptr<IScene> &
 	}
 }
 
-void CPURenderer::Render(const Camera &camera, unsigned int samples, const std::unique_ptr<IScene> &scene, std::unique_ptr<IImage> &out_image)
+void CPURenderer::Render(const Camera &camera, unsigned int samples, const std::shared_ptr<IScene> scene, std::shared_ptr<IImage> &out_image)
 {
 	auto time = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double, std::milli> cpuTime;
@@ -112,7 +116,7 @@ do \
     std::cout << message << ": line " << __LINE__ << ": time (ms): " << cpuTime.count() << std::endl ;    \
 } while(0)
 
-	out_image = std::make_unique<Image>(camera.Resolution());
+	out_image = std::make_shared<Image>(camera.Resolution());
 
 	std::vector<Pixel> pixels = camera.GetOutgoingPixels();
 
@@ -121,19 +125,19 @@ do \
 	std::cout << "[RENDERING]" << std::endl;
 
 	// For each sample in each pixel, trace its ray
-	// TODO: Threading
+	unsigned int hardware_concurrency = std::thread::hardware_concurrency();
+	// If there is more than one core, leave one available for enquing other tasks
+	hardware_concurrency -= hardware_concurrency > 1 ? 1 : 0;
+
+	ThreadPool rendering_pool(hardware_concurrency, 1000);
+
 	for (auto &pixel : pixels)
 	{
-		for (unsigned int i = 0; i < samples; i++)
-		{
-			Color current_sample_color(1.0f, 1.0f, 1.0f, 1.0f);
-			std::unique_ptr<IRay> ray = pixel.GetNextRay();
-			TraceRay(ray, scene, current_sample_color);
-			pixel.AccumulateColorSample(current_sample_color);
-		}
-
-		out_image->SetPixelColor(pixel.XCoordinate(), pixel.YCoordinate(), pixel.OutputColor());
+		std::shared_ptr<ThreadPool::IThreadPoolTask> pixel_render_task = std::make_shared<PixelRenderTask>(pixel, samples, scene, out_image);
+		rendering_pool.EnqueueTask(pixel_render_task);
 	}
+
+	rendering_pool.Complete();
 
 	PRINT_TIME("[RENDER TIME]");
 }

@@ -322,7 +322,7 @@ VkResult GPURenderer::CreateDevice(VkPhysicalDevice physicalDevice, uint32_t que
     return vkCreateDevice(physicalDevice, &deviceCreateInfo, 0, &device);
 }
 
-void GPURenderer::Render(const Camera& camera, unsigned int samples, const std::unique_ptr<IScene> &scene, std::unique_ptr<IImage> &out_image)
+void GPURenderer::Render(const Camera& camera, unsigned int samples, const std::shared_ptr<IScene> scene, std::shared_ptr<IImage> &out_image)
 {
     auto time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> cpuTime;
@@ -468,7 +468,7 @@ do \
             output_image->SetPixelColor(x, y, Color(r, g, b, 1.0));
         }
     }
-    out_image = std::unique_ptr<IImage>(output_image);
+    out_image = std::shared_ptr<IImage>(output_image);
 
     PRINT_TIME("\t[TEARDOWN]: Reading results");
 
