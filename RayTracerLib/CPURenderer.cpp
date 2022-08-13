@@ -137,7 +137,7 @@ do \
 		rendering_pool.EnqueueTask(pixel_render_task);
 	}
 
-	rendering_pool.Complete();
+	rendering_pool.BlockUntilComplete();
 
 	PRINT_TIME("[RENDER TIME]");
 }

@@ -26,13 +26,15 @@ namespace RayTracer
 		ThreadPool(size_t thread_count, size_t queue_size);
 		~ThreadPool();
 		void EnqueueTask(const std::shared_ptr<IThreadPoolTask> &task);
-		void Complete();
+		void BlockUntilComplete();
 	private:
 		ThreadPool() = delete;
 		ThreadPool(ThreadPool &) = delete;
 		ThreadPool(ThreadPool &&) = delete;
 		void thread_loop();
-		std::atomic<size_t> in_progress_task_count;
+
+		std::atomic<size_t> enqueued_tasks_count;
+		std::atomic<size_t> completed_tasks_count;
 
 		std::mutex enqueued_tasks_lock;
 		std::counting_semaphore<> queue_counter;

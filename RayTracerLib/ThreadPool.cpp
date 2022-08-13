@@ -17,19 +17,17 @@ void ThreadPool::thread_loop()
 			const std::lock_guard<std::mutex> lock(enqueued_tasks_lock);
 			if (!enqueued_tasks.empty())
 			{
-				{
-					task = enqueued_tasks.front();
-					enqueued_tasks.pop_front();
-				}
+				task = enqueued_tasks.front();
+				enqueued_tasks.pop_front();
 			}
 		}
 
 		if(nullptr != task)
 		{
-			in_progress_task_count++;
+			enqueued_tasks_count++;
 			queue_counter.release();
 			task->Execute();
-			in_progress_task_count--;
+			completed_tasks_count++;
 		}
 		else
 		{
@@ -39,7 +37,7 @@ void ThreadPool::thread_loop()
 }
 
 ThreadPool::ThreadPool(size_t thread_count, size_t queue_size)
-	: stop_requested(false), in_progress_task_count(0), enqueued_tasks_lock(), queue_counter(queue_size), enqueued_tasks()
+	: stop_requested(false), enqueued_tasks_lock(), queue_counter(queue_size), enqueued_tasks()
 {
 	size_t actual_threads = thread_count < 1 ? 1 : thread_count;
 	for (int index = 0; index < actual_threads; index++)
@@ -67,17 +65,19 @@ void ThreadPool::EnqueueTask(const std::shared_ptr<IThreadPoolTask> &task)
 	enqueued_tasks.push_back(task);
 }
 
-void ThreadPool::Complete()
+void ThreadPool::BlockUntilComplete()
 {
 	bool tasks_enqueued = true;
 	while (tasks_enqueued)
 	{
-		const std::lock_guard<std::mutex> lock(enqueued_tasks_lock);
-		tasks_enqueued = !enqueued_tasks.empty() || (in_progress_task_count != 0);
+		{
+			const std::lock_guard<std::mutex> lock(enqueued_tasks_lock);
+			tasks_enqueued = !enqueued_tasks.empty() || completed_tasks_count != enqueued_tasks_count;
+		}
 
 		if (tasks_enqueued)
 		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(20));
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		}
 	}
 }

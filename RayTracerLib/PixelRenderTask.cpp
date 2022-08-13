@@ -92,13 +92,15 @@ static void TraceRay(std::unique_ptr<IRay> &ray, const std::shared_ptr<IScene> s
 
 void PixelRenderTask::Execute()
 {
+	std::vector<Color> colors;
+	colors.resize(samples, Color(1.0f, 1.0f, 1.0f, 1.0f));
 	for (unsigned int i = 0; i < samples; i++)
 	{
-		Color current_sample_color(1.0f, 1.0f, 1.0f, 1.0f);
 		std::unique_ptr<IRay> ray = pixel.GetNextRay();
-		TraceRay(ray, scene, current_sample_color);
-		pixel.AccumulateColorSample(current_sample_color);
+		TraceRay(ray, scene, colors.at(i));
 	}
+	
+	pixel.Average(colors);
 
 	out_image->SetPixelColor(pixel.XCoordinate(), pixel.YCoordinate(), pixel.OutputColor());
 }

@@ -16,7 +16,6 @@ namespace RayTracer
 		Vector3<float> centralRayDirection;
 		Vector3<float> rightVector;
 		Vector3<float> upVector;
-		size_t accumulatedSamples;
 		size_t xCoordinate;
 		size_t yCoordinate;
 		float widthM;
@@ -24,7 +23,7 @@ namespace RayTracer
 
 	public:
 		Pixel(const Vector3<float> &origin, const Vector3<float> &centralRayDirection, size_t x, size_t y, float widthM, float heightM)
-			: output(), origin(origin), centralRayDirection(centralRayDirection), accumulatedSamples(0),
+			: output(), origin(origin), centralRayDirection(centralRayDirection), 
 			xCoordinate(x), yCoordinate(y), widthM(widthM), heightM(heightM)
 		{
 			if (centralRayDirection == Vector3<float>(0, 1, 0))
@@ -46,31 +45,32 @@ namespace RayTracer
 
 		void SetColor(const Color &color)
 		{
-			accumulatedSamples = 1;
 			output = color;
 		};
 
-		void AccumulateColorSample(const Color& color)
+		void Average(const std::vector<Color> &colors)
 		{
-			float r_accumulated = (float)output.R() * accumulatedSamples;
-			float g_accumulated = (float)output.G() * accumulatedSamples;
-			float b_accumulated = (float)output.B() * accumulatedSamples;
-			float a_accumulated = (float)output.A() * accumulatedSamples;
+			size_t r = 0;
+			size_t g = 0;
+			size_t b = 0;
+			size_t a = 0;
 
-			r_accumulated += color.R();
-			g_accumulated += color.G();
-			b_accumulated += color.B();
-			a_accumulated += color.A();
+			for (const auto &color : colors)
+			{
+				r += color.R();
+				g += color.G();
+				b += color.B();
+				a += color.A();
+			}
 
-			accumulatedSamples++;
+			size_t samples = colors.size();
 
-			Color accumulated_color(
-				(png_byte)(r_accumulated / accumulatedSamples), 
-				(png_byte)(g_accumulated / accumulatedSamples),
-				(png_byte)(b_accumulated / accumulatedSamples),
-				(png_byte)(a_accumulated / accumulatedSamples));
+			png_byte final_r = (png_byte)((float)r / samples);
+			png_byte final_g = (png_byte)((float)g / samples);
+			png_byte final_b = (png_byte)((float)b / samples);
+			png_byte final_a = (png_byte)((float)a / samples);
 
-			output = accumulated_color;
+			output = Color(final_r, final_g, final_b, final_a);
 		}
 
 		const Vector3<float> &CentralRayDirection()
