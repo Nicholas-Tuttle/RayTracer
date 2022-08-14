@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IMaterial.h"
+#include "Ray.h"
 
 namespace RayTracer
 {

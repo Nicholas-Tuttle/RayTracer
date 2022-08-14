@@ -86,7 +86,7 @@ namespace RayTracer
 
 			Vector3<float> jitteredRayDirection = centralRayDirection + (rightVector * random1 * widthM) + (upVector * random2 * heightM);
 
-			return std::make_unique<Ray>(origin, jitteredRayDirection);
+			return std::make_unique<Ray>(origin, jitteredRayDirection, Color());
 		}
 
 		size_t XCoordinate() const

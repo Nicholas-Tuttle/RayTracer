@@ -11,6 +11,7 @@ using RayTracer::IMaterial;
 using RayTracer::IWorld;
 using RayTracer::IImage;
 using RayTracer::Material;
+using RayTracer::Vector3;
 
 PixelRenderTask::PixelRenderTask(Pixel &pixel, unsigned int samples, std::shared_ptr<IScene> scene, std::shared_ptr<IImage> out_image) :
 	pixel(pixel), samples(samples), scene(scene), out_image(out_image) {}
@@ -28,63 +29,54 @@ static const IMaterial *GetMaterial(const std::shared_ptr<IScene> scene, int mat
 	}
 }
 
-static void TraceRay(std::unique_ptr<IRay> &ray, const std::shared_ptr<IScene> scene, Color &ray_color)
+static void TraceRay(std::unique_ptr<IRay> &ray, const std::shared_ptr<IScene> scene)
 {
 	const unsigned int max_bounces = 10;
 
-	bool at_least_one_intersected = false;
 	unsigned int total_bounces = 0;
 	std::unique_ptr<IRay> &traced_ray = ray;
 
 	/* Keep going while an intersection happens
 	* and the bounces is less than max bounce count */
-	while (nullptr != traced_ray)
+	while (nullptr != traced_ray && traced_ray->Direction() != Vector3<float>(0, 0, 0))
 	{
-		at_least_one_intersected = false;
 		float min_depth = std::numeric_limits<float>::infinity();
-		Color min_depth_color{};
-		std::unique_ptr<IRay> reflected_ray = nullptr;
+
+		const IMaterial *closest_intersection_mat = nullptr;
+		std::unique_ptr<IIntersection> closest_intersection = nullptr;
 
 		// Check for object intersections
 		for (const auto &intersectable : scene->Objects())
 		{
-			std::unique_ptr<IIntersection> intersection = nullptr;
-			bool intersected = intersectable->IntersectsRay(traced_ray, intersection);
-
-			if (intersected)
+			std::unique_ptr<IIntersection> current_intersection = nullptr;
+			if (intersectable->IntersectsRay(traced_ray, current_intersection)
+				&& current_intersection->Depth() < min_depth)
 			{
-				if (intersection->Depth() < min_depth)
-				{
-					min_depth = intersection->Depth();
-					const IMaterial *mat = GetMaterial(scene, intersectable->MaterialIndex());
-					min_depth_color = mat->SurfaceColor();
-					mat->GetResultantRay(intersection, traced_ray, reflected_ray);
-				}
-
-				at_least_one_intersected = true;
+				closest_intersection.swap(current_intersection);
+				min_depth = closest_intersection->Depth();
+				closest_intersection_mat = GetMaterial(scene, intersectable->MaterialIndex());
 			}
 		}
 
-		// TODO: the surfaces should modulate with the color, not just multiply (add specular reflections)
-
-		if (at_least_one_intersected)
+		if (nullptr != closest_intersection_mat)
 		{
+			std::unique_ptr<IRay> reflected_ray = nullptr;
+			closest_intersection_mat->GetResultantRay(closest_intersection, traced_ray, reflected_ray);
 			traced_ray.swap(reflected_ray);
-			ray_color *= min_depth_color;
 		}
 		else
 		{
 			// Intersect with the world
 			const IWorld *world = scene->World();
-			ray_color *= world->SurfaceColor(traced_ray->Direction());
-			traced_ray = nullptr;
+			traced_ray->RayColor() *= world->SurfaceColor(traced_ray->Direction());
+			break;
 		}
 
 		total_bounces++;
 		if (total_bounces == max_bounces)
 		{
 			const IWorld *world = scene->World();
-			ray_color *= world->AmbientColor();
+			traced_ray->RayColor() *= world->AmbientColor();
 			break;
 		}
 	}
@@ -97,7 +89,8 @@ void PixelRenderTask::Execute()
 	for (unsigned int i = 0; i < samples; i++)
 	{
 		std::unique_ptr<IRay> ray = pixel.GetNextRay();
-		TraceRay(ray, scene, colors.at(i));
+		TraceRay(ray, scene);
+		colors[i] = ray->RayColor();
 	}
 	
 	pixel.Average(colors);

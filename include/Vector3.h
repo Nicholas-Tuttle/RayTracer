@@ -52,6 +52,11 @@ namespace RayTracer
 			return vector.X == X && vector.Y == Y && vector.Z == Z;
 		}
 
+		inline bool operator!=(const Vector3<T> &vector) const
+		{
+			return vector.X != X || vector.Y != Y || vector.Z != Z;
+		}
+
 		inline T MagnitudeSquared() const
 		{
 			return Dot(*this);

@@ -104,7 +104,8 @@ static void TraceRay(std::unique_ptr<IRay> &ray, const std::unique_ptr<IScene> &
 	}
 }
 
-void CPURenderer::Render(const Camera &camera, unsigned int samples, const std::shared_ptr<IScene> scene, std::shared_ptr<IImage> &out_image)
+void CPURenderer::Render(size_t max_threads, const Camera &camera, unsigned int samples, 
+	const std::shared_ptr<IScene> scene, std::shared_ptr<IImage> &out_image)
 {
 	auto time = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double, std::milli> cpuTime;
@@ -127,6 +128,10 @@ do \
 	// For each sample in each pixel, trace its ray
 	unsigned int hardware_concurrency = std::thread::hardware_concurrency();
 	// If there is more than one core, leave one available for enquing other tasks
+	if (max_threads > 0)
+	{
+		hardware_concurrency = std::min<unsigned int>((unsigned int)max_threads, hardware_concurrency);
+	}
 	hardware_concurrency -= hardware_concurrency > 1 ? 1 : 0;
 
 	ThreadPool rendering_pool(hardware_concurrency, 1000);

@@ -25,10 +25,10 @@ void RayTracer::GlossyBSDF::GetResultantRay(std::unique_ptr<IIntersection> &inte
 
 	if (out_reflection_offset.Dot(intersection_normal) <= 0)
 	{
-		outgoing_ray = std::make_unique<Ray>(intersection->Location(), out_reflection);
+		outgoing_ray = std::make_unique<Ray>(intersection->Location(), out_reflection, Color(incoming_ray->RayColor() * color));
 	}
 	else
 	{
-		outgoing_ray = std::make_unique<Ray>(intersection->Location(), out_reflection_offset);
+		outgoing_ray = std::make_unique<Ray>(intersection->Location(), out_reflection_offset, Color(incoming_ray->RayColor() * color));
 	}
 }

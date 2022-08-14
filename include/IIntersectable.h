@@ -10,6 +10,7 @@ namespace RayTracer
 	public:
 		virtual const Vector3<float> &Origin() const = 0;
 		virtual const Vector3<float> &Direction() const = 0;
+		virtual Color &RayColor() = 0;
 	};
 
 	class IIntersection

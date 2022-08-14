@@ -9,7 +9,8 @@ namespace RayTracer
 	class CPURenderer
 	{
 	public:
-		void Render(const Camera& camera, unsigned int samples, const std::shared_ptr<IScene> scene, std::shared_ptr<IImage> &out_image);
+		void Render(size_t max_threads, const Camera& camera, unsigned int samples, 
+			const std::shared_ptr<IScene> scene, std::shared_ptr<IImage> &out_image);
 	};
 }
 

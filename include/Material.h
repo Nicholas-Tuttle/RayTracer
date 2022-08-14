@@ -68,11 +68,12 @@ namespace RayTracer
 					random3 + intersection_normal.Z
 					).Normalize();
 
-				outgoing_ray = std::unique_ptr<IRay>(new Ray(intersection->Location(), r.NormalizedLerp(jittered_refraction_ray, intersection_roughness)));
+				outgoing_ray = std::unique_ptr<IRay>(new Ray(intersection->Location(), r.NormalizedLerp(jittered_refraction_ray, intersection_roughness),
+					Color(incoming_ray_to_replace->RayColor() * color)));
 				return;
 			}
 
-			outgoing_ray = std::unique_ptr<IRay>(new Ray(intersection->Location(), r));
+			outgoing_ray = std::unique_ptr<IRay>(new Ray(intersection->Location(), r, Color(incoming_ray_to_replace->RayColor() * color)));
 		}
 
 		static Material DefaultMaterial;

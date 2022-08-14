@@ -33,11 +33,11 @@ namespace RayTracer
 
         scene->AddMaterial(new GlossyBSDF(Color(0.8f, 0.8f, 0.8f, 1.0f), 0.2f));
         scene->AddMaterial(new GlossyBSDF(Color(0.8f, 0.8f, 0.8f, 1.0f), 0.3f));
-        scene->AddMaterial(new DiffuseBSDF(Color(1.0f, 0.5f, 0.5f, 1.0f), RandomRoughness(0.0f, 0.3f)));
-        scene->AddMaterial(new DiffuseBSDF(Color(0.5f, 1.0f, 0.5f, 1.0f), RandomRoughness(0.0f, 0.3f)));
-        scene->AddMaterial(new DiffuseBSDF(Color(0.5f, 0.5f, 1.0f, 1.0f), RandomRoughness(0.0f, 0.3f)));
+        scene->AddMaterial(new DiffuseBSDF(Color(1.0f, 0.5f, 0.5f, 1.0f), RandomRoughness(0.3f, 0.5f)));
+        scene->AddMaterial(new DiffuseBSDF(Color(0.5f, 1.0f, 0.5f, 1.0f), RandomRoughness(0.3f, 0.5f)));
+        scene->AddMaterial(new DiffuseBSDF(Color(0.5f, 0.5f, 1.0f, 1.0f), RandomRoughness(0.3f, 0.5f)));
         scene->AddMaterial(new DiffuseBSDF(RandomColor(), RandomRoughness(0.0f, 0.3f)));
-        scene->AddMaterial(new EmissiveBSDF(Color(1.0f, 0.0f, 1.0f, 1.0f)));
+        scene->AddMaterial(new EmissiveBSDF(Color(100.0f, 0.0f, 100.0f, 1.0f)));
 
         scene->AddObject(new Sphere(Vector3<float>(  9,    0,    -3),   1.0f,   0));
         scene->AddObject(new Sphere(Vector3<float>( 14,    1,    -3),   1.0f,   1));
@@ -47,8 +47,24 @@ namespace RayTracer
         scene->AddObject(new Sphere(Vector3<float>( 16,   -1,     4),   1.0f,   5));
         scene->AddObject(new Sphere(Vector3<float>( 12,    0,     4),   1.0f,   6));
 
-        out_scene = std::unique_ptr<IScene>(scene);
+        out_scene = std::shared_ptr<IScene>(scene);
 	}
+
+    static void CreatePresetScene1Sphere1Light(std::shared_ptr<IScene> &out_scene, std::shared_ptr<Camera> &out_camera, ImageResolution resolution)
+    {
+        out_camera = std::shared_ptr<Camera>(new Camera(resolution, Vector3<float>(0, 0, 0), Vector3<float>(1, 0, 0), 50, 18));
+
+        // Build a scene to render
+        Scene *scene = new Scene();
+
+        scene->AddMaterial(new DiffuseBSDF(Color(1.0f, 0, 0, 1.0f), 0.3f));
+        scene->AddMaterial(new EmissiveBSDF(Color(0.0f, 0.0f, 100.0f, 1.0f)));
+
+        scene->AddObject(new Sphere(Vector3<float>(5, 0, 0), 1.0f, 0));
+        scene->AddObject(new Sphere(Vector3<float>(0, 3, 3), 2.0f, 1));
+
+        out_scene = std::shared_ptr<IScene>(scene);
+    }
 
 	static void CreatePresetSceneSphereArray(std::shared_ptr<IScene> &out_scene, std::shared_ptr<Camera> &out_camera, ImageResolution resolution)
 	{

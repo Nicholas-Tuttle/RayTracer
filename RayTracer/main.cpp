@@ -62,6 +62,8 @@ struct CommandLineArguments
         Samples = 1;
         ResolutionX = 1920;
         ResolutionY = 1080;
+        MaxThreads = 0;
+        ShowHelp = false;
     }
 
     bool RenderCPU;
@@ -70,16 +72,14 @@ struct CommandLineArguments
     unsigned int Samples;
     size_t ResolutionX;
     size_t ResolutionY;
+    size_t MaxThreads;
+    bool ShowHelp;
 };
 
 static void parse_command_line_arguments(int argc, char** argv, CommandLineArguments& arguments)
 {
     InputParser parser(argc, argv);
 
-    bool render_cpu = parser.CommandOptionExists("-c");
-    bool render_gpu = parser.CommandOptionExists("-g");
-    bool gpu_debug = parser.CommandOptionExists("-dg");
-    
     const std::string samples_string = parser.GetCommandOption("-s");
     if (0 != samples_string.compare(""))
     {
@@ -101,9 +101,24 @@ static void parse_command_line_arguments(int argc, char** argv, CommandLineArgum
         arguments.ResolutionY = resolution_y;
     }
 
+    const std::string max_threads_string = parser.GetCommandOption("--max-threads");
+    if (0 != max_threads_string.compare(""))
+    {
+        size_t max_threads = (size_t)std::stoul(max_threads_string);
+        arguments.MaxThreads = max_threads;
+    }
+
+    bool render_cpu = parser.CommandOptionExists("-c");
     arguments.RenderCPU = render_cpu;
+
+    bool render_gpu = parser.CommandOptionExists("-g");
     arguments.RenderGPU = render_gpu;
+
+    bool gpu_debug = parser.CommandOptionExists("-dg");
     arguments.GPUDebugEnabled = gpu_debug;
+
+    bool show_help = parser.CommandOptionExists("-h");
+    arguments.ShowHelp = show_help;
 }
 
 static bool write_png_file(const std::string &file_name, const std::vector<std::vector<png_byte>> &color_values)
@@ -133,18 +148,18 @@ static bool write_png_file(const std::string &file_name, const std::vector<std::
 
     png_init_io(png_pointer, file);
 
-    size_t height = color_values.size();
+    png_uint_32 height = (png_uint_32)color_values.size();
     if (0 == height)
     {
         return false;
     }
 
-    size_t width = color_values[0].size();
+    png_uint_32 width = (png_uint_32)color_values[0].size();
     if (width == 0 || (width % 4) != 0)
     {
         return false;
     }
-    png_uint_32 png_pixel_width = width / 4;
+    png_uint_32 png_pixel_width = (png_uint_32)(width / 4);
 
     png_byte bit_depth = 8; //TODO: parameterize
     png_byte color_type = PNG_COLOR_TYPE_RGBA; //TODO: parameterize
@@ -201,7 +216,7 @@ static bool write_png_file(const std::string &file_name, const std::vector<std::
         return false;
     }
 
-    for (int i = 0; i < height; i++)
+    for (png_uint_32 i = 0; i < height; i++)
     {
         if (width != color_values[i].size())
         {
@@ -214,7 +229,7 @@ static bool write_png_file(const std::string &file_name, const std::vector<std::
             return false;
         }
 
-        for (int j = 0; j < width; j++)
+        for (png_uint_32 j = 0; j < width; j++)
         {
             row_pointers[i][j] = color_values[i][j];
         }
@@ -222,7 +237,7 @@ static bool write_png_file(const std::string &file_name, const std::vector<std::
 
     png_write_image(png_pointer, row_pointers);
 
-    for (int i = 0; i < height; i++)
+    for (png_uint_32 i = 0; i < height; i++)
     {
         free(row_pointers[i]);
     }
@@ -246,6 +261,12 @@ int main(int argc, char **argv)
     CommandLineArguments arguments;
     parse_command_line_arguments(argc, argv, arguments);
 
+    if (arguments.ShowHelp)
+    {
+        // Show help
+        exit(0);
+    }
+
     std::cout << "Rendering with " << arguments.Samples << " samples" << std::endl;
 
     ImageResolution resolution(arguments.ResolutionX, arguments.ResolutionY);
@@ -254,7 +275,7 @@ int main(int argc, char **argv)
     std::shared_ptr<IScene> scene = nullptr;
     std::shared_ptr<Camera> camera = nullptr;
 
-    CreatePresetScene1(scene, camera, resolution);
+    CreatePresetScene1Sphere1Light(scene, camera, resolution);
 
     if (arguments.RenderCPU)
     {
@@ -266,7 +287,7 @@ int main(int argc, char **argv)
 
         // Render on the CPU
         auto tm0 = std::chrono::high_resolution_clock::now();
-        cpu_renderer.Render(*camera, arguments.Samples, scene, out_cpu_image);
+        cpu_renderer.Render(arguments.MaxThreads, *camera, arguments.Samples, scene, out_cpu_image);
         auto tm1 = std::chrono::high_resolution_clock::now();
 
         std::chrono::duration<double, std::milli> cpuTime = tm1 - tm0;
