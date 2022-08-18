@@ -1,10 +1,11 @@
 #pragma once
 
-#include <IIntersectable.h>
+#include "Vector3.h"
+#include "Color.h"
 
 namespace RayTracer
 {
-	class Ray : public IRay
+	class Ray
 	{
 	private:
 		Vector3<float> origin;
@@ -17,17 +18,17 @@ namespace RayTracer
 		Ray() :origin(), direction(), ray_color() {}
 		Ray(const Ray &ray) : origin(ray.origin), direction(ray.direction) {}
 
-		const Vector3<float> &Origin() const override
+		const Vector3<float> &Origin() const
 		{
 			return origin;
 		}
 
-		const Vector3<float> &Direction() const override
+		const Vector3<float> &Direction() const
 		{
 			return direction;
 		}
 
-		Color &RayColor() override
+		const Color &RayColor() const
 		{
 			return ray_color;
 		}
@@ -35,6 +36,11 @@ namespace RayTracer
 		void SetDirection(const Vector3<float> &direction)
 		{
 			this->direction = direction;
+		}
+
+		void SetColor(const Color &color)
+		{
+			ray_color = color;
 		}
 	};
 }

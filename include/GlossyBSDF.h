@@ -2,6 +2,8 @@
 
 #include "IMaterial.h"
 #include "Color.h"
+#include "Ray.h"
+#include "Intersection.h"
 
 namespace RayTracer
 {
@@ -12,8 +14,8 @@ namespace RayTracer
 		// Inherited via IMaterial
 		virtual const Color SurfaceColor() const override;
 		virtual float Roughness() const override;
-		virtual void GetResultantRay(std::unique_ptr<IIntersection> &intersection,
-			const std::unique_ptr<IRay> &incoming_ray, std::unique_ptr<IRay> &outgoing_ray) const override;
+		virtual void GetResultantRay(const Intersection &intersection,
+			const Ray &incoming_ray, Ray &outgoing_ray) const override;
 	private:
 		Color color;
 		float roughness;

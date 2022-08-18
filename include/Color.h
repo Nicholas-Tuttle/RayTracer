@@ -62,7 +62,7 @@ namespace RayTracer
 			float_a *= color.float_a;
 		}
 
-		Color operator*(const Color& color)
+		Color operator*(const Color& color) const
 		{
 			return Color(color.float_r * float_r, color.float_g * float_g, color.float_b * float_b, color.float_a * float_a);
 		}
@@ -72,7 +72,7 @@ namespace RayTracer
 			return Color(scalar * float_r, scalar * float_g, scalar * float_b, scalar * float_a);
 		}
 
-		Color operator+(const Color &color)
+		Color operator+(const Color &color) const
 		{
 			return Color(float_r + color.float_r, float_g + color.float_g, float_b + color.float_b, float_a + color.float_a);
 		}

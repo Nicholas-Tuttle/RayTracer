@@ -33,10 +33,10 @@ namespace RayTracer
 			return material_index;
 		}
 
-		bool IntersectsRay(const std::unique_ptr<IRay> &incoming_ray, std::unique_ptr<IIntersection> &out_intersection_info) const override
+		bool IntersectsRay(const Ray &incoming_ray, Intersection &out_intersection_info) const override
 		{
-			Vector3<float> line_origin_to_sphere_center_O_minus_C(position - incoming_ray->Origin());
-			float u_dot = line_origin_to_sphere_center_O_minus_C.Dot(incoming_ray->Direction().Normalize());
+			Vector3<float> line_origin_to_sphere_center_O_minus_C(position - incoming_ray.Origin());
+			float u_dot = line_origin_to_sphere_center_O_minus_C.Dot(incoming_ray.Direction().Normalize());
 
 			float dot_squared = u_dot * u_dot;
 			float magnitude_squared = line_origin_to_sphere_center_O_minus_C.MagnitudeSquared();
@@ -58,10 +58,10 @@ namespace RayTracer
 				return false;
 			}
 
-			Vector3<float> intersection_location = incoming_ray->Origin() + incoming_ray->Direction().Normalize() * depth;
+			Vector3<float> intersection_location = incoming_ray.Origin() + incoming_ray.Direction().Normalize() * depth;
 			Vector3<float> intersection_normal = (intersection_location - position).Normalize();
 
-			out_intersection_info = std::unique_ptr<IIntersection>(new Intersection(depth, intersection_normal, intersection_location));
+			out_intersection_info = Intersection(depth, intersection_normal, intersection_location);
 
 			return true;
 		}

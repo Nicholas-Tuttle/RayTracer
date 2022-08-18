@@ -28,12 +28,12 @@ namespace RayTracer
 			return roughness;
 		}
 
-		virtual void GetResultantRay(std::unique_ptr<IIntersection> &intersection, const std::unique_ptr<IRay> &incoming_ray_to_replace,
-			std::unique_ptr<IRay> &outgoing_ray) const override
+		virtual void GetResultantRay(const Intersection &intersection, const Ray &incoming_ray_to_replace,
+			Ray &outgoing_ray) const override
 		{
 			if (emissive)
 			{
-				outgoing_ray = nullptr;
+				outgoing_ray = Ray();
 				return;
 			}
 
@@ -46,11 +46,11 @@ namespace RayTracer
 
 			*/
 
-			Vector3<float> intersection_normal = intersection->Normal();
+			Vector3<float> intersection_normal = intersection.Normal();
 			float intersection_roughness = 0.05f;
 
-			Vector3<float> b = intersection_normal * incoming_ray_to_replace->Direction().Dot(intersection_normal);
-			Vector3<float> a = incoming_ray_to_replace->Direction() - b;
+			Vector3<float> b = intersection_normal * incoming_ray_to_replace.Direction().Dot(intersection_normal);
+			Vector3<float> a = incoming_ray_to_replace.Direction() - b;
 			Vector3<float> r = ((b * -1) + a).Normalize();
 
 			// TODO: This isn't lambertian reflection at all, probably should be
@@ -68,12 +68,12 @@ namespace RayTracer
 					random3 + intersection_normal.Z
 					).Normalize();
 
-				outgoing_ray = std::unique_ptr<IRay>(new Ray(intersection->Location(), r.NormalizedLerp(jittered_refraction_ray, intersection_roughness),
-					Color(incoming_ray_to_replace->RayColor() * color)));
+				outgoing_ray = Ray(intersection.Location(), r.NormalizedLerp(jittered_refraction_ray, intersection_roughness),
+					Color(incoming_ray_to_replace.RayColor() * color));
 				return;
 			}
 
-			outgoing_ray = std::unique_ptr<IRay>(new Ray(intersection->Location(), r, Color(incoming_ray_to_replace->RayColor() * color)));
+			outgoing_ray = Ray(intersection.Location(), r, Color(incoming_ray_to_replace.RayColor() * color));
 		}
 
 		static Material DefaultMaterial;

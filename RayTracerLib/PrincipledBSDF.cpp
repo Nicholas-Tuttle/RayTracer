@@ -1,6 +1,7 @@
 #include "PrincipledBSDF.h"
 
 using RayTracer::Color;
+using RayTracer::Intersection;
 
 const Color RayTracer::PrincipledBSDF::SurfaceColor() const
 {
@@ -12,8 +13,8 @@ float RayTracer::PrincipledBSDF::Roughness() const
 	return 0.0f;
 }
 
-void RayTracer::PrincipledBSDF::GetResultantRay(std::unique_ptr<IIntersection> &intersection, 
-	const std::unique_ptr<IRay> &incoming_ray, std::unique_ptr<IRay> &outgoing_ray) const
+void RayTracer::PrincipledBSDF::GetResultantRay(const Intersection &intersection, 
+	const Ray &incoming_ray, Ray &outgoing_ray) const
 {
-	outgoing_ray = nullptr;
+	outgoing_ray = Ray();
 }

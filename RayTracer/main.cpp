@@ -101,7 +101,7 @@ static void parse_command_line_arguments(int argc, char** argv, CommandLineArgum
         arguments.ResolutionY = resolution_y;
     }
 
-    const std::string max_threads_string = parser.GetCommandOption("--max-threads");
+    const std::string max_threads_string = parser.GetCommandOption("-m");
     if (0 != max_threads_string.compare(""))
     {
         size_t max_threads = (size_t)std::stoul(max_threads_string);
@@ -119,6 +119,20 @@ static void parse_command_line_arguments(int argc, char** argv, CommandLineArgum
 
     bool show_help = parser.CommandOptionExists("-h");
     arguments.ShowHelp = show_help;
+}
+
+static void help()
+{
+    std::cout << "RayTracer.exe" << std::endl
+        << "\tArguments:" << std::endl
+        << "\t\t-h : show help" << std::endl
+        << "\t\t-c : render on CPU" << std::endl
+        << "\t\t-g : render on GPU" << std::endl
+        << "\t\t-dg : enable GPU debug messages" << std::endl
+        << "\t\t-s <samples> : set sample count [ default 1 ]" << std::endl
+        << "\t\t-x <x resolution> : set image width (pixels) [ default 1920 ]" << std::endl
+        << "\t\t-y <y resolution> : set image height (pixels) [ default 1080 ]" << std::endl
+        << "\t\t-m <max threads> : set the max number of threads the cpu renderer can use [ default inf ]" << std::endl;
 }
 
 static bool write_png_file(const std::string &file_name, const std::vector<std::vector<png_byte>> &color_values)
@@ -263,7 +277,7 @@ int main(int argc, char **argv)
 
     if (arguments.ShowHelp)
     {
-        // Show help
+        help();
         exit(0);
     }
 

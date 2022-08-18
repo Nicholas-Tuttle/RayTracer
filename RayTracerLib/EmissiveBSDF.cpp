@@ -2,6 +2,7 @@
 
 using RayTracer::Color;
 using RayTracer::Ray;
+using RayTracer::Intersection;
 
 const Color RayTracer::EmissiveBSDF::SurfaceColor() const
 {
@@ -13,8 +14,8 @@ float RayTracer::EmissiveBSDF::Roughness() const
 	return 0.0f;
 }
 
-void RayTracer::EmissiveBSDF::GetResultantRay(std::unique_ptr<IIntersection> &intersection,
-	const std::unique_ptr<IRay> &incoming_ray, std::unique_ptr<IRay> &outgoing_ray) const
+void RayTracer::EmissiveBSDF::GetResultantRay(const Intersection &intersection,
+	const Ray &incoming_ray, Ray &outgoing_ray) const
 {
-	outgoing_ray = std::make_unique<Ray>(incoming_ray->Origin(), Vector3<float>(0, 0, 0), Color(incoming_ray->RayColor() * color));
+	outgoing_ray = Ray(incoming_ray.Origin(), Vector3<float>(0, 0, 0), Color(incoming_ray.RayColor() * color));
 }

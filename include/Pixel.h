@@ -78,7 +78,7 @@ namespace RayTracer
 			return centralRayDirection;
 		}
 
-		std::unique_ptr<IRay> GetNextRay()
+		Ray GetNextRay()
 		{
 			//Get 2 random floats -0.5 <= float <= 0.5
 			float random1 = (float)(rand() - (RAND_MAX / 2)) / RAND_MAX;
@@ -86,7 +86,7 @@ namespace RayTracer
 
 			Vector3<float> jitteredRayDirection = centralRayDirection + (rightVector * random1 * widthM) + (upVector * random2 * heightM);
 
-			return std::make_unique<Ray>(origin, jitteredRayDirection, Color());
+			return Ray(origin, jitteredRayDirection, Color());
 		}
 
 		size_t XCoordinate() const
