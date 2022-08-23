@@ -57,11 +57,11 @@ namespace RayTracer
         // Build a scene to render
         Scene *scene = new Scene();
 
-        scene->AddMaterial(new DiffuseBSDF(Color(1.0f, 0, 0, 1.0f), 0.3f));
-        scene->AddMaterial(new EmissiveBSDF(Color(0.0f, 0.0f, 100.0f, 1.0f)));
+        scene->AddMaterial(new GlossyBSDF(Color(1.0f, 0, 1.0f, 1.0f), 0.3f));
+        scene->AddMaterial(new EmissiveBSDF(Color(0.0f, 0.0f, 1.0f, 1.0f), 100.0f));
 
-        scene->AddObject(new Sphere(Vector3<float>(5, 0, 0), 1.0f, 0));
-        scene->AddObject(new Sphere(Vector3<float>(0, 3, 3), 2.0f, 1));
+        scene->AddObject(new Sphere(Vector3<float>(5, 0, -1), 0.5f, 0));
+        scene->AddObject(new Sphere(Vector3<float>(5, 0, 1), 0.1f, 1));
 
         out_scene = std::shared_ptr<IScene>(scene);
     }

@@ -7,7 +7,8 @@ namespace RayTracer
 	class EmissiveBSDF : public IMaterial
 	{
 	public:
-		EmissiveBSDF(const Color &color) : color(color) {}
+		EmissiveBSDF(const Color &color) : color(color), strength(1.0) {}
+		EmissiveBSDF(const Color &color, float strength) : color(color), strength(strength) {}
 		// Inherited via IMaterial
 		virtual const Color SurfaceColor() const override;
 		virtual float Roughness() const override;
@@ -15,6 +16,7 @@ namespace RayTracer
 			const Ray &incoming_ray, Ray &outgoing_ray) const override;
 	private:
 		Color color;
+		float strength;
 	};
 }
 

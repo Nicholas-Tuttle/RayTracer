@@ -85,12 +85,12 @@ static void TraceRay(Ray &ray, const std::shared_ptr<IScene> scene)
 void PixelRenderTask::Execute()
 {
 	std::vector<Color> colors;
-	colors.resize(samples, Color(1.0f, 1.0f, 1.0f, 1.0f));
+	colors.reserve(samples);
 	for (unsigned int i = 0; i < samples; i++)
 	{
 		Ray ray = pixel.GetNextRay();
 		TraceRay(ray, scene);
-		colors.at(i) = ray.RayColor();
+		colors.emplace_back(ray.RayColor());
 	}
 	
 	pixel.Average(colors);

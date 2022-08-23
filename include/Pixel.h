@@ -50,25 +50,25 @@ namespace RayTracer
 
 		void Average(const std::vector<Color> &colors)
 		{
-			size_t r = 0;
-			size_t g = 0;
-			size_t b = 0;
-			size_t a = 0;
+			float r = 0;
+			float g = 0;
+			float b = 0;
+			float a = 0;
 
 			for (const auto &color : colors)
 			{
-				r += color.R();
-				g += color.G();
-				b += color.B();
-				a += color.A();
+				r += color.R_float();
+				g += color.G_float();
+				b += color.B_float();
+				a += color.A_float();
 			}
 
 			size_t samples = colors.size();
 
-			png_byte final_r = (png_byte)((float)r / samples);
-			png_byte final_g = (png_byte)((float)g / samples);
-			png_byte final_b = (png_byte)((float)b / samples);
-			png_byte final_a = (png_byte)((float)a / samples);
+			png_byte final_r = (png_byte)(std::min<float>(1.0f, (r / samples)) * Color::MAX_COLOR);
+			png_byte final_g = (png_byte)(std::min<float>(1.0f, (g / samples)) * Color::MAX_COLOR);
+			png_byte final_b = (png_byte)(std::min<float>(1.0f, (b / samples)) * Color::MAX_COLOR);
+			png_byte final_a = (png_byte)(std::min<float>(1.0f, (a / samples)) * Color::MAX_COLOR);
 
 			output = Color(final_r, final_g, final_b, final_a);
 		}
