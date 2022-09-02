@@ -1,0 +1,35 @@
+// glslangValidator -V -e main %(FullPath)  -o $(ProjectDir)\RayInitializationV2.comp.spv
+
+#version 450
+#extension GL_EXT_debug_printf : enable
+
+//	Incoming data
+//		camera origin, camera direction, sample count, image resolution
+//	Outgoing data for rays
+//		ray origins, ray directions
+
+layout (push_constant) uniform camera_data
+{
+	vec4 Origin;
+	vec4 ForwardVector;
+	vec4 RightVector;
+	vec4 UpVector;
+	uint FocalLengthMM;
+	uint SensorWidthMM;
+} CameraData;
+
+layout(std430, set = 0, binding = 0) buffer out_rays
+{
+	vec4 Origin;
+	vec4 Direction;
+} Rays;
+
+void main()
+{
+	uint gID = gl_GlobalInvocationID.x;
+
+	if(gID == 0)
+	{
+		debugPrintfEXT("Running RayInitializationV2 Main");
+	}
+}

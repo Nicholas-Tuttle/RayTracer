@@ -30,6 +30,15 @@
     <Filter Include="Header Files\GPU Rendering">
       <UniqueIdentifier>{db030e6d-07ae-4b6e-b5f4-90ea7887f8f0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shader Files V2">
+      <UniqueIdentifier>{ca49132c-8928-4140-b013-5c76b78a2c7d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader Files V2\RayCasting">
+      <UniqueIdentifier>{aeb1d1e1-7d6c-4e66-81a4-2a1fc6458639}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader Files V2\Materials">
+      <UniqueIdentifier>{e4a7b9d4-9b9a-4fab-a4f3-f8f0cd69054f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Shaders\RayIntersection.h">
@@ -153,5 +162,18 @@
     <CustomBuild Include="Shaders\RayIntersection.comp">
       <Filter>Shader Files</Filter>
     </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="RayInitializationV2.comp">
+      <Filter>Shader Files V2\RayCasting</Filter>
+    </None>
+    <None Include="Diffuse.comp">
+      <Filter>Shader Files V2\Materials</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="RayIntersectionV2.comp">
+      <Filter>Shader Files V2\RayCasting</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
