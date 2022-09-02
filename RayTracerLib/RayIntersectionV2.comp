@@ -1,0 +1,32 @@
+// glslangValidator -V -e main %(FullPath)  -o $(ProjectDir)\RayIntersectionV2.comp.spv
+
+#version 450
+#extension GL_EXT_debug_printf : enable
+
+//	Incoming data for rays
+//		origin, direction
+//	Outgoing data for rays
+//		intersection location, normal, material ID, (eventualy object ID too)
+
+layout(std430, set = 0, binding = 0) buffer in_rays
+{
+	vec4 Origin;
+	vec4 Direction;
+} Rays;
+
+layout(std430, set = 0, binding = 0) buffer out_intersections
+{
+	vec4 Location;
+	vec4 Normal;
+	uint MaterialID;
+} Intersections;
+
+void main()
+{
+	uint gID = gl_GlobalInvocationID.x;
+
+	if(gID == 0)
+	{
+		debugPrintfEXT("Running RayIntersectionV2 Main");
+	}
+}
