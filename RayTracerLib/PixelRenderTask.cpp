@@ -13,12 +13,12 @@ using RayTracer::IImage;
 using RayTracer::Material;
 using RayTracer::Vector3;
 
-PixelRenderTask::PixelRenderTask(Pixel &pixel, unsigned int samples, std::shared_ptr<IScene> scene, std::shared_ptr<IImage> out_image) :
+PixelRenderTask::PixelRenderTask(Pixel &pixel, unsigned int samples, const IScene &scene, std::shared_ptr<IImage> out_image) :
 	pixel(pixel), samples(samples), scene(scene), out_image(out_image) {}
 
-static const IMaterial *GetMaterial(const std::shared_ptr<IScene> scene, int materialIndex)
+static const IMaterial *GetMaterial(const IScene &scene, int materialIndex)
 {
-	const auto &materials = scene->Materials();
+	const auto &materials = scene.Materials();
 	if (materialIndex < 0 || materialIndex >= materials.size())
 	{
 		return &Material::DefaultMaterial;
@@ -29,7 +29,7 @@ static const IMaterial *GetMaterial(const std::shared_ptr<IScene> scene, int mat
 	}
 }
 
-static void TraceRay(Ray &ray, const std::shared_ptr<IScene> scene)
+static void TraceRay(Ray &ray, const IScene &scene)
 {
 	const unsigned int max_bounces = 10;
 
@@ -46,7 +46,7 @@ static void TraceRay(Ray &ray, const std::shared_ptr<IScene> scene)
 		Intersection closest_intersection;
 
 		// Check for object intersections
-		for (const auto &intersectable : scene->Objects())
+		for (const auto &intersectable : scene.Objects())
 		{
 			Intersection current_intersection;
 			if (intersectable->IntersectsRay(traced_ray, current_intersection)
@@ -67,7 +67,7 @@ static void TraceRay(Ray &ray, const std::shared_ptr<IScene> scene)
 		else
 		{
 			// Intersect with the world
-			const IWorld *world = scene->World();
+			const IWorld *world = scene.World();
 			traced_ray.SetColor(traced_ray.RayColor() * world->SurfaceColor(traced_ray.Direction()));
 			break;
 		}
@@ -75,7 +75,7 @@ static void TraceRay(Ray &ray, const std::shared_ptr<IScene> scene)
 		total_bounces++;
 		if (total_bounces == max_bounces)
 		{
-			const IWorld *world = scene->World();
+			const IWorld *world = scene.World();
 			traced_ray.SetColor(traced_ray.RayColor() * world->AmbientColor());
 			break;
 		}

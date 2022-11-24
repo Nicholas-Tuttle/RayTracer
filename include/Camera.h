@@ -67,6 +67,16 @@ namespace RayTracer
 			return resolution;
 		}
 
+		float FocalLengthMM() const
+		{
+			return focalLengthMM;
+		}
+
+		float SensorWidthMM() const
+		{
+			return sensorWidthMM;
+		}
+
 		std::vector<Pixel> GetOutgoingPixels() const
 		{
 			std::vector<Pixel> pixels;

@@ -6,6 +6,7 @@
 #include <IScene.h>
 #include <CPURenderer.h>
 #include <GPURenderer.h>
+#include <GPURendererV2.h>
 #include <Scene.h>
 #include <Sphere.h>
 #include <Material.h>
@@ -17,6 +18,7 @@ using RayTracer::IScene;
 using RayTracer::Camera;
 using RayTracer::CPURenderer;
 using RayTracer::GPURenderer;
+using RayTracer::GPURendererV2;
 using RayTracer::ImageResolution;
 using RayTracer::IImage;
 using RayTracer::Color;
@@ -269,24 +271,14 @@ static bool write_png_file(const std::string &file_name, const std::vector<std::
     return true;
 }
 
-int main(int argc, char **argv)
+void run(const CommandLineArguments arguments)
 {
-    // Determine sample count from command line if possible
-    CommandLineArguments arguments;
-    parse_command_line_arguments(argc, argv, arguments);
-
-    if (arguments.ShowHelp)
-    {
-        help();
-        exit(0);
-    }
-
     std::cout << "Rendering with " << arguments.Samples << " samples" << std::endl;
 
     ImageResolution resolution(arguments.ResolutionX, arguments.ResolutionY);
 
     // Build a scene to render
-    std::shared_ptr<IScene> scene = nullptr;
+    IScene *scene = nullptr;
     std::shared_ptr<Camera> camera = nullptr;
 
     CreatePresetScene1Sphere1Light(scene, camera, resolution);
@@ -301,7 +293,7 @@ int main(int argc, char **argv)
 
         // Render on the CPU
         auto tm0 = std::chrono::high_resolution_clock::now();
-        cpu_renderer.Render(arguments.MaxThreads, *camera, arguments.Samples, scene, out_cpu_image);
+        cpu_renderer.Render(arguments.MaxThreads, *camera, arguments.Samples, *scene, out_cpu_image);
         auto tm1 = std::chrono::high_resolution_clock::now();
 
         std::chrono::duration<double, std::milli> cpuTime = tm1 - tm0;
@@ -312,23 +304,54 @@ int main(int argc, char **argv)
 
     if (arguments.RenderGPU)
     {
+        /*
         std::cout << std::endl << "Rendering on GPU" << std::endl;
         GPURenderer gpu_renderer;
         gpu_renderer.GPUDebugEnabled = arguments.GPUDebugEnabled;
-
+        
         // Provide an output pointer for the GPU image
         std::shared_ptr<IImage> out_gpu_image = nullptr;
-
+        
         // Render on the GPU
         auto tm2 = std::chrono::high_resolution_clock::now();
         gpu_renderer.Render(*camera, arguments.Samples, scene, out_gpu_image);
         auto tm3 = std::chrono::high_resolution_clock::now();
-
+        
         std::chrono::duration<double, std::milli> gpuTime = tm3 - tm2;
         std::cout << "Total GPU Time (ms): " << gpuTime.count() << std::endl;
-
+        
         write_png_file("..\\demo_gpu.png", out_gpu_image->GetColorRGBAValues());
+        */
+
+        std::cout << std::endl << "Rendering on GPU V2" << std::endl;
+        GPURendererV2 gpu_renderer_v2(*camera);
+        std::shared_ptr<IImage> out_dont_care = nullptr;
+        gpu_renderer_v2.Render(0, *scene, out_dont_care);
     }
+
 
     std::cout << std::endl;
 }
+
+#if _WIN32
+
+#include <windows.h>
+
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow) 
+{
+    // Determine sample count from command line if possible
+    CommandLineArguments arguments;
+    parse_command_line_arguments(__argc, __argv, arguments);
+
+    if (arguments.ShowHelp)
+    {
+        help();
+        exit(0);
+    }
+
+    run(arguments);
+
+    return 0;
+}
+
+#endif

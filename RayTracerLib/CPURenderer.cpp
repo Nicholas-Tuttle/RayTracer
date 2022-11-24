@@ -29,7 +29,7 @@ using RayTracer::Image;
 using RayTracer::PixelRenderTask;
 
 void CPURenderer::Render(size_t max_threads, const Camera &camera, unsigned int samples, 
-	const std::shared_ptr<IScene> scene, std::shared_ptr<IImage> &out_image)
+	const IScene &scene, std::shared_ptr<IImage> &out_image)
 {
 	auto time = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double, std::milli> cpuTime;

@@ -1,0 +1,39 @@
+// glslangValidator.exe -V -e main %(FullPath) -o $(OutDir)\..\bin\%(Filename).comp.spv
+
+#version 450
+#extension GL_EXT_debug_printf : enable
+
+//	Incoming data for colors
+//		colors
+//	Outgoing data for image
+//		colors
+
+layout (push_constant) uniform sample_count
+{
+	uint samples;
+} Samples;
+
+layout(std430, set = 0, binding = 0) buffer in_ray_colors
+{
+	vec4 Color;
+} RayColors;
+
+layout(std430, set = 0, binding = 1) buffer accumulated_colors
+{
+	vec4 Color;
+} AccumulatedColors;
+
+layout(std430, set = 0, binding = 1) buffer final_colors
+{
+	vec4 Color;
+} FinalColors;
+
+void main()
+{
+	uint gID = gl_GlobalInvocationID.x;
+
+	if(gID == 0)
+	{
+		debugPrintfEXT("Running SampleAccumulator.comp Main");
+	}
+}

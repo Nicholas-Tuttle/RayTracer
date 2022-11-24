@@ -1,4 +1,4 @@
-// glslangValidator -V -e main %(FullPath)  -o $(ProjectDir)\Diffuse.comp.spv
+// glslangValidator.exe -V -e main %(FullPath) -o $(OutDir)\..\bin\%(Filename).comp.spv
 
 #version 450
 #extension GL_EXT_debug_printf : enable
@@ -32,6 +32,6 @@ void main()
 
 	if(gID == 0)
 	{
-		debugPrintfEXT("Running RayIntersectionV2 Main");
+		debugPrintfEXT("Running Diffuse.comp Main");
 	}
 }

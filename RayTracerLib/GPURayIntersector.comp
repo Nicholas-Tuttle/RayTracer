@@ -1,10 +1,12 @@
-// glslangValidator -V -e main %(FullPath)  -o $(ProjectDir)\RayIntersectionV2.comp.spv
+// glslangValidator.exe -V -e main %(FullPath) -o $(OutDir)\..\bin\%(Filename).comp.spv
+
+// TODO: this could be threaded per-ray per-object
 
 #version 450
 #extension GL_EXT_debug_printf : enable
 
 //	Incoming data for rays
-//		origin, direction
+//		origin (camera origin), direction
 //	Outgoing data for rays
 //		intersection location, normal, material ID, (eventualy object ID too)
 
@@ -14,11 +16,17 @@ layout(std430, set = 0, binding = 0) buffer in_rays
 	vec4 Direction;
 } Rays;
 
-layout(std430, set = 0, binding = 0) buffer out_intersections
+layout(std430, set = 0, binding = 1) buffer out_intersections
 {
-	vec4 Location;
-	vec4 Normal;
-	uint MaterialID;
+	vec4 ray_origin;
+	vec4 ray_direction;
+	vec4 intersection_location;
+	vec4 intersection_normal;
+	vec4 ray_color;
+	float depth;
+	uint object_id;
+	uint face_id;
+	uint material_id;
 } Intersections;
 
 void main()

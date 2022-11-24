@@ -1,5 +1,4 @@
-// glslc.exe -fshader-stage=compute --target-env=vulkan1.3 %(FullPath) -o $(OutDir)\..\binaries\%(Filename).comp.spv
-// glslangValidator -V -e main %(FullPath)  -o $(ProjectDir)\RayIntersection.comp.spv
+// glslangValidator -V -e main %(FullPath)  -o $(OutDir)\..\bin\%(Filename).comp.spv
 
 #version 450
 #extension GL_EXT_debug_printf : enable
