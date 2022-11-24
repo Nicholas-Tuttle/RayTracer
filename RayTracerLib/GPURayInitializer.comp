@@ -1,0 +1,93 @@
+// glslangValidator.exe -V -e main %(FullPath) -o $(OutDir)\..\bin\%(Filename).comp.spv
+
+#version 450
+#extension GL_EXT_debug_printf : enable
+
+//	Incoming data
+//		camera origin, camera direction, sample count, image resolution, seed
+//	Outgoing data for rays
+//		ray origins, ray directions
+
+layout (push_constant) uniform camera_data
+{
+	vec4 Origin;
+	vec4 ForwardVector;
+	vec4 RightVector;
+	vec4 UpVector;
+	uint FocalLengthMM;
+	uint SensorWidthMM;
+	uint ResolutionX;
+	uint ResolutionY;
+	uint Seed;
+} CameraData;
+
+struct Ray
+{
+	vec4 Direction;
+};
+
+layout(std430, set = 0, binding = 0) buffer out_rays
+{
+	Ray rays[];
+} OutRays;
+
+float noise(float seed)
+{
+	return fract(cos(seed));
+}
+
+// Work group layout
+layout(local_size_x = 1024, local_size_y = 1, local_size_z = 1) in;
+void main()
+{
+	uint gID = gl_GlobalInvocationID.x;
+
+	if(gID == 0)
+	{
+		debugPrintfEXT("RayInitializationV2: [%3.2v4f], [%3.2v4f], [%3.2v4f], [%3.2v4f]", CameraData.Origin,
+			CameraData.ForwardVector, CameraData.RightVector, CameraData.UpVector);
+		debugPrintfEXT("%u, %u, %u, %u, %u, %u", CameraData.FocalLengthMM, CameraData.SensorWidthMM,
+			CameraData.ResolutionX, CameraData.ResolutionY, CameraData.Seed, OutRays.rays.length());
+	}
+	
+	if (gID > OutRays.rays.length())
+	{
+		return;
+	}
+
+	const uint pixel_x_index = gID % CameraData.ResolutionX;
+	const uint pixel_y_index = gID / CameraData.ResolutionX;
+	
+	const float camera_sensor_width_m = float(CameraData.SensorWidthMM) / 1000;
+	const float horizontal_scalar = ((float(((2 * pixel_x_index) + 1)) / CameraData.ResolutionX) - 1) * camera_sensor_width_m;
+	const float camera_sensor_height_m = float(CameraData.SensorWidthMM * CameraData.ResolutionY) / 1000 / CameraData.ResolutionX;
+	const float vertical_scalar = ((float((-1 * int(((2 * pixel_y_index) + 1)))) / CameraData.ResolutionY) + 1) * camera_sensor_height_m;
+	
+	const vec4 center_of_near_clip_plane = vec4(CameraData.Origin + (CameraData.ForwardVector * (float(CameraData.FocalLengthMM) / 1000)));
+
+	vec3 central_ray = (center_of_near_clip_plane + (CameraData.RightVector * horizontal_scalar) + 
+		(CameraData.UpVector * vertical_scalar) - CameraData.Origin).xyz;
+	
+	vec3 rightVector;
+	vec3 upVector;
+	if(central_ray == vec3(0, 1, 0))
+	{
+		rightVector = vec3(1, 0, 0);
+		upVector = vec3(0, 1, 0);
+	}
+	else
+	{
+		rightVector = normalize(cross(central_ray, vec3(0, 1, 0)));
+		upVector = normalize(cross(rightVector, central_ray));
+	}
+
+	// Get a jittered ray
+	float random1 = noise(269 * CameraData.Seed + 13) - 0.5;
+	float random2 = noise(271 * CameraData.Seed + 17) - 0.5;
+	
+	float pixel_width_m = camera_sensor_width_m / CameraData.ResolutionX;
+	float pixel_height_m = pixel_width_m;
+	vec3 ray_direction = central_ray + (rightVector * random1 * pixel_width_m) + (upVector * random2 * pixel_height_m);
+
+	OutRays.rays[gID].Direction = vec4(ray_direction, 0);
+}

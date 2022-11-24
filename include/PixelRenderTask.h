@@ -13,12 +13,12 @@ namespace RayTracer
 	{
 	public:
 		PixelRenderTask(Pixel &pixel, unsigned int samples, 
-			std::shared_ptr<IScene> scene, std::shared_ptr<IImage> out_image);
+			const IScene &scene, std::shared_ptr<IImage> out_image);
 		void Execute() override;
 	private:
 		Pixel &pixel;
 		unsigned int samples;
-		std::shared_ptr<IScene> scene;
+		const IScene &scene;
 		std::shared_ptr<IImage> out_image;
 	};
 }

@@ -69,13 +69,13 @@ namespace RayTracer
 
 		Color operator*(float scalar) const
 		{
-			return Color(scalar * float_r, scalar * float_g, scalar * float_b, std::max(0.0f, std::min<float>(scalar * float_a, 1.0f)));
+			return Color(scalar * float_r, scalar * float_g, scalar * float_b, std::max<float>(0.0f, std::min<float>(scalar * float_a, 1.0f)));
 		}
 
 		Color operator+(const Color &color) const
 		{
 			return Color(float_r + color.float_r, float_g + color.float_g, float_b + color.float_b, 
-				std::max(0.0f, std::min<float>(float_a + color.float_a, 1.0f)));
+				std::max<float>(0.0f, std::min<float>(float_a + color.float_a, 1.0f)));
 		}
 
 		png_byte R() const { return r; }

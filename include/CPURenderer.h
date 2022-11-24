@@ -10,7 +10,7 @@ namespace RayTracer
 	{
 	public:
 		void Render(size_t max_threads, const Camera& camera, unsigned int samples, 
-			const std::shared_ptr<IScene> scene, std::shared_ptr<IImage> &out_image);
+			const IScene &scene, std::shared_ptr<IImage> &out_image);
 	};
 }
 

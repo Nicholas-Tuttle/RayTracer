@@ -24,7 +24,7 @@ namespace RayTracer
         return RayTracer::Lerp<float>(min, max, (float)rand() / RAND_MAX);
     }
 
-	static void CreatePresetScene1(std::shared_ptr<IScene> &out_scene, std::shared_ptr<Camera> &out_camera, ImageResolution resolution)
+	static void CreatePresetScene1(IScene *&out_scene, std::shared_ptr<Camera> &out_camera, ImageResolution resolution)
 	{
         out_camera = std::shared_ptr<Camera>(new Camera(resolution, Vector3<float>(0, 0.25f, 0), Vector3<float>(1, 0, 0), 50, 18));
 
@@ -47,10 +47,10 @@ namespace RayTracer
         scene->AddObject(new Sphere(Vector3<float>( 16,   -1,     4),   1.0f,   5));
         scene->AddObject(new Sphere(Vector3<float>( 12,    0,     4),   1.0f,   6));
 
-        out_scene = std::shared_ptr<IScene>(scene);
+        out_scene = scene;
 	}
 
-    static void CreatePresetScene1Sphere1Light(std::shared_ptr<IScene> &out_scene, std::shared_ptr<Camera> &out_camera, ImageResolution resolution)
+    static void CreatePresetScene1Sphere1Light(IScene *&out_scene, std::shared_ptr<Camera> &out_camera, ImageResolution resolution)
     {
         out_camera = std::shared_ptr<Camera>(new Camera(resolution, Vector3<float>(0, 0, 0), Vector3<float>(1, 0, 0), 50, 18));
 
@@ -63,10 +63,10 @@ namespace RayTracer
         scene->AddObject(new Sphere(Vector3<float>(5, 0, -1), 0.5f, 0));
         scene->AddObject(new Sphere(Vector3<float>(5, 0, 1), 0.1f, 1));
 
-        out_scene = std::shared_ptr<IScene>(scene);
+        out_scene = scene;
     }
 
-	static void CreatePresetSceneSphereArray(std::shared_ptr<IScene> &out_scene, std::shared_ptr<Camera> &out_camera, ImageResolution resolution)
+	static void CreatePresetSceneSphereArray(IScene *&out_scene, std::shared_ptr<Camera> &out_camera, ImageResolution resolution)
 	{
         float sphere_array_count = 15;
 
@@ -86,6 +86,6 @@ namespace RayTracer
             }
         }
 
-        out_scene = std::shared_ptr<IScene>(scene);
+        out_scene = scene;
 	}
 }

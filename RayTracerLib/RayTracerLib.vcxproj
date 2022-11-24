@@ -39,8 +39,10 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(solutiondir)\lib\</OutDir>
+    <OutDir>$(SolutionDir)\lib\</OutDir>
     <IncludePath>$(SOLUTIONDIR)\include;$(LIBPNG);$(VULKAN_SDK)\Include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <EnableClangTidyCodeAnalysis>false</EnableClangTidyCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SOLUTIONDIR)\include;$(LIBPNG);$(VULKAN_SDK)\Include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
@@ -50,7 +52,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;RAYTRACERLIB_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>VK_USE_PLATFORM_WIN32_KHR;_DEBUG;RAYTRACERLIB_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
@@ -69,26 +71,45 @@
     <ClCompile>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <PreprocessorDefinitions>VK_USE_PLATFORM_WIN32_KHR</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="DiffuseBSDF.cpp" />
     <ClCompile Include="EmissiveBSDF.cpp" />
     <ClCompile Include="GlossyBSDF.cpp" />
+    <ClCompile Include="GPUComputeShader.cpp" />
+    <ClCompile Include="GPUDiffuseMaterial.cpp" />
+    <ClCompile Include="GPURayInitializer.cpp" />
+    <ClCompile Include="GPURayIntersector.cpp" />
     <ClCompile Include="GPURenderer.cpp" />
+    <ClCompile Include="GPURendererV2.cpp" />
+    <ClCompile Include="GPUSampleAccumulator.cpp" />
+    <ClCompile Include="GPUWorldMaterial.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="PixelRenderTask.cpp" />
     <ClCompile Include="PrincipledBSDF.cpp" />
     <ClCompile Include="Shaders\RayIntersection.cpp" />
     <ClCompile Include="ThreadPool.cpp" />
+    <ClCompile Include="VulkanUtils.cpp" />
     <ClCompile Include="World.cpp" />
     <ClInclude Include="..\include\Camera.h" />
     <ClInclude Include="..\include\Color.h" />
     <ClInclude Include="..\include\CPURenderer.h" />
+    <ClInclude Include="..\include\GPUComputeShader.h" />
+    <ClInclude Include="..\include\GPUDiffuseMaterial.h" />
     <ClInclude Include="..\include\DiffuseBSDF.h" />
+    <ClInclude Include="..\include\ElapsedTimer.h" />
     <ClInclude Include="..\include\EmissiveBSDF.h" />
     <ClInclude Include="..\include\GlossyBSDF.h" />
+    <ClInclude Include="..\include\GPURayInitializer.h" />
+    <ClInclude Include="..\include\GPURayIntersector.h" />
+    <ClInclude Include="..\include\GPUStructs.h" />
     <ClInclude Include="..\include\GPURenderer.h" />
+    <ClInclude Include="..\include\GPURendererV2.h" />
+    <ClInclude Include="..\include\GPUSampleAccumulator.h" />
+    <ClInclude Include="..\include\GPUWorldMaterial.h" />
+    <ClInclude Include="..\include\IGPUMaterial.h" />
     <ClInclude Include="..\include\IImage.h" />
     <ClInclude Include="..\include\IIntersectable.h" />
     <ClInclude Include="..\include\Image.h" />
@@ -107,6 +128,7 @@
     <ClInclude Include="..\include\ThreadPool.h" />
     <ClInclude Include="..\include\Utilities.h" />
     <ClInclude Include="..\include\Vector3.h" />
+    <ClInclude Include="..\include\VulkanUtils.h" />
     <ClInclude Include="..\include\World.h" />
     <ClInclude Include="Shaders\RayIntersection.h" />
   </ItemGroup>
@@ -119,7 +141,7 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling Ray Intersection Shader</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(FullPath)</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">glslangValidator.exe -V -e main %(FullPath) -o $(OutDir)\..\bin\%(Filename).comp.spv</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\..\bin\%(FileName).comp.spv</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
@@ -127,16 +149,59 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="RayIntersectionV2.comp">
+    <CustomBuild Include="GPURayIntersector.comp">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
-    </FxCompile>
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">glslangValidator.exe -V -e main %(FullPath) -o $(OutDir)\..\bin\%(Filename).comp.spv</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\..\bin\%(FileName).comp.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <BuildInParallel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</BuildInParallel>
+    </CustomBuild>
+    <CustomBuild Include="GPUSampleAccumulator.comp">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">glslangValidator.exe -V -e main %(FullPath) -o $(OutDir)\..\bin\%(Filename).comp.spv</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\..\bin\%(FileName).comp.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <BuildInParallel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</BuildInParallel>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Diffuse.comp" />
-    <None Include="RayInitializationV2.comp" />
+    <CustomBuild Include="GPUDiffuseMaterial.comp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">glslangValidator.exe -V -e main %(FullPath) -o $(OutDir)\..\bin\%(Filename).comp.spv</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\..\bin\%(FileName).comp.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <BuildInParallel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</BuildInParallel>
+    </CustomBuild>
+    <CustomBuild Include="GPURayInitializer.comp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">glslangValidator.exe -V -e main %(FullPath) -o $(OutDir)\..\bin\%(Filename).comp.spv</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\..\bin\%(FileName).comp.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <BuildInParallel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</BuildInParallel>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="GPUWorldMaterial.comp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">glslangValidator.exe -V -e main %(FullPath) -o $(OutDir)\..\bin\%(Filename).comp.spv</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\..\bin\%(FileName).comp.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <BuildInParallel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</BuildInParallel>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(FullPath)</Message>
+    </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
