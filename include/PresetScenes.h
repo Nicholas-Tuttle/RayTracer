@@ -24,9 +24,9 @@ namespace RayTracer
         return RayTracer::Lerp<float>(min, max, (float)rand() / RAND_MAX);
     }
 
-	static void CreatePresetScene1(IScene *&out_scene, std::shared_ptr<Camera> &out_camera, ImageResolution resolution)
+	static void CreatePresetScene1(IScene *&out_scene, Camera *&out_camera, ImageResolution resolution)
 	{
-        out_camera = std::shared_ptr<Camera>(new Camera(resolution, Vector3<float>(0, 0.25f, 0), Vector3<float>(1, 0, 0), 50, 18));
+        out_camera = new Camera(resolution, Vector3<float>(0, 0.25f, 0), Vector3<float>(1, 0, 0), 50, 18);
 
         // Build a scene to render
         Scene *scene = new Scene();
@@ -50,9 +50,9 @@ namespace RayTracer
         out_scene = scene;
 	}
 
-    static void CreatePresetScene1Sphere1Light(IScene *&out_scene, std::shared_ptr<Camera> &out_camera, ImageResolution resolution)
+    static void CreatePresetScene1Sphere1Light(IScene *&out_scene, Camera *&out_camera, ImageResolution resolution)
     {
-        out_camera = std::shared_ptr<Camera>(new Camera(resolution, Vector3<float>(0, 0, 0), Vector3<float>(1, 0, 0), 50, 18));
+        out_camera = new Camera(resolution, Vector3<float>(0, 0, 0), Vector3<float>(1, 0, 0), 50, 18);
 
         // Build a scene to render
         Scene *scene = new Scene();
@@ -66,13 +66,13 @@ namespace RayTracer
         out_scene = scene;
     }
 
-	static void CreatePresetSceneSphereArray(IScene *&out_scene, std::shared_ptr<Camera> &out_camera, ImageResolution resolution)
+	static void CreatePresetSceneSphereArray(IScene *&out_scene, Camera *&out_camera, ImageResolution resolution)
 	{
         float sphere_array_count = 15;
 
-        out_camera = std::shared_ptr<Camera>(new Camera(resolution,
+        out_camera = new Camera(resolution,
             Vector3<float>((sphere_array_count - 1) / 2, sphere_array_count * 2.5f, (sphere_array_count - 1) / 2),
-            Vector3<float>(0, -1, 0), 50, 18));
+            Vector3<float>(0, -1, 0), 50, 18);
 
         // Build a scene to render
         Scene *scene = new Scene(); 

@@ -36,6 +36,11 @@ namespace RayTracer
 			float_r(R), float_g(G), float_b(B), float_a(A)
 		{};
 
+		Color(const Color &other)
+			: r(other.r), g(other.g), b(other.b), a(other.a),
+			float_r(other.float_r), float_g(other.float_g), float_b(other.float_b), float_a(other.float_a)
+		{}
+
 		void operator=(const Color &color)
 		{
 			r = color.r;

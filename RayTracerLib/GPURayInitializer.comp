@@ -18,7 +18,9 @@ layout (push_constant) uniform camera_data
 	uint SensorWidthMM;
 	uint ResolutionX;
 	uint ResolutionY;
+	uint Samples;
 	uint Seed;
+	uint Offset;
 } CameraData;
 
 struct Ray
@@ -46,17 +48,22 @@ void main()
 	{
 		debugPrintfEXT("RayInitializationV2: [%3.2v4f], [%3.2v4f], [%3.2v4f], [%3.2v4f]", CameraData.Origin,
 			CameraData.ForwardVector, CameraData.RightVector, CameraData.UpVector);
-		debugPrintfEXT("%u, %u, %u, %u, %u, %u", CameraData.FocalLengthMM, CameraData.SensorWidthMM,
-			CameraData.ResolutionX, CameraData.ResolutionY, CameraData.Seed, OutRays.rays.length());
+		debugPrintfEXT("%u, %u, %u, %u, %u, %u, %u, %u", CameraData.FocalLengthMM, CameraData.SensorWidthMM,
+			CameraData.ResolutionX, CameraData.ResolutionY, CameraData.Samples, CameraData.Seed, CameraData.Offset, OutRays.rays.length());
 	}
-	
-	if (gID > OutRays.rays.length())
+
+	// Universal ID across any ray initialization buffers
+	uint uID = gID + CameraData.Offset;
+
+	if (gID > OutRays.rays.length() || uID >= (CameraData.ResolutionX * CameraData.ResolutionY * CameraData.Samples))
 	{
 		return;
 	}
-
-	const uint pixel_x_index = gID % CameraData.ResolutionX;
-	const uint pixel_y_index = gID / CameraData.ResolutionX;
+	
+	uint local_ID = uID / CameraData.Samples;
+	
+	const uint pixel_x_index = local_ID % CameraData.ResolutionX;
+	const uint pixel_y_index = local_ID / CameraData.ResolutionX;
 	
 	const float camera_sensor_width_m = float(CameraData.SensorWidthMM) / 1000;
 	const float horizontal_scalar = ((float(((2 * pixel_x_index) + 1)) / CameraData.ResolutionX) - 1) * camera_sensor_width_m;
@@ -82,8 +89,9 @@ void main()
 	}
 
 	// Get a jittered ray
-	float random1 = noise(269 * CameraData.Seed + 13) - 0.5;
-	float random2 = noise(271 * CameraData.Seed + 17) - 0.5;
+	uint sample_number = uID % CameraData.Samples;
+	float random1 = noise(269 * (CameraData.Seed + sample_number) + 13) - 0.5;
+	float random2 = noise(271 * (CameraData.Seed + sample_number) + 17) - 0.5;
 	
 	float pixel_width_m = camera_sensor_width_m / CameraData.ResolutionX;
 	float pixel_height_m = pixel_width_m;

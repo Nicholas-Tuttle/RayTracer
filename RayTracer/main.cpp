@@ -271,17 +271,27 @@ static bool write_png_file(const std::string &file_name, const std::vector<std::
     return true;
 }
 
-void run(const CommandLineArguments arguments)
+int main(int argc, char **argv)
 {
+    // Determine sample count from command line if possible
+    CommandLineArguments arguments;
+    parse_command_line_arguments(argc, argv, arguments);
+
+    if (arguments.ShowHelp)
+    {
+        help();
+        exit(0);
+    }
+
     std::cout << "Rendering with " << arguments.Samples << " samples" << std::endl;
 
     ImageResolution resolution(arguments.ResolutionX, arguments.ResolutionY);
 
     // Build a scene to render
     IScene *scene = nullptr;
-    std::shared_ptr<Camera> camera = nullptr;
+    Camera *camera = nullptr;
 
-    CreatePresetScene1Sphere1Light(scene, camera, resolution);
+    CreatePresetScene1(scene, camera, resolution);
 
     if (arguments.RenderCPU)
     {
@@ -324,34 +334,14 @@ void run(const CommandLineArguments arguments)
         */
 
         std::cout << std::endl << "Rendering on GPU V2" << std::endl;
-        GPURendererV2 gpu_renderer_v2(*camera);
+        GPURendererV2 gpu_renderer_v2(*camera, arguments.Samples);
         std::shared_ptr<IImage> out_dont_care = nullptr;
-        gpu_renderer_v2.Render(0, *scene, out_dont_care);
+        gpu_renderer_v2.Render(*scene, out_dont_care);
     }
 
 
     std::cout << std::endl;
-}
-
-#if _WIN32
-
-#include <windows.h>
-
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow) 
-{
-    // Determine sample count from command line if possible
-    CommandLineArguments arguments;
-    parse_command_line_arguments(__argc, __argv, arguments);
-
-    if (arguments.ShowHelp)
-    {
-        help();
-        exit(0);
-    }
-
-    run(arguments);
 
     return 0;
 }
 
-#endif
