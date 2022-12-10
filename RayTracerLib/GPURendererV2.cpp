@@ -26,7 +26,9 @@ using RayTracer::GPUDiffuseMaterial;
 
 using RayTracer::GPUSampleAccumulator;
 
-GPURendererV2::GPURendererV2(const Camera &camera) : camera(camera)
+static const vk::DeviceSize RayBufferSize = 1024 * 1024;
+
+GPURendererV2::GPURendererV2(const Camera &camera, unsigned int samples) : camera(camera), samples(samples)
 {
 	ElapsedTimer performance_timer;
 
@@ -35,7 +37,7 @@ GPURendererV2::GPURendererV2(const Camera &camera) : camera(camera)
 	if (!VKUtils::VerifyInstanceLayers(VKUtils::DebugInstanceLayers) ||
 		!VKUtils::VerifyInstanceExtensions(VKUtils::DebugInstanceExtensions))
 	{
-		return;
+		throw std::exception("Failed to verify instance layers or extensions");
 	}
 
 	instance = VKUtils::CreateHeadlessVulkanInstance(VKUtils::DebugInstanceLayers, VKUtils::DebugInstanceExtensions,
@@ -47,46 +49,45 @@ GPURendererV2::GPURendererV2(const Camera &camera) : camera(camera)
 	VKUtils::EnumerateDevices(instance, devices);
 	if (devices.size() == 0)
 	{
-		return;
+		throw std::exception("Failed to enumerate devices");
 	}
 
 	PhysicalDevice = devices[0];
 
 	if (vk::Result::eSuccess != VKUtils::GetBestComputeQueue(PhysicalDevice, ComputeQueueIndex))
 	{
-		return;
+		throw std::exception("Failed to get best compute queue");
 	}
 
 	device = VKUtils::CreateDevice(PhysicalDevice, ComputeQueueIndex);
 
 	BufferData.resize((size_t)GPUBufferBindings::GPUBufferBindingCount);
 
-	BufferData[(int)GPUBufferBindings::ray_buffer].buffer_size = sizeof(GPURay) * camera.Resolution().X * camera.Resolution().Y;
+	size_t total_rays = camera.Resolution().X * camera.Resolution().Y * samples;
+	size_t ray_buffer_count = total_rays / RayBufferSize + ((total_rays % RayBufferSize) > 0 ? 1 : 0);
+	std::cout << "Total ray buffers needed for " << total_rays << " rays with buffer of size " << RayBufferSize << ": " << ray_buffer_count << std::endl;
+
+	BufferData[(int)GPUBufferBindings::ray_buffer].buffer_size = sizeof(GPURay) * RayBufferSize;
 	BufferData[(int)GPUBufferBindings::ray_buffer].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::ray_buffer].descriptor_type = vk::DescriptorType::eStorageBuffer;
-	BufferData[(int)GPUBufferBindings::ray_buffer].data_pointer = (void **)&gpu_ray_buffer;
+	BufferData[(int)GPUBufferBindings::ray_buffer].data_pointers = &gpu_ray_buffers;
 
-	BufferData[(int)GPUBufferBindings::intersection_buffer].buffer_size = sizeof(GPUIntersection) * camera.Resolution().X * camera.Resolution().Y;
-	BufferData[(int)GPUBufferBindings::intersection_buffer].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
-	BufferData[(int)GPUBufferBindings::intersection_buffer].descriptor_type = vk::DescriptorType::eStorageBuffer;
-	BufferData[(int)GPUBufferBindings::intersection_buffer].data_pointer = (void **)&gpu_intersection_buffer;
+	BufferData[(int)GPUBufferBindings::ray_buffer].resize(ray_buffer_count);
 
 	if (vk::Result::eSuccess != CreateAndMapMemories(ComputeQueueIndex))
 	{
 		throw std::exception("Failed to create and map memories for compute shader");
 	}
 
-	if (nullptr == gpu_ray_buffer || nullptr == gpu_intersection_buffer)
+	for (const auto buffer : gpu_ray_buffers)
 	{
-		throw std::exception("Buffer data for GPU compute failed to allocate");
+		if (nullptr == buffer)
+		{
+			throw std::exception("Ray initialization buffer data for GPU compute failed to allocate");
+		}
 	}
 
 	std::cout << "GPU Renderer initialization took" << ": line " << __LINE__ << ": time (ms): " << performance_timer.Poll().count() << std::endl;
-}
-
-GPURendererV2::GPURendererV2(const Camera &camera, HINSTANCE hInstance) : GPURendererV2(camera)
-{
-
 }
 
 void *GPURendererV2::CreateAndMapMemory(uint32_t queueFamilyIndex, const vk::DeviceSize memorySize, const vk::BufferUsageFlags usage_flags,
@@ -146,37 +147,41 @@ vk::Result GPURendererV2::CreateAndMapMemories(uint32_t queueFamilyIndex)
 
 	for (auto &buffer_data : BufferData)
 	{
-		if (nullptr == (*buffer_data.data_pointer = CreateAndMapMemory(queueFamilyIndex, buffer_data.buffer_size, buffer_data.usage_flag_bits,
-			buffer_data.buffer, buffer_data.device_memory)))
+		for (size_t i = 0; i < buffer_data.data_pointers->size(); i++)
 		{
-			result = vk::Result::eErrorMemoryMapFailed;
+			if (nullptr == ((*buffer_data.data_pointers)[i] = CreateAndMapMemory(queueFamilyIndex, buffer_data.buffer_size, buffer_data.usage_flag_bits,
+				buffer_data.buffers[i], buffer_data.device_memories[i])))
+			{
+				result = vk::Result::eErrorMemoryMapFailed;
+			}
 		}
 	}
 
 	return result;
 }
 
-void GPURendererV2::Render(unsigned int samples, const IScene &scene, std::shared_ptr<IImage> &out_image)
+void GPURendererV2::Render(const IScene &scene, std::shared_ptr<IImage> &out_image)
 {
 	ElapsedTimer performance_timer;
 
 	std::cout << "[RENDER STARTED]" << ": line " << __LINE__ << ": time (ms): " << performance_timer.Poll().count() << std::endl;
 
-	GPURayInitializer ray_initializer(device, camera, camera.Resolution().X, camera.Resolution().Y, 
-		gpu_ray_buffer, BufferData[(int)GPUBufferBindings::ray_buffer].buffer);
-	ray_initializer.Execute(ComputeQueueIndex);
-
-	for (size_t i = 0; i < camera.Resolution().X * camera.Resolution().Y; i++)
+	GPURayInitializer ray_initializer(device, camera, camera.Resolution().X, camera.Resolution().Y, samples);
+	
+	for (size_t i = 0; i < BufferData[(int)GPUBufferBindings::ray_buffer].buffers.size(); i++)
 	{
-		std::cout << gpu_ray_buffer[i].direction[0] << " "
-			<< gpu_ray_buffer[i].direction[1] << " "
-			<< gpu_ray_buffer[i].direction[2] << " "
-			<< gpu_ray_buffer[i].direction[3] << std::endl;
-	}
+		ray_initializer.Execute(ComputeQueueIndex, RayBufferSize * i, BufferData[(int)GPUBufferBindings::ray_buffer].buffers[i]);
 
-	GPURayIntersector ray_intersector(device, camera.Resolution().X * camera.Resolution().Y, gpu_ray_buffer, gpu_intersection_buffer, 
-		BufferData[(int)GPUBufferBindings::ray_buffer].buffer, BufferData[(int)GPUBufferBindings::intersection_buffer].buffer);
-	ray_intersector.Execute(ComputeQueueIndex);
+#ifdef _DEBUG
+		std::cout << "---- initialized ray values for ray initialization buffer " << i << " ----" << std::endl;
+		for (size_t j = 0, max = 0; j < RayBufferSize && max < 100; j++, max++)
+		{
+			std::cout << std::fixed << std::setprecision(9) << j << ":\t" << ((GPURay *)gpu_ray_buffers[i])[j].direction[0] << "\t\t"
+				<< ((GPURay *)gpu_ray_buffers[i])[j].direction[1] << "\t\t" << ((GPURay *)gpu_ray_buffers[i])[j].direction[2] << std::endl;
+		}
+		std::cout << "---- ----" << std::endl;
+#endif
+	}
 
 	std::cout << "[RENDER TIME]" << ": line " << __LINE__ << ": time (ms): " << performance_timer.Poll().count() << std::endl;
 }

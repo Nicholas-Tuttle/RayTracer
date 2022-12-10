@@ -8,9 +8,9 @@ using RayTracer::VKUtils;
 
 const static size_t shader_local_size_x = 1024;
 
-GPURayInitializer::GPURayInitializer(vk::Device device, const Camera &camera, size_t resolution_x, size_t resolution_y,
-	GPURay *gpu_ray_buffer, vk::Buffer output_ray_buffer)
-	: ResolutionX(resolution_x), ResolutionY(resolution_y), OutputRayBuffer(output_ray_buffer), CameraDataPushConstants(),
+GPURayInitializer::GPURayInitializer(vk::Device device, const Camera &camera, size_t resolution_x, size_t resolution_y, 
+	unsigned int samples)
+	: ResolutionX(resolution_x), ResolutionY(resolution_y), CameraDataPushConstants(),
 	GPUComputeShader("GPURayInitializer.comp.spv", device)
 {
 	std::cout << __FUNCTION__ << std::endl;
@@ -37,7 +37,12 @@ GPURayInitializer::GPURayInitializer(vk::Device device, const Camera &camera, si
 	CameraDataPushConstants.resolution_x = resolution_x;
 	CameraDataPushConstants.resolution_y = resolution_y;
 
+	CameraDataPushConstants.samples = samples;
+
 	CameraDataPushConstants.seed = 0;
+
+	// This is set later in the execution function
+	CameraDataPushConstants.offset = 0;
 
 	ShaderModule = CreateShaderModule();
 	if (ShaderModule == static_cast<vk::ShaderModule>(nullptr))
@@ -56,7 +61,7 @@ GPURayInitializer::GPURayInitializer(vk::Device device, const Camera &camera, si
 		throw std::exception("Failed to create pipeline layout");
 	}
 
-	AllocateAndUpdateDescriptorSets();
+	DescriptorSets = AllocateDescriptorSets();
 }
 
 vk::DescriptorSetLayout GPURayInitializer::DescribeShader()
@@ -130,12 +135,12 @@ std::vector<vk::DescriptorSet> GPURayInitializer::AllocateDescriptorSets()
 	return Device.allocateDescriptorSets(descriptorSetAllocateInfo);
 }
 
-void GPURayInitializer::UpdateDescriptorSets(std::vector<vk::DescriptorSet> &descriptorSet)
+void GPURayInitializer::UpdateDescriptorSets(std::vector<vk::DescriptorSet> &descriptorSet, vk::Buffer output_ray_buffer)
 {
 	vk::DescriptorBufferInfo writeDescriptorSetBufferInfo[1] = {};
 	vk::WriteDescriptorSet writeDescriptorSet[1] = {};
 
-	writeDescriptorSetBufferInfo[0].buffer = OutputRayBuffer;
+	writeDescriptorSetBufferInfo[0].buffer = output_ray_buffer;
 	writeDescriptorSetBufferInfo[0].offset = 0;
 	writeDescriptorSetBufferInfo[0].range = VK_WHOLE_SIZE;
 
@@ -148,14 +153,12 @@ void GPURayInitializer::UpdateDescriptorSets(std::vector<vk::DescriptorSet> &des
 	Device.updateDescriptorSets(1, writeDescriptorSet, 0, nullptr);
 }
 
-void GPURayInitializer::AllocateAndUpdateDescriptorSets()
+void GPURayInitializer::Execute(uint32_t ComputeQueueIndex, size_t offset, vk::Buffer output_ray_buffer)
 {
-	DescriptorSets = AllocateDescriptorSets();
-	UpdateDescriptorSets(DescriptorSets);
-}
+	CameraDataPushConstants.offset = offset;
 
-void GPURayInitializer::Execute(uint32_t ComputeQueueIndex)
-{
+	UpdateDescriptorSets(DescriptorSets, output_ray_buffer);
+
 	vk::CommandPoolCreateInfo commandPoolCreateInfo = {};
 	commandPoolCreateInfo.queueFamilyIndex = ComputeQueueIndex;
 

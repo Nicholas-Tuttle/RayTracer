@@ -12,23 +12,19 @@ namespace RayTracer
 	{
 	public:
 		GPURayInitializer(vk::Device device, const Camera &camera, size_t resolution_x, size_t resolution_y,
-			GPURay *gpu_ray_buffer, vk::Buffer output_ray_buffer);
-		void Execute(uint32_t ComputeQueueIndex);
+			unsigned int samples);
+		void Execute(uint32_t ComputeQueueIndex, size_t offset, vk::Buffer output_ray_buffer);
 	private:
 		vk::DescriptorSetLayout DescribeShader();
 		vk::Result CreatePipeline();
-		void AllocateAndUpdateDescriptorSets();
 		std::vector<vk::DescriptorSet> AllocateDescriptorSets();
-		void UpdateDescriptorSets(std::vector<vk::DescriptorSet> &descriptorSet);
+		void UpdateDescriptorSets(std::vector<vk::DescriptorSet> &descriptorSet, vk::Buffer output_ray_buffer);
 
 		GPURayInitializer(const GPURayInitializer &other) = delete;
 		GPURayInitializer(const GPURayInitializer &&other) = delete;
 
 		size_t ResolutionX;
 		size_t ResolutionY;
-
-		vk::Buffer OutputRayBuffer = nullptr;
-		GPURay *gpu_ray_buffer = nullptr;
 
 		struct push_constants
 		{
@@ -42,7 +38,9 @@ namespace RayTracer
 				sensor_width_mm = 0;
 				resolution_x = 0;
 				resolution_y = 0;
+				samples = 1;
 				seed = 0;
+				offset = 0;
 			}
 
 			float camera_origin[4];
@@ -53,7 +51,9 @@ namespace RayTracer
 			unsigned int sensor_width_mm;
 			unsigned int resolution_x;
 			unsigned int resolution_y;
+			unsigned int samples;
 			unsigned int seed;
+			unsigned int offset;
 		} CameraDataPushConstants;
 	};
 }
