@@ -160,6 +160,11 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\..\bin\%(FileName).comp.spv</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
       <BuildInParallel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</BuildInParallel>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">glslangValidator.exe -V -e main %(FullPath) -o $(OutDir)\..\bin\%(Filename).comp.spv</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\..\bin\%(FileName).comp.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <BuildInParallel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</BuildInParallel>
     </CustomBuild>
     <CustomBuild Include="GPUSampleAccumulator.comp">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
@@ -192,6 +197,11 @@
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
       <BuildInParallel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</BuildInParallel>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(FullPath)</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">glslangValidator.exe -V -e main %(FullPath) -o $(OutDir)\..\bin\%(Filename).comp.spv</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\..\bin\%(FileName).comp.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <BuildInParallel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</BuildInParallel>
     </CustomBuild>
     <CustomBuild Include="GPUWorldMaterial.comp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
@@ -201,6 +211,11 @@
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
       <BuildInParallel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</BuildInParallel>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(FullPath)</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">glslangValidator.exe -V -e main %(FullPath) -o $(OutDir)\..\bin\%(Filename).comp.spv</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\..\bin\%(FileName).comp.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <BuildInParallel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</BuildInParallel>
     </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

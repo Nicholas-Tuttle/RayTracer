@@ -8,47 +8,10 @@ using RayTracer::VKUtils;
 
 const static size_t shader_local_size_x = 1024;
 
-GPURayInitializer::GPURayInitializer(vk::Device device, const Camera &camera, size_t resolution_x, size_t resolution_y, 
-	unsigned int samples)
-	: ResolutionX(resolution_x), ResolutionY(resolution_y), CameraDataPushConstants(),
-	GPUComputeShader("GPURayInitializer.comp.spv", device)
+GPURayInitializer::GPURayInitializer(vk::Device device)
+	: CameraDataPushConstants(), GPUComputeShader("GPURayInitializer.comp.spv", device)
 {
 	std::cout << __FUNCTION__ << std::endl;
-
-	CameraDataPushConstants.camera_origin[0] = camera.Position().X;
-	CameraDataPushConstants.camera_origin[1] = camera.Position().Y;
-	CameraDataPushConstants.camera_origin[2] = camera.Position().Z;
-
-	CameraDataPushConstants.forward_vector[0] = camera.ForwardVector().X;
-	CameraDataPushConstants.forward_vector[1] = camera.ForwardVector().Y;
-	CameraDataPushConstants.forward_vector[2] = camera.ForwardVector().Z;
-
-	CameraDataPushConstants.right_vector[0] = camera.RightVector().X;
-	CameraDataPushConstants.right_vector[1] = camera.RightVector().Y;
-	CameraDataPushConstants.right_vector[2] = camera.RightVector().Z;
-
-	CameraDataPushConstants.up_vector[0] = camera.UpVector().X;
-	CameraDataPushConstants.up_vector[1] = camera.UpVector().Y;
-	CameraDataPushConstants.up_vector[2] = camera.UpVector().Z;
-
-	CameraDataPushConstants.focal_length_mm = camera.FocalLengthMM();
-	CameraDataPushConstants.sensor_width_mm = camera.SensorWidthMM();
-
-	CameraDataPushConstants.resolution_x = resolution_x;
-	CameraDataPushConstants.resolution_y = resolution_y;
-
-	CameraDataPushConstants.samples = samples;
-
-	CameraDataPushConstants.seed = 0;
-
-	// This is set later in the execution function
-	CameraDataPushConstants.offset = 0;
-
-	ShaderModule = CreateShaderModule();
-	if (ShaderModule == static_cast<vk::ShaderModule>(nullptr))
-	{
-		throw std::exception("Failed to create shader module");
-	}
 
 	DescriptorSetLayout = DescribeShader();
 	if (DescriptorSetLayout == static_cast<vk::DescriptorSetLayout>(nullptr))
@@ -153,8 +116,32 @@ void GPURayInitializer::UpdateDescriptorSets(std::vector<vk::DescriptorSet> &des
 	Device.updateDescriptorSets(1, writeDescriptorSet, 0, nullptr);
 }
 
-void GPURayInitializer::Execute(uint32_t ComputeQueueIndex, size_t offset, vk::Buffer output_ray_buffer)
+void GPURayInitializer::Execute(uint32_t ComputeQueueIndex, Vector3<float> origin, Vector3<float> forward_vector, 
+	Vector3<float> right_vector, Vector3<float> up_vector, float focal_length_mm, float sensor_width_mm,
+	size_t resolution_x, size_t resolution_y, size_t samples, size_t seed, size_t offset, vk::Buffer output_ray_buffer)
 {
+	CameraDataPushConstants.camera_origin[0] = origin.X;
+	CameraDataPushConstants.camera_origin[1] = origin.Y;
+	CameraDataPushConstants.camera_origin[2] = origin.Z;
+
+	CameraDataPushConstants.forward_vector[0] = forward_vector.X;
+	CameraDataPushConstants.forward_vector[1] = forward_vector.Y;
+	CameraDataPushConstants.forward_vector[2] = forward_vector.Z;
+
+	CameraDataPushConstants.right_vector[0] = right_vector.X;
+	CameraDataPushConstants.right_vector[1] = right_vector.Y;
+	CameraDataPushConstants.right_vector[2] = right_vector.Z;
+
+	CameraDataPushConstants.up_vector[0] = up_vector.X;
+	CameraDataPushConstants.up_vector[1] = up_vector.Y;
+	CameraDataPushConstants.up_vector[2] = up_vector.Z;
+
+	CameraDataPushConstants.focal_length_mm = focal_length_mm;
+	CameraDataPushConstants.sensor_width_mm = sensor_width_mm;
+	CameraDataPushConstants.resolution_x = resolution_x;
+	CameraDataPushConstants.resolution_y = resolution_y;
+	CameraDataPushConstants.samples = samples;
+	CameraDataPushConstants.seed = seed;
 	CameraDataPushConstants.offset = offset;
 
 	UpdateDescriptorSets(DescriptorSets, output_ray_buffer);
@@ -175,7 +162,7 @@ void GPURayInitializer::Execute(uint32_t ComputeQueueIndex, size_t offset, vk::B
 	vk::CommandBufferBeginInfo commandBufferBeginInfo = {};
 	commandBufferBeginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 
-	uint32_t group_count_x = (uint32_t)std::ceil((float)(ResolutionX * ResolutionY) / (float)shader_local_size_x);
+	uint32_t group_count_x = (uint32_t)std::ceil((float)(resolution_x * resolution_y) / (float)shader_local_size_x);
 	commandBuffers[0].begin(commandBufferBeginInfo);
 	commandBuffers[0].bindPipeline(vk::PipelineBindPoint::eCompute, Pipeline);
 	commandBuffers[0].bindDescriptorSets(vk::PipelineBindPoint::eCompute, PipelineLayout, 0, DescriptorSets.size(), DescriptorSets.data(), 0, 0);

@@ -11,9 +11,20 @@ namespace RayTracer
 	class GPURayInitializer : protected GPUComputeShader
 	{
 	public:
-		GPURayInitializer(vk::Device device, const Camera &camera, size_t resolution_x, size_t resolution_y,
-			unsigned int samples);
-		void Execute(uint32_t ComputeQueueIndex, size_t offset, vk::Buffer output_ray_buffer);
+		GPURayInitializer(vk::Device device);
+		void Execute(uint32_t ComputeQueueIndex,
+			Vector3<float> origin,
+			Vector3<float> forward_vector,
+			Vector3<float> right_vector,
+			Vector3<float> up_vector,
+			float focal_length_mm,
+			float sensor_width_mm,
+			size_t resolution_x,
+			size_t resolution_y,
+			size_t samples,
+			size_t seed,
+			size_t offset, 
+			vk::Buffer output_ray_buffer);
 	private:
 		vk::DescriptorSetLayout DescribeShader();
 		vk::Result CreatePipeline();
@@ -22,9 +33,6 @@ namespace RayTracer
 
 		GPURayInitializer(const GPURayInitializer &other) = delete;
 		GPURayInitializer(const GPURayInitializer &&other) = delete;
-
-		size_t ResolutionX;
-		size_t ResolutionY;
 
 		struct push_constants
 		{
