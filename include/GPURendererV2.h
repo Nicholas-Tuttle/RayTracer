@@ -24,6 +24,7 @@ namespace RayTracer
 		enum class GPUBufferBindings
 		{
 			ray_buffer,
+			intersection_buffer,
 			GPUBufferBindingCount
 		};
 
@@ -57,6 +58,8 @@ namespace RayTracer
 
 		// Pointers are of type GPURay*
 		gpu_buffer_vector gpu_ray_buffers;
+		// Pointers are of type GPUIntersection*
+		gpu_buffer_vector gpu_intersection_buffers;
 		
 		void *CreateAndMapMemory(uint32_t queueFamilyIndex, const vk::DeviceSize memorySize, const vk::BufferUsageFlags usage_flags,
 			vk::Buffer &vk_buffer, vk::DeviceMemory &device_memory);

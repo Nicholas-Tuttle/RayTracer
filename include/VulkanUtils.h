@@ -9,6 +9,7 @@ namespace RayTracer
     public:
         static const std::vector<const char*> DebugInstanceLayers;
         static const std::vector<const char*> DebugInstanceExtensions;
+        static const std::vector<const char*> DebugDeviceExtensions;
         static vk::ValidationFeaturesEXT VulkanDebugPrintfInstanceItem;
         
         static VKAPI_ATTR VkBool32 VKAPI_CALL DefaultVulkanDebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -19,6 +20,9 @@ namespace RayTracer
 
         // Verifies the instance extensions in requiredInstanceExtensions are available
         static bool VerifyInstanceExtensions(const std::vector<const char *> &requiredInstanceLayers);
+
+        // Verifies the device extensions in requiredDeviceExtensions are available
+        static bool VerifyDeviceExtensions(vk::PhysicalDevice device, const std::vector<const char *> &requiredDeviceExtensions);
 
         static vk::Instance CreateHeadlessVulkanInstance(const std::vector<const char *> &InstanceLayers,
             const std::vector<const char *> &InstanceExtensions, const void *instance_items);
@@ -31,7 +35,7 @@ namespace RayTracer
 
         static vk::Result GetBestComputeQueue(vk::PhysicalDevice physicalDevice, uint32_t &queueFamilyIndex);
 
-        static vk::Device CreateDevice(vk::PhysicalDevice physicalDevice, uint32_t queueFamilyIndex);
+        static vk::Device CreateDevice(vk::PhysicalDevice physicalDevice, const std::vector<const char *> &DeviceEntensions, uint32_t queueFamilyIndex);
 
         static std::vector<uint8_t> ReadShaderFileToBytes(const std::string &filename);
     };

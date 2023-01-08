@@ -1,12 +1,19 @@
 #include "GPUComputeShader.h"
 #include "VulkanUtils.h"
+#include <iostream>
 
 using RayTracer::GPUComputeShader;
 
 GPUComputeShader::GPUComputeShader(const std::string &shader_file_name, vk::Device device)
 	: ShaderFileName(shader_file_name), Device(device)
 {
-	// Nothing else to do
+	std::cout << __FUNCTION__ << std::endl;
+
+	ShaderModule = CreateShaderModule();
+	if (ShaderModule == static_cast<vk::ShaderModule>(nullptr))
+	{
+		throw std::exception("Failed to create shader module");
+	}
 }
 
 vk::ShaderModule GPUComputeShader::CreateShaderModule()

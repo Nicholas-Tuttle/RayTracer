@@ -7,18 +7,10 @@ using RayTracer::VKUtils;
 
 const static size_t shader_local_size_x = 1024;
 
-GPURayIntersector::GPURayIntersector(vk::Device device, size_t incoming_ray_count, GPURay *gpu_ray_buffer, 
-	GPUIntersection *gpu_intersection_buffer, vk::Buffer input_gpu_ray_buffer, vk::Buffer output_gpu_ray_buffer)
-	: GPUComputeShader("GPURayIntersector.comp.spv", device), gpu_ray_buffer(gpu_ray_buffer), gpu_intersection_buffer(gpu_intersection_buffer),
-	InputRayBuffer(input_gpu_ray_buffer), OutputIntersectionBuffer(output_gpu_ray_buffer), IncomingRayBufferCount(incoming_ray_count)
+GPURayIntersector::GPURayIntersector(vk::Device device)
+	: GPUComputeShader("GPURayIntersector.comp.spv", device)
 {
 	std::cout << __FUNCTION__ << std::endl;
-
-	ShaderModule = CreateShaderModule();
-	if (ShaderModule == static_cast<vk::ShaderModule>(nullptr))
-	{
-		throw std::exception("Failed to create shader module");
-	}
 
 	DescriptorSetLayout = DescribeShader();
 	if (DescriptorSetLayout == static_cast<vk::DescriptorSetLayout>(nullptr))
@@ -31,7 +23,7 @@ GPURayIntersector::GPURayIntersector(vk::Device device, size_t incoming_ray_coun
 		throw std::exception("Failed to create pipeline layout");
 	}
 
-	AllocateAndUpdateDescriptorSets();
+	DescriptorSets = AllocateDescriptorSets();
 }
 
 vk::DescriptorSetLayout GPURayIntersector::DescribeShader()
@@ -106,12 +98,13 @@ std::vector<vk::DescriptorSet> GPURayIntersector::AllocateDescriptorSets()
 	return Device.allocateDescriptorSets(descriptorSetAllocateInfo);
 }
 
-void GPURayIntersector::UpdateDescriptorSets(std::vector<vk::DescriptorSet> &descriptorSet)
+void GPURayIntersector::UpdateDescriptorSets(std::vector<vk::DescriptorSet> &descriptorSet,
+	vk::Buffer input_gpu_ray_buffer, vk::Buffer output_gpu_intersection_buffer)
 {
 	vk::DescriptorBufferInfo writeDescriptorSetBufferInfo[2] = {};
 	vk::WriteDescriptorSet writeDescriptorSet[2] = {};
 
-	writeDescriptorSetBufferInfo[0].buffer = InputRayBuffer;
+	writeDescriptorSetBufferInfo[0].buffer = input_gpu_ray_buffer;
 	writeDescriptorSetBufferInfo[0].offset = 0;
 	writeDescriptorSetBufferInfo[0].range = VK_WHOLE_SIZE;
 
@@ -121,7 +114,7 @@ void GPURayIntersector::UpdateDescriptorSets(std::vector<vk::DescriptorSet> &des
 	writeDescriptorSet[0].descriptorType = vk::DescriptorType::eStorageBuffer;
 	writeDescriptorSet[0].pBufferInfo = &writeDescriptorSetBufferInfo[0];
 
-	writeDescriptorSetBufferInfo[1].buffer = OutputIntersectionBuffer;
+	writeDescriptorSetBufferInfo[1].buffer = output_gpu_intersection_buffer;
 	writeDescriptorSetBufferInfo[1].offset = 0;
 	writeDescriptorSetBufferInfo[1].range = VK_WHOLE_SIZE;
 
@@ -134,14 +127,11 @@ void GPURayIntersector::UpdateDescriptorSets(std::vector<vk::DescriptorSet> &des
 	Device.updateDescriptorSets(2, writeDescriptorSet, 0, nullptr);
 }
 
-void GPURayIntersector::AllocateAndUpdateDescriptorSets()
+void GPURayIntersector::Execute(uint32_t ComputeQueueIndex, size_t incoming_ray_count, 
+	vk::Buffer input_gpu_ray_buffer, vk::Buffer output_gpu_ray_buffer)
 {
-	DescriptorSets = AllocateDescriptorSets();
-	UpdateDescriptorSets(DescriptorSets);
-}
+	UpdateDescriptorSets(DescriptorSets, input_gpu_ray_buffer, output_gpu_ray_buffer);
 
-void GPURayIntersector::Execute(uint32_t ComputeQueueIndex)
-{
 	vk::CommandPoolCreateInfo commandPoolCreateInfo = {};
 	commandPoolCreateInfo.queueFamilyIndex = ComputeQueueIndex;
 
@@ -158,7 +148,7 @@ void GPURayIntersector::Execute(uint32_t ComputeQueueIndex)
 	vk::CommandBufferBeginInfo commandBufferBeginInfo = {};
 	commandBufferBeginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 
-	uint32_t group_count_x = (uint32_t)std::ceil((float)(IncomingRayBufferCount) / (float)shader_local_size_x);
+	uint32_t group_count_x = (uint32_t)std::ceil((float)(incoming_ray_count) / (float)shader_local_size_x);
 	commandBuffers[0].begin(commandBufferBeginInfo);
 	commandBuffers[0].bindPipeline(vk::PipelineBindPoint::eCompute, Pipeline);
 	commandBuffers[0].bindDescriptorSets(vk::PipelineBindPoint::eCompute, PipelineLayout, 0, DescriptorSets.size(), DescriptorSets.data(), 0, 0);

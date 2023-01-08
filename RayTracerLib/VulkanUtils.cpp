@@ -13,6 +13,10 @@ const std::vector<const char*> VKUtils::DebugInstanceExtensions = {
     VK_EXT_DEBUG_UTILS_EXTENSION_NAME
 };
 
+const std::vector<const char *> VKUtils::DebugDeviceExtensions = {
+    VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME
+};
+
 static vk::ValidationFeatureEnableEXT VulkanDebugPrintfInstanceItemEnable = vk::ValidationFeatureEnableEXT::eDebugPrintf;
 vk::ValidationFeaturesEXT VKUtils::VulkanDebugPrintfInstanceItem(1, &VulkanDebugPrintfInstanceItemEnable, 0, nullptr);
 
@@ -157,6 +161,37 @@ bool VKUtils::VerifyInstanceExtensions(const std::vector<const char *> &required
     return true;
 }
 
+bool VKUtils::VerifyDeviceExtensions(vk::PhysicalDevice device, const std::vector<const char *> &requiredDeviceExtensions)
+{
+    if (requiredDeviceExtensions.size() == 0)
+    {
+        return true;
+    }
+
+    std::vector<vk::ExtensionProperties> extensions = device.enumerateDeviceExtensionProperties();
+
+    for (const char *extensionName : requiredDeviceExtensions)
+    {
+        bool layerFound = false;
+
+        for (const auto &extensionProperties : extensions)
+        {
+            if (strcmp(extensionName, extensionProperties.extensionName) == 0)
+            {
+                layerFound = true;
+                break;
+            }
+        }
+
+        if (!layerFound)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 vk::Instance VKUtils::CreateHeadlessVulkanInstance(const std::vector<const char *>& InstanceLayers,
     const std::vector<const char *> &InstanceExtensions, const void *instance_items)
 {
@@ -255,7 +290,7 @@ vk::Result VKUtils::GetBestComputeQueue(vk::PhysicalDevice physicalDevice, uint3
     return vk::Result::eErrorInitializationFailed;
 }
 
-vk::Device VKUtils::CreateDevice(vk::PhysicalDevice physicalDevice, uint32_t queueFamilyIndex)
+vk::Device VKUtils::CreateDevice(vk::PhysicalDevice physicalDevice, const std::vector<const char *> &DeviceEntensions, uint32_t queueFamilyIndex)
 {
     const float queuePrioritory = 1.0f;
     vk::DeviceQueueCreateInfo deviceQueueCreateInfo;
@@ -266,8 +301,8 @@ vk::Device VKUtils::CreateDevice(vk::PhysicalDevice physicalDevice, uint32_t que
     vk::DeviceCreateInfo deviceCreateInfo;
     deviceCreateInfo.queueCreateInfoCount = 1;
     deviceCreateInfo.pQueueCreateInfos = &deviceQueueCreateInfo;
-    deviceCreateInfo.enabledExtensionCount = 0;
-    deviceCreateInfo.ppEnabledExtensionNames = nullptr;
+    deviceCreateInfo.enabledExtensionCount = DeviceEntensions.size();
+    deviceCreateInfo.ppEnabledExtensionNames = DeviceEntensions.data();
 
     return physicalDevice.createDevice(deviceCreateInfo);
 }

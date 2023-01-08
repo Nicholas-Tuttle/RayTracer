@@ -54,12 +54,17 @@ GPURendererV2::GPURendererV2(const Camera &camera, unsigned int samples) : camer
 
 	PhysicalDevice = devices[0];
 
+	if (!VKUtils::VerifyDeviceExtensions(PhysicalDevice, VKUtils::DebugDeviceExtensions))
+	{
+		throw std::exception("Failed to verify device layers or extensions");
+	}
+
 	if (vk::Result::eSuccess != VKUtils::GetBestComputeQueue(PhysicalDevice, ComputeQueueIndex))
 	{
 		throw std::exception("Failed to get best compute queue");
 	}
 
-	device = VKUtils::CreateDevice(PhysicalDevice, ComputeQueueIndex);
+	device = VKUtils::CreateDevice(PhysicalDevice, VKUtils::DebugDeviceExtensions, ComputeQueueIndex);
 
 	BufferData.resize((size_t)GPUBufferBindings::GPUBufferBindingCount);
 
@@ -74,6 +79,13 @@ GPURendererV2::GPURendererV2(const Camera &camera, unsigned int samples) : camer
 
 	BufferData[(int)GPUBufferBindings::ray_buffer].resize(ray_buffer_count);
 
+	BufferData[(int)GPUBufferBindings::intersection_buffer].buffer_size = sizeof(GPUIntersection) * RayBufferSize;
+	BufferData[(int)GPUBufferBindings::intersection_buffer].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
+	BufferData[(int)GPUBufferBindings::intersection_buffer].descriptor_type = vk::DescriptorType::eStorageBuffer;
+	BufferData[(int)GPUBufferBindings::intersection_buffer].data_pointers = &gpu_intersection_buffers;
+
+	BufferData[(int)GPUBufferBindings::intersection_buffer].resize(ray_buffer_count);
+
 	if (vk::Result::eSuccess != CreateAndMapMemories(ComputeQueueIndex))
 	{
 		throw std::exception("Failed to create and map memories for compute shader");
@@ -84,6 +96,14 @@ GPURendererV2::GPURendererV2(const Camera &camera, unsigned int samples) : camer
 		if (nullptr == buffer)
 		{
 			throw std::exception("Ray initialization buffer data for GPU compute failed to allocate");
+		}
+	}
+
+	for (const auto buffer : gpu_intersection_buffers)
+	{
+		if (nullptr == buffer)
+		{
+			throw std::exception("Ray intersection buffer data for GPU compute failed to allocate");
 		}
 	}
 
@@ -166,11 +186,15 @@ void GPURendererV2::Render(const IScene &scene, std::shared_ptr<IImage> &out_ima
 
 	std::cout << "[RENDER STARTED]" << ": line " << __LINE__ << ": time (ms): " << performance_timer.Poll().count() << std::endl;
 
-	GPURayInitializer ray_initializer(device, camera, camera.Resolution().X, camera.Resolution().Y, samples);
+	GPURayInitializer ray_initializer(device);
 	
+	// Ray initialization
 	for (size_t i = 0; i < BufferData[(int)GPUBufferBindings::ray_buffer].buffers.size(); i++)
 	{
-		ray_initializer.Execute(ComputeQueueIndex, RayBufferSize * i, BufferData[(int)GPUBufferBindings::ray_buffer].buffers[i]);
+		ray_initializer.Execute(ComputeQueueIndex, camera.Position(), camera.ForwardVector(),
+			camera.RightVector(), camera.UpVector(), camera.FocalLengthMM(), camera.SensorWidthMM(),
+			camera.Resolution().X, camera.Resolution().Y, samples, 0, RayBufferSize * i, 
+			BufferData[(int)GPUBufferBindings::ray_buffer].buffers[i]);
 
 #ifdef _DEBUG
 		std::cout << "---- initialized ray values for ray initialization buffer " << i << " ----" << std::endl;
@@ -182,6 +206,65 @@ void GPURendererV2::Render(const IScene &scene, std::shared_ptr<IImage> &out_ima
 		std::cout << "---- ----" << std::endl;
 #endif
 	}
+
+	// Ray Intersection
+	GPURayIntersector ray_intersector(device);
+	for (size_t i = 0; i < BufferData[(int)GPUBufferBindings::ray_buffer].buffers.size(); i++)
+	{
+		ray_intersector.Execute(ComputeQueueIndex, RayBufferSize, 
+			BufferData[(int)GPUBufferBindings::ray_buffer].buffers[i],
+			BufferData[(int)GPUBufferBindings::intersection_buffer].buffers[i]);
+
+#ifdef _DEBUG
+		std::cout << "---- Calculated intersections for ray buffer " << i << " ----" << std::endl;
+		for (size_t j = 0, max = 0; j < RayBufferSize && max < 100; j++, max++)
+		{
+			std::cout << std::fixed << std::setprecision(9) << j << ":\tMaterial ID: " 
+				<< ((GPUIntersection *)gpu_intersection_buffers[i])[j].material_id << std::endl;
+		}
+		std::cout << "---- ----" << std::endl;
+#endif
+	}
+
+	// Material Calculation will be here
+	GPUWorldMaterial world_material(device);
+	for (size_t i = 0; i < gpu_ray_buffers.size(); i++)
+	{
+		world_material.Execute(ComputeQueueIndex, RayBufferSize, 
+			BufferData[(int)GPUBufferBindings::intersection_buffer].buffers[i],
+			BufferData[(int)GPUBufferBindings::ray_buffer].buffers[i]);
+#ifdef _DEBUG
+		std::cout << "---- Calculated world material for ray buffer " << i << " ----" << std::endl;
+		std::cout << "---- ----" << std::endl;
+#endif
+	}
+
+	// Sample accumulation or re-queueing
+	Image *output_image = new Image(camera.Resolution());
+	for (size_t i = 0; i < gpu_ray_buffers.size() && i < gpu_intersection_buffers.size(); i++)
+	{
+		for (size_t j = 0; j < RayBufferSize; j++)
+		{
+			GPURay &ray = ((GPURay *)(gpu_ray_buffers[i]))[j];
+			GPUIntersection &intersection = ((GPUIntersection *)(gpu_intersection_buffers[i]))[j];
+			float *new_ray_direction = ray.direction;
+			if (0 == new_ray_direction[0] && 0 == new_ray_direction[1] && 0 == new_ray_direction[2])
+			{
+				// Send to sample accumulator
+				float *intersection_color = intersection.ray_color;
+				output_image->SetPixelColor(intersection.pixelXIndex, intersection.pixelYIndex,
+					Color(intersection_color[0], intersection_color[1], intersection_color[2], 1.0f));
+			}
+			else
+			{
+				// Put it back on the queue
+				std::cout << "Requeueing ray should not happen yet" << std::endl;
+				exit(1);
+			}
+		}
+	}
+
+	out_image = std::shared_ptr<IImage>(output_image);
 
 	std::cout << "[RENDER TIME]" << ": line " << __LINE__ << ": time (ms): " << performance_timer.Poll().count() << std::endl;
 }

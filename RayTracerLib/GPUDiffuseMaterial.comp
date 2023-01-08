@@ -3,16 +3,34 @@
 #version 450
 #extension GL_EXT_debug_printf : enable
 
+//	Incoming shader data
+//		this material ID
 //	Incoming data for rays
 //		intersection location, direction, material ID, (eventualy object ID too)
 //	Outgoing data for rays
 //		origin, direction, color
 
+layout (push_constant) uniform material_data
+{
+	uint ID;
+} MaterialData;
+
+struct Intersection
+{
+	vec4 ray_origin;
+	vec4 ray_direction;
+	vec4 intersection_location;
+	vec4 intersection_normal;
+	vec4 ray_color;
+	float depth;
+	uint object_id;
+	uint face_id;
+	uint material_id;
+};
+
 layout(std430, set = 0, binding = 0) buffer in_intersections
 {
-	vec4 Location;
-	vec4 Normal;
-	uint MaterialID;
+	Intersection intersections[];
 } Intersections;
 
 layout(std430, set = 0, binding = 1) buffer out_resultant_rays
@@ -34,4 +52,16 @@ void main()
 	{
 		debugPrintfEXT("Running Diffuse.comp Main");
 	}
+	
+	if (gID > Intersections.intersections.length())
+	{
+		return;
+	}
+	
+	if(Intersections.intersections[gID].material_id != MaterialData.ID)
+	{
+		return;
+	}
+
+	Intersections.intersections[gID].ray_color = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 }
