@@ -161,9 +161,6 @@
     <ClInclude Include="..\include\VulkanUtils.h">
       <Filter>Utilities\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\IGPUMaterial.h">
-      <Filter>Shader Files V2\Materials</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\GPURayInitializer.h">
       <Filter>Shader Files V2\RayInitialization</Filter>
     </ClInclude>
@@ -184,6 +181,9 @@
     </ClInclude>
     <ClInclude Include="..\include\GPUWorldMaterial.h">
       <Filter>Shader Files V2\Materials\World</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\GPUMaterialCalculator.h">
+      <Filter>Shader Files V2\Materials</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -244,6 +244,9 @@
     <ClCompile Include="GPUWorldMaterial.cpp">
       <Filter>Shader Files V2\Materials\World</Filter>
     </ClCompile>
+    <ClCompile Include="GPUMaterialCalculator.cpp">
+      <Filter>Shader Files V2\Materials</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="Shaders\RayIntersection.comp">
@@ -255,7 +258,7 @@
     <CustomBuild Include="GPUSampleAccumulator.comp">
       <Filter>Shader Files V2\Sampling</Filter>
     </CustomBuild>
-    <CustomBuild Include="GPURayIntersector.comp">
+    <CustomBuild Include="GPUSphereIntersector.comp">
       <Filter>Shader Files V2\RayIntersection</Filter>
     </CustomBuild>
     <CustomBuild Include="GPUDiffuseMaterial.comp">
@@ -263,6 +266,9 @@
     </CustomBuild>
     <CustomBuild Include="GPUWorldMaterial.comp">
       <Filter>Shader Files V2\Materials\World</Filter>
+    </CustomBuild>
+    <CustomBuild Include="GPUWorldIntersector.comp">
+      <Filter>Shader Files V2\RayIntersection</Filter>
     </CustomBuild>
   </ItemGroup>
 </Project>

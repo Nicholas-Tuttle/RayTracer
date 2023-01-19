@@ -47,6 +47,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SOLUTIONDIR)\include;$(LIBPNG);$(VULKAN_SDK)\Include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <OutDir>$(solutiondir)\lib\</OutDir>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -80,6 +81,7 @@
     <ClCompile Include="GlossyBSDF.cpp" />
     <ClCompile Include="GPUComputeShader.cpp" />
     <ClCompile Include="GPUDiffuseMaterial.cpp" />
+    <ClCompile Include="GPUMaterialCalculator.cpp" />
     <ClCompile Include="GPURayInitializer.cpp" />
     <ClCompile Include="GPURayIntersector.cpp" />
     <ClCompile Include="GPURenderer.cpp" />
@@ -102,6 +104,7 @@
     <ClInclude Include="..\include\ElapsedTimer.h" />
     <ClInclude Include="..\include\EmissiveBSDF.h" />
     <ClInclude Include="..\include\GlossyBSDF.h" />
+    <ClInclude Include="..\include\GPUMaterialCalculator.h" />
     <ClInclude Include="..\include\GPURayInitializer.h" />
     <ClInclude Include="..\include\GPURayIntersector.h" />
     <ClInclude Include="..\include\GPUStructs.h" />
@@ -109,7 +112,6 @@
     <ClInclude Include="..\include\GPURendererV2.h" />
     <ClInclude Include="..\include\GPUSampleAccumulator.h" />
     <ClInclude Include="..\include\GPUWorldMaterial.h" />
-    <ClInclude Include="..\include\IGPUMaterial.h" />
     <ClInclude Include="..\include\IImage.h" />
     <ClInclude Include="..\include\IIntersectable.h" />
     <ClInclude Include="..\include\Image.h" />
@@ -149,7 +151,7 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="GPURayIntersector.comp">
+    <CustomBuild Include="GPUSphereIntersector.comp">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
@@ -213,6 +215,25 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(FullPath)</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">glslangValidator.exe -V -e main %(FullPath) -o $(OutDir)\..\bin\%(Filename).comp.spv</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\..\bin\%(FileName).comp.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <BuildInParallel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</BuildInParallel>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="GPUWorldIntersector.comp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </ExcludedFromBuild>
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">glslangValidator.exe -V -e main %(FullPath) -o $(OutDir)\..\bin\%(Filename).comp.spv</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">glslangValidator.exe -V -e main %(FullPath) -o $(OutDir)\..\bin\%(Filename).comp.spv</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(FullPath)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\..\bin\%(FileName).comp.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <BuildInParallel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</BuildInParallel>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\..\bin\%(FileName).comp.spv</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
       <BuildInParallel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</BuildInParallel>
