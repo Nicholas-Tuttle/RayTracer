@@ -4,11 +4,12 @@
 
 #version 450
 #extension GL_EXT_debug_printf : enable
+#define FLOAT_MAX 0x7f7fffff
 
-//	Incoming data for rays
-//		origin (camera origin), direction
-//		scene data
-//	Outgoing data for rays
+//	Incoming data
+//		origin, direction, pixel
+//		sphere data
+//	Outgoing data
 //		intersection location, normal, material ID, (eventualy object ID too)
 
 struct Ray
@@ -52,7 +53,7 @@ void main()
 
 	if(gID == 0)
 	{
-		debugPrintfEXT("RayIntersectionV2: %u, %u", Rays.rays.length(), Intersections.intersections.length());
+		debugPrintfEXT("World Intersection: %u, %u", Rays.rays.length(), Intersections.intersections.length());
 	}
 	
 	if (gID > Rays.rays.length())
@@ -60,12 +61,12 @@ void main()
 		return;
 	}
 	
-	// TODO: Intersect with scene data, this is just filling in world shader info right now
 	Intersections.intersections[gID].ray_origin = Rays.rays[gID].origin;
 	Intersections.intersections[gID].ray_direction = Rays.rays[gID].direction;
 	Intersections.intersections[gID].intersection_location = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 	Intersections.intersections[gID].intersection_normal = vec4(0.0f);
 	Intersections.intersections[gID].ray_color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+	Intersections.intersections[gID].depth = FLOAT_MAX;
 	Intersections.intersections[gID].material_id = 0;
 	Intersections.intersections[gID].pixelXIndex = Rays.rays[gID].pixelXIndex;
 	Intersections.intersections[gID].pixelYIndex = Rays.rays[gID].pixelYIndex;

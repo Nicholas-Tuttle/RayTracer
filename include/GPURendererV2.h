@@ -10,9 +10,9 @@ namespace RayTracer
 	class GPURendererV2
 	{
 	public:
-		GPURendererV2(const Camera &camera, unsigned int samples);
+		GPURendererV2(const Camera &camera, unsigned int samples, const IScene &scene);
 		~GPURendererV2();
-		void Render(const IScene &scene, std::shared_ptr<IImage> &out_image);
+		void Render(std::shared_ptr<IImage> &out_image);
 		bool GPUDebugEnabled = false;
 	private:
 		vk::Instance instance = nullptr;
@@ -25,6 +25,7 @@ namespace RayTracer
 		{
 			ray_buffer,
 			intersection_buffer,
+			sphere_buffer,
 			GPUBufferBindingCount
 		};
 
@@ -53,6 +54,7 @@ namespace RayTracer
 
 		Camera camera;
 		unsigned int samples;
+		const IScene &scene;
 
 		std::vector<BufferCreationAndMappingData> BufferData;
 
@@ -60,6 +62,8 @@ namespace RayTracer
 		gpu_buffer_vector gpu_ray_buffers;
 		// Pointers are of type GPUIntersection*
 		gpu_buffer_vector gpu_intersection_buffers;
+		// Pointers are of type GPUSphere*
+		gpu_buffer_vector gpu_sphere_buffers;
 		
 		void *CreateAndMapMemory(uint32_t queueFamilyIndex, const vk::DeviceSize memorySize, const vk::BufferUsageFlags usage_flags,
 			vk::Buffer &vk_buffer, vk::DeviceMemory &device_memory);

@@ -334,9 +334,9 @@ int main(int argc, char **argv)
         */
 
         std::cout << std::endl << "Rendering on GPU V2" << std::endl;
-        GPURendererV2 gpu_renderer_v2(*camera, arguments.Samples);
+        GPURendererV2 gpu_renderer_v2(*camera, arguments.Samples, *scene);
         std::shared_ptr<IImage> out_gpu_image = nullptr;
-        gpu_renderer_v2.Render(*scene, out_gpu_image);
+        gpu_renderer_v2.Render(out_gpu_image);
         write_png_file("..\\demo_gpu.png", out_gpu_image->GetColorRGBAValues());
     }
 

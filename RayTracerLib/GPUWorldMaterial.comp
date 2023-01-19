@@ -55,7 +55,7 @@ void main()
 	
 	if(gID == 0)
 	{
-		debugPrintfEXT("RayIntersectionV2: %u, %u", Rays.rays.length(), Intersections.intersections.length());
+		debugPrintfEXT("GPU World Material: %u, %u", Rays.rays.length(), Intersections.intersections.length());
 	}
 	
 	if (gID > Intersections.intersections.length())
