@@ -13,7 +13,7 @@ namespace RayTracer
 		float direction[4];
 		uint32_t pixelXIndex;
 		uint32_t pixelYIndex;
-		float padding[2]; // Needed for "vec4" alignment
+		char padding[8]; // Needed for "vec4" alignment
 	};
 
 	struct GPUIntersection
@@ -27,9 +27,6 @@ namespace RayTracer
 		uint32_t object_id;
 		uint32_t face_id;
 		uint32_t material_id;
-		uint32_t pixelXIndex;
-		uint32_t pixelYIndex;
-		float padding[2]; // Needed for "vec4" alignment
 	};
 
 	struct GPUSphere
@@ -66,6 +63,11 @@ namespace RayTracer
 		float position[4];
 		float radius;
 		uint32_t material_index;
-		float padding[2]; // Needed for "vec4" alignment
+		char padding[8]; // Needed for "vec4" alignment
+	};
+
+	struct GPUSample
+	{
+		float color[4];
 	};
 }

@@ -5,7 +5,9 @@ using RayTracer::GPUMaterialCalculator;
 GPUMaterialCalculator::GPUMaterialCalculator(vk::Device device)
 	: device(device), diffuse_material(device), world_material(device)
 {
+#ifdef _DEBUG
 	std::cout << __FUNCTION__ << "\n";
+#endif
 }
 
 void GPUMaterialCalculator::Execute(uint32_t compute_queue_index,

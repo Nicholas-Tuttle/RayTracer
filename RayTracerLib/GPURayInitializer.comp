@@ -2,9 +2,10 @@
 
 #version 450
 #extension GL_EXT_debug_printf : enable
+#define NO_MATERIAL_ID 0xffffffff
 
 //	Incoming data
-//		camera origin, camera direction, sample count, image resolution, seed
+//		camera origin, camera direction, image resolution, seed
 //	Outgoing data for rays
 //		ray origins, ray directions
 
@@ -18,9 +19,7 @@ layout (push_constant) uniform camera_data
 	uint SensorWidthMM;
 	uint ResolutionX;
 	uint ResolutionY;
-	uint Samples;
 	uint Seed;
-	uint Offset;
 } CameraData;
 
 struct Ray
@@ -36,8 +35,27 @@ layout(std430, set = 0, binding = 0) buffer out_rays
 	Ray rays[];
 } OutRays;
 
+struct Intersection
+{
+	vec4 ray_origin;
+	vec4 ray_direction;
+	vec4 intersection_location;
+	vec4 intersection_normal;
+	vec4 ray_color;
+	float depth;
+	uint object_id;
+	uint face_id;
+	uint material_id;
+};
+
+layout(std430, set = 0, binding = 1) buffer out_intersections
+{
+	Intersection intersections[];
+} Intersections;
+
 float noise(float seed)
 {
+	// multiple the seed by a prime to get more variation
 	return fract(cos(seed));
 }
 
@@ -51,22 +69,17 @@ void main()
 	{
 		debugPrintfEXT("RayInitializationV2: [%3.2v4f], [%3.2v4f], [%3.2v4f], [%3.2v4f]", CameraData.Origin,
 			CameraData.ForwardVector, CameraData.RightVector, CameraData.UpVector);
-		debugPrintfEXT("%u, %u, %u, %u, %u, %u, %u, %u", CameraData.FocalLengthMM, CameraData.SensorWidthMM,
-			CameraData.ResolutionX, CameraData.ResolutionY, CameraData.Samples, CameraData.Seed, CameraData.Offset, OutRays.rays.length());
+		debugPrintfEXT("%u, %u, %u, %u, %u, %u", CameraData.FocalLengthMM, CameraData.SensorWidthMM,
+			CameraData.ResolutionX, CameraData.ResolutionY, CameraData.Seed, OutRays.rays.length());
 	}
 
-	// Universal ID across any ray initialization buffers
-	uint uID = gID + CameraData.Offset;
-
-	if (gID > OutRays.rays.length() || uID >= (CameraData.ResolutionX * CameraData.ResolutionY * CameraData.Samples))
+	if (gID > OutRays.rays.length())
 	{
 		return;
 	}
-	
-	uint local_ID = uID / CameraData.Samples;
-	
-	const uint pixel_x_index = local_ID % CameraData.ResolutionX;
-	const uint pixel_y_index = local_ID / CameraData.ResolutionX;
+
+	const uint pixel_x_index = gID % CameraData.ResolutionX;
+	const uint pixel_y_index = gID / CameraData.ResolutionX;
 	
 	const float camera_sensor_width_m = float(CameraData.SensorWidthMM) / 1000;
 	const float horizontal_scalar = ((float(((2 * pixel_x_index) + 1)) / CameraData.ResolutionX) - 1) * camera_sensor_width_m;
@@ -92,15 +105,22 @@ void main()
 	}
 
 	// Get a jittered ray
-	uint sample_number = uID % CameraData.Samples;
-	float random1 = noise(269 * (CameraData.Seed + sample_number) + 13) - 0.5;
-	float random2 = noise(271 * (CameraData.Seed + sample_number) + 17) - 0.5;
+	float random1 = noise(269 * CameraData.Seed + 13) - 0.5;
+	float random2 = noise(271 * CameraData.Seed + 17) - 0.5;
 	
 	float pixel_width_m = camera_sensor_width_m / CameraData.ResolutionX;
 	float pixel_height_m = pixel_width_m;
 	vec3 ray_direction = central_ray + (rightVector * random1 * pixel_width_m) + (upVector * random2 * pixel_height_m);
 
 	OutRays.rays[gID].Direction = vec4(ray_direction, 0);
-	OutRays.rays[gID].PixelXIndex = pixel_x_index;
-	OutRays.rays[gID].PixelYIndex = pixel_y_index;
+	
+	Intersections.intersections[gID].ray_origin = vec4(0);
+	Intersections.intersections[gID].ray_direction = vec4(0);
+	Intersections.intersections[gID].intersection_location = vec4(0);
+	Intersections.intersections[gID].intersection_normal = vec4(0);
+	Intersections.intersections[gID].ray_color = vec4(1);
+	Intersections.intersections[gID].material_id = NO_MATERIAL_ID;
+	Intersections.intersections[gID].depth = 0;
+	Intersections.intersections[gID].object_id = 0;
+	Intersections.intersections[gID].face_id = 0;
 }

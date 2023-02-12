@@ -5,6 +5,7 @@
 #version 450
 #extension GL_EXT_debug_printf : enable
 #define FLOAT_MAX 0x7f7fffff
+#define NO_MATERIAL_ID 0xffffffff
 
 //	Incoming data
 //		origin, direction, pixel
@@ -36,8 +37,6 @@ struct Intersection
 	uint object_id;
 	uint face_id;
 	uint material_id;
-	uint pixelXIndex;
-	uint pixelYIndex;
 };
 
 layout(std430, set = 0, binding = 1) buffer out_intersections
@@ -61,13 +60,19 @@ void main()
 		return;
 	}
 	
+	// If the ray is finished don't do anything
+	if(Rays.rays[gID].direction.x == 0 && Rays.rays[gID].direction.y == 0 && Rays.rays[gID].direction.z == 0)
+	{
+		Intersections.intersections[gID].material_id = NO_MATERIAL_ID;
+		Intersections.intersections[gID].depth = 0;
+		return;
+	}
+
 	Intersections.intersections[gID].ray_origin = Rays.rays[gID].origin;
 	Intersections.intersections[gID].ray_direction = Rays.rays[gID].direction;
-	Intersections.intersections[gID].intersection_location = vec4(0.0f, 0.0f, 0.0f, 0.0f);
-	Intersections.intersections[gID].intersection_normal = vec4(0.0f);
-	Intersections.intersections[gID].ray_color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+	Intersections.intersections[gID].intersection_location = vec4(0);
+	Intersections.intersections[gID].intersection_normal = vec4(0);
 	Intersections.intersections[gID].depth = FLOAT_MAX;
 	Intersections.intersections[gID].material_id = 0;
-	Intersections.intersections[gID].pixelXIndex = Rays.rays[gID].pixelXIndex;
-	Intersections.intersections[gID].pixelYIndex = Rays.rays[gID].pixelYIndex;
+
 }

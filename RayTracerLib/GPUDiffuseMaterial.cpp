@@ -9,7 +9,9 @@ const static size_t shader_local_size_x = 1024;
 GPUDiffuseMaterial::GPUDiffuseMaterial(vk::Device device)
 	: DiffuseMaterialPushConstants(), GPUComputeShader("GPUDiffuseMaterial.comp.spv", device)
 {
+#ifdef _DEBUG
 	std::cout << __FUNCTION__ << std::endl;
+#endif
 
 	DescriptorSetLayout = DescribeShader();
 	if (DescriptorSetLayout == static_cast<vk::DescriptorSetLayout>(nullptr))
@@ -159,7 +161,7 @@ void GPUDiffuseMaterial::Execute(uint32_t ComputeQueueIndex, size_t incoming_ray
 	uint32_t group_count_x = (uint32_t)std::ceil((float)(incoming_ray_count) / (float)shader_local_size_x);
 	commandBuffers[0].begin(commandBufferBeginInfo);
 	commandBuffers[0].bindPipeline(vk::PipelineBindPoint::eCompute, Pipeline);
-	commandBuffers[0].bindDescriptorSets(vk::PipelineBindPoint::eCompute, PipelineLayout, 0, DescriptorSets.size(), DescriptorSets.data(), 0, 0);
+	commandBuffers[0].bindDescriptorSets(vk::PipelineBindPoint::eCompute, PipelineLayout, 0, static_cast<uint32_t>(DescriptorSets.size()), DescriptorSets.data(), 0, 0);
 	commandBuffers[0].pushConstants(PipelineLayout, vk::ShaderStageFlagBits::eCompute, 0,
 		sizeof(DiffuseMaterialPushConstants), (void *)&DiffuseMaterialPushConstants);
 	commandBuffers[0].dispatch(group_count_x, 1, 1);
@@ -176,5 +178,7 @@ void GPUDiffuseMaterial::Execute(uint32_t ComputeQueueIndex, size_t incoming_ray
 	{
 		queue.waitIdle();
 	}
+
+	Device.destroyCommandPool(commandPool);
 }
 
