@@ -12,24 +12,12 @@ namespace RayTracer
 	{
 	public:
 		GPURayInitializer(vk::Device device);
-		void Execute(uint32_t ComputeQueueIndex,
-			Vector3<float> origin,
-			Vector3<float> forward_vector,
-			Vector3<float> right_vector,
-			Vector3<float> up_vector,
-			float focal_length_mm,
-			float sensor_width_mm,
-			size_t resolution_x,
-			size_t resolution_y,
-			size_t samples,
-			size_t seed,
-			size_t offset, 
-			vk::Buffer output_ray_buffer);
+		void Execute(uint32_t ComputeQueueIndex, Camera camera, size_t seed, vk::Buffer output_ray_buffer, vk::Buffer output_intersection_buffer);
 	private:
 		vk::DescriptorSetLayout DescribeShader();
 		vk::Result CreatePipeline();
 		std::vector<vk::DescriptorSet> AllocateDescriptorSets();
-		void UpdateDescriptorSets(std::vector<vk::DescriptorSet> &descriptorSet, vk::Buffer output_ray_buffer);
+		void UpdateDescriptorSets(std::vector<vk::DescriptorSet> &descriptorSet, vk::Buffer output_ray_buffer, vk::Buffer output_intersection_buffer);
 
 		GPURayInitializer(const GPURayInitializer &other) = delete;
 		GPURayInitializer(const GPURayInitializer &&other) = delete;
@@ -46,9 +34,7 @@ namespace RayTracer
 				sensor_width_mm = 0;
 				resolution_x = 0;
 				resolution_y = 0;
-				samples = 1;
 				seed = 0;
-				offset = 0;
 			}
 
 			float camera_origin[4];
@@ -59,9 +45,7 @@ namespace RayTracer
 			unsigned int sensor_width_mm;
 			unsigned int resolution_x;
 			unsigned int resolution_y;
-			unsigned int samples;
 			unsigned int seed;
-			unsigned int offset;
 		} CameraDataPushConstants;
 	};
 }

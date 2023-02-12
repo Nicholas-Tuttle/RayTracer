@@ -5,6 +5,7 @@
 
 using RayTracer::VKUtils;
 
+#ifdef _DEBUG
 const std::vector<const char*> VKUtils::DebugInstanceLayers = {
     "VK_LAYER_KHRONOS_validation"
 };
@@ -16,6 +17,11 @@ const std::vector<const char*> VKUtils::DebugInstanceExtensions = {
 const std::vector<const char *> VKUtils::DebugDeviceExtensions = {
     VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME
 };
+#else
+const std::vector<const char *> VKUtils::DebugInstanceLayers = {};
+const std::vector<const char *> VKUtils::DebugInstanceExtensions = {};
+const std::vector<const char *> VKUtils::DebugDeviceExtensions = {};
+#endif
 
 static vk::ValidationFeatureEnableEXT VulkanDebugPrintfInstanceItemEnable = vk::ValidationFeatureEnableEXT::eDebugPrintf;
 vk::ValidationFeaturesEXT VKUtils::VulkanDebugPrintfInstanceItem(1, &VulkanDebugPrintfInstanceItemEnable, 0, nullptr);
@@ -35,6 +41,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VKUtils::DefaultVulkanDebugCallback(
     void *pUserData
 )
 {
+#ifdef _DEBUG
     std::cout << "[VULKAN DEBUG] : ";
     
     switch (messageSeverity)
@@ -66,7 +73,8 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VKUtils::DefaultVulkanDebugCallback(
     }
     }
 
-    std::cout << " : [FLAGS]: " << messageType << "\t" << pCallbackData->pMessage << std::endl;
+    std::cout << " : [FLAGS]: " << messageType << "\t" << pCallbackData->pMessage << "\n";
+#endif
 
     return VK_FALSE;
 }
@@ -262,7 +270,7 @@ vk::Result VKUtils::GetBestComputeQueue(vk::PhysicalDevice physicalDevice, uint3
     // first try and find a queue that has just the compute bit set
     for (uint32_t i = 0; i < queueFamilyPropertiesCount; i++)
     {
-        // mask out the sparse binding bit that we aren't caring about (yet!) and the transfer bit
+        // mask out the sparse binding bit and the transfer bit
         const vk::Flags<vk::QueueFlagBits> maskedFlags = (~(vk::QueueFlagBits::eTransfer | vk::QueueFlagBits::eSparseBinding) 
             & queueFamilyProperties[i].queueFlags);
 
@@ -301,7 +309,7 @@ vk::Device VKUtils::CreateDevice(vk::PhysicalDevice physicalDevice, const std::v
     vk::DeviceCreateInfo deviceCreateInfo;
     deviceCreateInfo.queueCreateInfoCount = 1;
     deviceCreateInfo.pQueueCreateInfos = &deviceQueueCreateInfo;
-    deviceCreateInfo.enabledExtensionCount = DeviceEntensions.size();
+    deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(DeviceEntensions.size());
     deviceCreateInfo.ppEnabledExtensionNames = DeviceEntensions.data();
 
     return physicalDevice.createDevice(deviceCreateInfo);

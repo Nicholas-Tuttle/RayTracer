@@ -14,7 +14,9 @@ const static size_t shader_local_size_x = 1024;
 GPURayIntersector::GPURayIntersector(vk::Device device, const IScene &scene)
 	: world_intersector(device), sphere_intersector(device, scene)
 {
+#ifdef _DEBUG
 	std::cout << __FUNCTION__ << std::endl;
+#endif
 }
 
 void GPURayIntersector::Execute(uint32_t compute_queue_index,
@@ -39,7 +41,9 @@ void GPURayIntersector::Execute(uint32_t compute_queue_index,
 GPURayIntersector::GPUWorldIntersector::GPUWorldIntersector(vk::Device device)
 	: GPUComputeShader("GPUWorldIntersector.comp.spv", device)
 {
+#ifdef _DEBUG
 	std::cout << __FUNCTION__ << std::endl;
+#endif
 
 	DescriptorSetLayout = DescribeShader();
 	if (DescriptorSetLayout == static_cast<vk::DescriptorSetLayout>(nullptr))
@@ -110,7 +114,7 @@ std::vector<vk::DescriptorSet> GPURayIntersector::GPUWorldIntersector::AllocateD
 
 	vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo = {};
 	descriptorPoolCreateInfo.maxSets = 1;
-	descriptorPoolCreateInfo.poolSizeCount = 2;
+	descriptorPoolCreateInfo.poolSizeCount = ARRAYSIZE(descriptorPoolSizes);
 	descriptorPoolCreateInfo.pPoolSizes = descriptorPoolSizes;
 
 	vk::DescriptorPool descriptorPool = Device.createDescriptorPool(descriptorPoolCreateInfo);
@@ -153,10 +157,10 @@ void GPURayIntersector::GPUWorldIntersector::UpdateDescriptorSets(std::vector<vk
 	writeDescriptorSet[1].descriptorType = vk::DescriptorType::eStorageBuffer;
 	writeDescriptorSet[1].pBufferInfo = &writeDescriptorSetBufferInfo[1];
 
-	Device.updateDescriptorSets(2, writeDescriptorSet, 0, nullptr);
+	Device.updateDescriptorSets(ARRAYSIZE(writeDescriptorSet), writeDescriptorSet, 0, nullptr);
 }
 
-void GPURayIntersector::GPUWorldIntersector::Execute(uint32_t ComputeQueueIndex,
+void GPURayIntersector::GPUWorldIntersector::Execute(uint32_t compute_queue_index,
 	size_t incoming_ray_count,
 	vk::Buffer input_gpu_ray_buffer,
 	vk::Buffer output_gpu_intersection_buffer)
@@ -164,7 +168,7 @@ void GPURayIntersector::GPUWorldIntersector::Execute(uint32_t ComputeQueueIndex,
 	UpdateDescriptorSets(DescriptorSets, input_gpu_ray_buffer, output_gpu_intersection_buffer);
 
 	vk::CommandPoolCreateInfo commandPoolCreateInfo = {};
-	commandPoolCreateInfo.queueFamilyIndex = ComputeQueueIndex;
+	commandPoolCreateInfo.queueFamilyIndex = compute_queue_index;
 
 	vk::CommandPool commandPool = Device.createCommandPool(commandPoolCreateInfo);;
 
@@ -182,11 +186,11 @@ void GPURayIntersector::GPUWorldIntersector::Execute(uint32_t ComputeQueueIndex,
 	uint32_t group_count_x = (uint32_t)std::ceil((float)(incoming_ray_count) / (float)shader_local_size_x);
 	commandBuffers[0].begin(commandBufferBeginInfo);
 	commandBuffers[0].bindPipeline(vk::PipelineBindPoint::eCompute, Pipeline);
-	commandBuffers[0].bindDescriptorSets(vk::PipelineBindPoint::eCompute, PipelineLayout, 0, DescriptorSets.size(), DescriptorSets.data(), 0, 0);
+	commandBuffers[0].bindDescriptorSets(vk::PipelineBindPoint::eCompute, PipelineLayout, 0, static_cast<uint32_t>(DescriptorSets.size()), DescriptorSets.data(), 0, 0);
 	commandBuffers[0].dispatch(group_count_x, 1, 1);
 	commandBuffers[0].end();
 
-	vk::Queue queue = Device.getQueue(ComputeQueueIndex, 0);
+	vk::Queue queue = Device.getQueue(compute_queue_index, 0);
 
 	vk::SubmitInfo submitInfo = {};
 	submitInfo.commandBufferCount = 1;
@@ -197,6 +201,8 @@ void GPURayIntersector::GPUWorldIntersector::Execute(uint32_t ComputeQueueIndex,
 	{
 		queue.waitIdle();
 	}
+
+	Device.destroyCommandPool(commandPool);
 }
 
 #pragma endregion
@@ -206,7 +212,9 @@ void GPURayIntersector::GPUWorldIntersector::Execute(uint32_t ComputeQueueIndex,
 GPURayIntersector::GPUSphereIntersector::GPUSphereIntersector(vk::Device device, const IScene &scene)
 	: GPUComputeShader("GPUSphereIntersector.comp.spv", device)
 {
+#ifdef _DEBUG
 	std::cout << __FUNCTION__ << std::endl;
+#endif
 
 	for (const auto &object : scene.Objects())
 	{
@@ -374,7 +382,7 @@ void GPURayIntersector::GPUSphereIntersector::Execute(uint32_t ComputeQueueIndex
 	uint32_t group_count_x = (uint32_t)std::ceil((float)(incoming_ray_count) / (float)shader_local_size_x);
 	commandBuffers[0].begin(commandBufferBeginInfo);
 	commandBuffers[0].bindPipeline(vk::PipelineBindPoint::eCompute, Pipeline);
-	commandBuffers[0].bindDescriptorSets(vk::PipelineBindPoint::eCompute, PipelineLayout, 0, DescriptorSets.size(), DescriptorSets.data(), 0, 0);
+	commandBuffers[0].bindDescriptorSets(vk::PipelineBindPoint::eCompute, PipelineLayout, 0, static_cast<uint32_t>(DescriptorSets.size()), DescriptorSets.data(), 0, 0);
 	commandBuffers[0].dispatch(group_count_x, 1, 1);
 	commandBuffers[0].end();
 
@@ -389,6 +397,8 @@ void GPURayIntersector::GPUSphereIntersector::Execute(uint32_t ComputeQueueIndex
 	{
 		queue.waitIdle();
 	}
+
+	Device.destroyCommandPool(commandPool);
 }
 
 #pragma endregion

@@ -26,8 +26,6 @@ struct Intersection
 	uint object_id;
 	uint face_id;
 	uint material_id;
-	uint pixelXIndex;
-	uint pixelYIndex;
 };
 
 layout(std430, set = 0, binding = 0) buffer in_intersections
@@ -70,13 +68,14 @@ void main()
 
 	if(Intersections.intersections[gID].ray_direction.y > 0)
 	{
-		Intersections.intersections[gID].ray_color = vec4(0.53f, 0.81f, 0.92f, 1.0f);
+		Intersections.intersections[gID].ray_color *= vec4(0.53f, 0.81f, 0.92f, 1.0f);
 	}
 	else
 	{
-		Intersections.intersections[gID].ray_color = vec4(0.62f, 0.44f, 0.27f, 1.0f);
+		Intersections.intersections[gID].ray_color *= vec4(0.62f, 0.44f, 0.27f, 1.0f);
 	}
 
-	Rays.rays[gID].origin = vec4(0.0f);
-	Rays.rays[gID].direction = vec4(0.0f);
+	// Mark the ray as inactive
+	Rays.rays[gID].origin = vec4(0);
+	Rays.rays[gID].direction = vec4(0);
 }

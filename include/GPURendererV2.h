@@ -20,16 +20,16 @@ namespace RayTracer
 		vk::PhysicalDevice PhysicalDevice = nullptr;
 		vk::Device device = nullptr;
 		uint32_t ComputeQueueIndex = 0;
+		vk::DeviceSize RayBufferSize = 0;
 
 		enum class GPUBufferBindings
 		{
 			ray_buffer,
 			intersection_buffer,
 			sphere_buffer,
+			sample_buffer,
 			GPUBufferBindingCount
 		};
-
-		using gpu_buffer_vector = std::vector<void *>;
 
 		class BufferCreationAndMappingData
 		{
@@ -37,19 +37,9 @@ namespace RayTracer
 			vk::DeviceSize buffer_size = 0;
 			vk::BufferUsageFlagBits usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
 			vk::DescriptorType descriptor_type = vk::DescriptorType::eStorageBuffer;
-			std::vector<vk::Buffer> buffers;
-			std::vector<vk::DeviceMemory> device_memories;
-			gpu_buffer_vector *data_pointers = nullptr;
-
-			void resize(size_t size)
-			{
-				buffers.resize(size, nullptr);
-				device_memories.resize(size, nullptr);
-				if (data_pointers)
-				{
-					data_pointers->resize(size, nullptr);
-				}
-			}
+			vk::Buffer buffer;
+			vk::DeviceMemory device_memory;
+			void **data_pointer = nullptr;
 		};
 
 		Camera camera;
@@ -59,11 +49,13 @@ namespace RayTracer
 		std::vector<BufferCreationAndMappingData> BufferData;
 
 		// Pointers are of type GPURay*
-		gpu_buffer_vector gpu_ray_buffers;
+		void *gpu_ray_buffer;
 		// Pointers are of type GPUIntersection*
-		gpu_buffer_vector gpu_intersection_buffers;
+		void *gpu_intersection_buffer;
 		// Pointers are of type GPUSphere*
-		gpu_buffer_vector gpu_sphere_buffers;
+		void *gpu_sphere_buffer;
+		// Pointers are of type GPUSample*
+		void *gpu_sample_buffer;
 		
 		void *CreateAndMapMemory(uint32_t queueFamilyIndex, const vk::DeviceSize memorySize, const vk::BufferUsageFlags usage_flags,
 			vk::Buffer &vk_buffer, vk::DeviceMemory &device_memory);

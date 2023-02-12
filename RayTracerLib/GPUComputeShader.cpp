@@ -7,7 +7,9 @@ using RayTracer::GPUComputeShader;
 GPUComputeShader::GPUComputeShader(const std::string &shader_file_name, vk::Device device)
 	: ShaderFileName(shader_file_name), Device(device)
 {
+#ifdef _DEBUG
 	std::cout << __FUNCTION__ << std::endl;
+#endif
 
 	ShaderModule = CreateShaderModule();
 	if (ShaderModule == static_cast<vk::ShaderModule>(nullptr))

@@ -26,8 +26,6 @@ struct Intersection
 	uint object_id;
 	uint face_id;
 	uint material_id;
-	uint pixelXIndex;
-	uint pixelYIndex;
 };
 
 layout(std430, set = 0, binding = 0) buffer in_intersections
@@ -68,6 +66,8 @@ void main()
 		return;
 	}
 
-	Intersections.intersections[gID].ray_color = vec4(1.0f, 1.0f, 1.0f, 1.0f) * 
-		vec4(Intersections.intersections[gID].intersection_normal.xyz, 1.0f);
+	Intersections.intersections[gID].ray_color *= vec4(0.8f, 0.8f, 0.8f, 1.0f);// * vec4(Intersections.intersections[gID].intersection_normal.xyz, 1.0f);
+	
+	Rays.rays[gID].origin = Intersections.intersections[gID].intersection_location;
+	Rays.rays[gID].direction = Intersections.intersections[gID].intersection_normal;
 }
