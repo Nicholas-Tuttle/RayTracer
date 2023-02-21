@@ -35,6 +35,7 @@ struct Intersection
 	uint object_id;
 	uint face_id;
 	uint material_id;
+	int material_index;
 };
 
 layout(std430, set = 0, binding = 1) buffer out_intersections
@@ -139,6 +140,8 @@ void main()
 			Intersections.intersections[gID].intersection_location = vec4(info.location, 0.0);
 			Intersections.intersections[gID].intersection_normal = vec4(info.normal, 0.0);
 			Intersections.intersections[gID].material_id = info.material_id;
+			// TODO: Fill in the correct material index
+			Intersections.intersections[gID].material_index = -1;
 		}
 	}
 }

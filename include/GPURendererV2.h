@@ -28,6 +28,7 @@ namespace RayTracer
 			intersection_buffer,
 			sphere_buffer,
 			sample_buffer,
+			diffuse_material_parameters,
 			GPUBufferBindingCount
 		};
 
@@ -56,6 +57,8 @@ namespace RayTracer
 		void *gpu_sphere_buffer;
 		// Pointers are of type GPUSample*
 		void *gpu_sample_buffer;
+		// Pointers are of type GPUDiffuseMaterialParameters*
+		void *gpu_diffuse_material_parameters_buffer;
 		
 		void *CreateAndMapMemory(uint32_t queueFamilyIndex, const vk::DeviceSize memorySize, const vk::BufferUsageFlags usage_flags,
 			vk::Buffer &vk_buffer, vk::DeviceMemory &device_memory);
