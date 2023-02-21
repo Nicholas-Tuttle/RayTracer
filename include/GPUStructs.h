@@ -1,11 +1,16 @@
 #pragma once
 
 #include "Sphere.h"
+#include "DiffuseBSDF.h"
+
+#define GPU_PADDING_BYTES(byte_count) char _[byte_count] = { 0 };
 
 namespace RayTracer
 {
 	// When editing the structs in the shader code calculate the size 
 	// of the GPU struct and include alignment in these structs 
+
+#pragma region Ray Tracing Structures
 
 	struct GPURay
 	{
@@ -13,7 +18,7 @@ namespace RayTracer
 		float direction[4];
 		uint32_t pixelXIndex;
 		uint32_t pixelYIndex;
-		char padding[8]; // Needed for "vec4" alignment
+		GPU_PADDING_BYTES(8);
 	};
 
 	struct GPUIntersection
@@ -27,6 +32,8 @@ namespace RayTracer
 		uint32_t object_id;
 		uint32_t face_id;
 		uint32_t material_id;
+		int32_t material_index;
+		GPU_PADDING_BYTES(12);
 	};
 
 	struct GPUSphere
@@ -63,11 +70,92 @@ namespace RayTracer
 		float position[4];
 		float radius;
 		uint32_t material_index;
-		char padding[8]; // Needed for "vec4" alignment
+		GPU_PADDING_BYTES(8);
 	};
 
 	struct GPUSample
 	{
 		float color[4];
 	};
+
+#pragma endregion
+
+#pragma region Materials
+
+	struct GPUDiffuseMaterialParameters
+	{
+		float color[4];
+		float roughness;
+		GPU_PADDING_BYTES(12);
+
+		GPUDiffuseMaterialParameters()
+		{
+			color[0] = 1;
+			color[1] = 1;
+			color[2] = 1;
+			color[3] = 1;
+			roughness = 0;
+		}
+
+		GPUDiffuseMaterialParameters(const RayTracer::DiffuseBSDF *diffuse)
+		{
+			if (nullptr == diffuse)
+			{
+				return;
+			}
+
+			color[0] = diffuse->SurfaceColor().R_float();
+			color[1] = diffuse->SurfaceColor().G_float();
+			color[2] = diffuse->SurfaceColor().B_float();
+			color[3] = 1;
+			roughness = diffuse->Roughness();
+		}
+	};
+
+	// Based on Blender's Principled BSDF object material shader
+	// TODO: If this doesn't copy to the GPU code correctly the float[4] arrays might need to be ordered differently in the struct
+	// TODO: This should replace basically every other surface-shader and they should be removed
+	// TODO: Add default values where needed
+	struct GPUPrincipledMaterialParameters
+	{
+		// Basic parameters
+		float color[4];
+		float roughness;
+		float metallic;
+		// Specular
+		float specular;
+		float specular_tint;
+		// Anisotropic
+		float anisotropic;
+		float anisotropic_rotation;
+		// Sheen
+		float sheen;
+		float sheen_tint;
+		// Clearcoat
+		float clearcoat;
+		float clearcoat_roughness;
+		// Transmission/transparency
+		float index_of_refraction;
+		float transmission;
+		float transmission_roughness;
+		// Emission
+		float emission_color[4];
+		float emission_strength;
+		// Subsurface
+		float subsurface_color[4];
+		float subsurface_radius[4];
+		float subsurface_index_of_refraction;
+		float subsurface_anisotropy;
+		float subsurface_strength;
+		// Geometric
+		float normal[4];
+		float clearcoat_normal[4];
+		float tangent[4];
+		// Struct alignment
+		GPU_PADDING_BYTES(12);
+	};
+
+#pragma endregion
 }
+
+#undef GPU_PADDING_BYTES

@@ -26,6 +26,7 @@ struct Intersection
 	uint object_id;
 	uint face_id;
 	uint material_id;
+	int material_index;
 };
 
 layout(std430, set = 0, binding = 0) buffer in_intersections
@@ -46,6 +47,17 @@ layout(std430, set = 0, binding = 1) buffer out_resultant_rays
 	Ray rays[];
 } Rays;
 
+struct MaterialParameter
+{
+	vec4 color;
+	float roughness;
+};
+
+layout(std430, set = 0, binding = 2) buffer in_material_parameters
+{
+	MaterialParameter params[];
+} MaterialParameters;
+
 layout(local_size_x = 1024, local_size_y = 1, local_size_z = 1) in;
 void main()
 {
@@ -53,7 +65,7 @@ void main()
 
 	if(gID == 0)
 	{
-		debugPrintfEXT("GPU Diffuse Material: %u, %u", Rays.rays.length(), Intersections.intersections.length());
+		debugPrintfEXT("GPU Diffuse Material: %u, %u, %u", Rays.rays.length(), Intersections.intersections.length(), MaterialParameters.params.length());
 	}
 	
 	if (gID > Intersections.intersections.length())
@@ -66,8 +78,17 @@ void main()
 		return;
 	}
 
-	Intersections.intersections[gID].ray_color *= vec4(0.8f, 0.8f, 0.8f, 1.0f);// * vec4(Intersections.intersections[gID].intersection_normal.xyz, 1.0f);
+	if(Intersections.intersections[gID].material_index < 0 || Intersections.intersections[gID].material_index >= MaterialParameters.params.length())
+	{
+		// TODO: Use a default material here
+		Intersections.intersections[gID].ray_color *= vec4(0.8f, 0.8f, 0.8f, 1.0f);
+	}
+	else
+	{
+		Intersections.intersections[gID].ray_color *= MaterialParameters.params[Intersections.intersections[gID].material_index].color;
+	}
 	
 	Rays.rays[gID].origin = Intersections.intersections[gID].intersection_location;
+	// TODO: Calculate a bounced ray
 	Rays.rays[gID].direction = Intersections.intersections[gID].intersection_normal;
 }

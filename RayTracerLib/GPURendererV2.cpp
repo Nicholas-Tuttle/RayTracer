@@ -9,6 +9,8 @@
 #include "GPUSampleAccumulator.h"
 #include "GPUStructs.h"
 
+#include "DiffuseBSDF.h"
+
 using RayTracer::GPURendererV2;
 using RayTracer::Camera;
 using RayTracer::IScene;
@@ -17,12 +19,14 @@ using RayTracer::ElapsedTimer;
 
 using RayTracer::GPURayInitializer;
 using RayTracer::GPURayIntersector;
+using RayTracer::GPUMaterialCalculator;
+using RayTracer::GPUSampleAccumulator;
+
 using RayTracer::GPURay;
 using RayTracer::GPUSphere;
+using RayTracer::GPUDiffuseMaterialParameters;
 
-using RayTracer::GPUMaterialCalculator;
-
-using RayTracer::GPUSampleAccumulator;
+using RayTracer::DiffuseBSDF;
 
 GPURendererV2::GPURendererV2(const Camera &camera, unsigned int samples, const IScene &scene) 
 	: camera(camera), samples(samples), scene(scene)
@@ -99,6 +103,21 @@ GPURendererV2::GPURendererV2(const Camera &camera, unsigned int samples, const I
 	BufferData[(int)GPUBufferBindings::sample_buffer].descriptor_type = vk::DescriptorType::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::sample_buffer].data_pointer = &gpu_sample_buffer;
 
+	std::vector<GPUDiffuseMaterialParameters> diffuse_material_parameters;
+	for (const auto &material : scene.Materials())
+	{
+		const DiffuseBSDF *diffuse_material = dynamic_cast<const DiffuseBSDF *>(material);
+		if (nullptr != diffuse_material)
+		{
+			diffuse_material_parameters.emplace_back(diffuse_material);
+		}
+	}
+
+	BufferData[(int)GPUBufferBindings::diffuse_material_parameters].buffer_size = sizeof(GPUDiffuseMaterialParameters) * diffuse_material_parameters.size();
+	BufferData[(int)GPUBufferBindings::diffuse_material_parameters].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
+	BufferData[(int)GPUBufferBindings::diffuse_material_parameters].descriptor_type = vk::DescriptorType::eStorageBuffer;
+	BufferData[(int)GPUBufferBindings::diffuse_material_parameters].data_pointer = &gpu_diffuse_material_parameters_buffer;
+
 	if (vk::Result::eSuccess != CreateAndMapMemories(ComputeQueueIndex))
 	{
 		throw std::exception("Failed to create and map memories for compute shader");
@@ -124,7 +143,13 @@ GPURendererV2::GPURendererV2(const Camera &camera, unsigned int samples, const I
 		throw std::exception("Sample buffer data for GPU compute failed to allocate");
 	}
 
+	if (nullptr == gpu_diffuse_material_parameters_buffer)
+	{
+		throw std::exception("Diffuse material parameters for GPU compute failed to allocate");
+	}
+
 	memcpy(gpu_sphere_buffer, spheres.data(), spheres.size() * sizeof(GPUSphere));
+	memcpy(gpu_diffuse_material_parameters_buffer, diffuse_material_parameters.data(), diffuse_material_parameters.size() * sizeof(GPUDiffuseMaterialParameters));
 
 	std::cout << "GPU Renderer initialization took" << ": line " << __LINE__ << ": time (ms): " << performance_timer.Poll().count() << "\n";
 }
@@ -267,7 +292,8 @@ void GPURendererV2::Render(std::shared_ptr<IImage> &out_image)
 
 			material_calculator.Execute(ComputeQueueIndex, RayBufferSize,
 				BufferData[(int)GPUBufferBindings::intersection_buffer].buffer,
-				BufferData[(int)GPUBufferBindings::ray_buffer].buffer);
+				BufferData[(int)GPUBufferBindings::ray_buffer].buffer,
+				BufferData[(int)GPUBufferBindings::diffuse_material_parameters].buffer);
 
 	#if defined _DEBUG && false
 			std::cout << "---- Calculated materials for ray buffer " << i << " ----" << "\n";

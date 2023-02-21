@@ -29,20 +29,18 @@ GPUDiffuseMaterial::GPUDiffuseMaterial(vk::Device device)
 
 vk::DescriptorSetLayout GPUDiffuseMaterial::DescribeShader()
 {
-	vk::DescriptorSetLayoutBinding descriptorSetLayoutBindings[2] = {};
+	vk::DescriptorSetLayoutBinding descriptorSetLayoutBindings[3] = {};
 
-	descriptorSetLayoutBindings[0].binding = 0;
-	descriptorSetLayoutBindings[0].descriptorType = vk::DescriptorType::eStorageBuffer;
-	descriptorSetLayoutBindings[0].descriptorCount = 1;
-	descriptorSetLayoutBindings[0].stageFlags = vk::ShaderStageFlagBits::eCompute;
-
-	descriptorSetLayoutBindings[1].binding = 1;
-	descriptorSetLayoutBindings[1].descriptorType = vk::DescriptorType::eStorageBuffer;
-	descriptorSetLayoutBindings[1].descriptorCount = 1;
-	descriptorSetLayoutBindings[1].stageFlags = vk::ShaderStageFlagBits::eCompute;
+	for (size_t i = 0; i < ARRAYSIZE(descriptorSetLayoutBindings); i++)
+	{
+		descriptorSetLayoutBindings[i].binding = static_cast<uint32_t>(i);
+		descriptorSetLayoutBindings[i].descriptorType = vk::DescriptorType::eStorageBuffer;
+		descriptorSetLayoutBindings[i].descriptorCount = 1;
+		descriptorSetLayoutBindings[i].stageFlags = vk::ShaderStageFlagBits::eCompute;
+	}
 
 	vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo;
-	descriptorSetLayoutCreateInfo.bindingCount = 2;
+	descriptorSetLayoutCreateInfo.bindingCount = ARRAYSIZE(descriptorSetLayoutBindings);
 	descriptorSetLayoutCreateInfo.pBindings = descriptorSetLayoutBindings;
 
 	return Device.createDescriptorSetLayout(descriptorSetLayoutCreateInfo);
@@ -79,17 +77,17 @@ vk::Result GPUDiffuseMaterial::CreatePipeline()
 
 std::vector<vk::DescriptorSet> GPUDiffuseMaterial::AllocateDescriptorSets()
 {
-	vk::DescriptorPoolSize descriptorPoolSizes[2] = {};
+	vk::DescriptorPoolSize descriptorPoolSizes[3] = {};
 
-	descriptorPoolSizes[0].type = vk::DescriptorType::eStorageBuffer;
-	descriptorPoolSizes[0].descriptorCount = 1;
-
-	descriptorPoolSizes[1].type = vk::DescriptorType::eStorageBuffer;
-	descriptorPoolSizes[1].descriptorCount = 1;
+	for (size_t i = 0; i < ARRAYSIZE(descriptorPoolSizes); i++)
+	{
+		descriptorPoolSizes[i].type = vk::DescriptorType::eStorageBuffer;
+		descriptorPoolSizes[i].descriptorCount = 1;
+	}
 
 	vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo = {};
 	descriptorPoolCreateInfo.maxSets = 1;
-	descriptorPoolCreateInfo.poolSizeCount = 2;
+	descriptorPoolCreateInfo.poolSizeCount = ARRAYSIZE(descriptorPoolSizes);
 	descriptorPoolCreateInfo.pPoolSizes = descriptorPoolSizes;
 
 	vk::DescriptorPool descriptorPool = Device.createDescriptorPool(descriptorPoolCreateInfo);
@@ -107,40 +105,36 @@ std::vector<vk::DescriptorSet> GPUDiffuseMaterial::AllocateDescriptorSets()
 }
 
 void GPUDiffuseMaterial::UpdateDescriptorSets(std::vector<vk::DescriptorSet> &descriptorSet,
-	vk::Buffer input_gpu_intersection_buffer, vk::Buffer output_gpu_ray_buffer)
+	vk::Buffer input_gpu_intersection_buffer, vk::Buffer output_gpu_ray_buffer, vk::Buffer input_material_parameters)
 {
-	vk::DescriptorBufferInfo writeDescriptorSetBufferInfo[2] = {};
-	vk::WriteDescriptorSet writeDescriptorSet[2] = {};
+	vk::DescriptorBufferInfo writeDescriptorSetBufferInfo[3] = {};
+	vk::WriteDescriptorSet writeDescriptorSet[ARRAYSIZE(writeDescriptorSetBufferInfo)] = {};
+
+	for (size_t i = 0; i < ARRAYSIZE(writeDescriptorSetBufferInfo); i++)
+	{
+		writeDescriptorSetBufferInfo[i].offset = 0;
+		writeDescriptorSetBufferInfo[i].range = VK_WHOLE_SIZE;
+
+		writeDescriptorSet[i].dstSet = descriptorSet[0];
+		writeDescriptorSet[i].dstBinding = static_cast<uint32_t>(i);
+		writeDescriptorSet[i].descriptorCount = 1;
+		writeDescriptorSet[i].descriptorType = vk::DescriptorType::eStorageBuffer;
+		writeDescriptorSet[i].pBufferInfo = &writeDescriptorSetBufferInfo[i];
+	}
 
 	writeDescriptorSetBufferInfo[0].buffer = input_gpu_intersection_buffer;
-	writeDescriptorSetBufferInfo[0].offset = 0;
-	writeDescriptorSetBufferInfo[0].range = VK_WHOLE_SIZE;
-
-	writeDescriptorSet[0].dstSet = descriptorSet[0];
-	writeDescriptorSet[0].dstBinding = 0;
-	writeDescriptorSet[0].descriptorCount = 1;
-	writeDescriptorSet[0].descriptorType = vk::DescriptorType::eStorageBuffer;
-	writeDescriptorSet[0].pBufferInfo = &writeDescriptorSetBufferInfo[0];
-
 	writeDescriptorSetBufferInfo[1].buffer = output_gpu_ray_buffer;
-	writeDescriptorSetBufferInfo[1].offset = 0;
-	writeDescriptorSetBufferInfo[1].range = VK_WHOLE_SIZE;
+	writeDescriptorSetBufferInfo[2].buffer = input_material_parameters;
 
-	writeDescriptorSet[1].dstSet = descriptorSet[0];
-	writeDescriptorSet[1].dstBinding = 1;
-	writeDescriptorSet[1].descriptorCount = 1;
-	writeDescriptorSet[1].descriptorType = vk::DescriptorType::eStorageBuffer;
-	writeDescriptorSet[1].pBufferInfo = &writeDescriptorSetBufferInfo[1];
-
-	Device.updateDescriptorSets(2, writeDescriptorSet, 0, nullptr);
+	Device.updateDescriptorSets(ARRAYSIZE(writeDescriptorSetBufferInfo), writeDescriptorSet, 0, nullptr);
 }
 
 void GPUDiffuseMaterial::Execute(uint32_t ComputeQueueIndex, size_t incoming_ray_count,
-	vk::Buffer input_gpu_intersection_buffer, vk::Buffer output_gpu_ray_buffer)
+	vk::Buffer input_gpu_intersection_buffer, vk::Buffer output_gpu_ray_buffer, vk::Buffer input_material_parameters)
 {
 	DiffuseMaterialPushConstants.material_id = 1;
 
-	UpdateDescriptorSets(DescriptorSets, input_gpu_intersection_buffer, output_gpu_ray_buffer);
+	UpdateDescriptorSets(DescriptorSets, input_gpu_intersection_buffer, output_gpu_ray_buffer, input_material_parameters);
 
 	vk::CommandPoolCreateInfo commandPoolCreateInfo = {};
 	commandPoolCreateInfo.queueFamilyIndex = ComputeQueueIndex;
