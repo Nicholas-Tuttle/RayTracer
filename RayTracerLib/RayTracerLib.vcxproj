@@ -91,13 +91,11 @@
     <ClCompile Include="GPURayInitializer.cpp" />
     <ClCompile Include="GPURayIntersector.cpp" />
     <ClCompile Include="GPURenderer.cpp" />
-    <ClCompile Include="GPURendererV2.cpp" />
     <ClCompile Include="GPUSampleAccumulator.cpp" />
     <ClCompile Include="GPUWorldMaterial.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="PixelRenderTask.cpp" />
     <ClCompile Include="PrincipledBSDF.cpp" />
-    <ClCompile Include="Shaders\RayIntersection.cpp" />
     <ClCompile Include="ThreadPool.cpp" />
     <ClCompile Include="VulkanUtils.cpp" />
     <ClCompile Include="World.cpp" />
@@ -115,7 +113,6 @@
     <ClInclude Include="..\include\GPURayIntersector.h" />
     <ClInclude Include="..\include\GPUStructs.h" />
     <ClInclude Include="..\include\GPURenderer.h" />
-    <ClInclude Include="..\include\GPURendererV2.h" />
     <ClInclude Include="..\include\GPUSampleAccumulator.h" />
     <ClInclude Include="..\include\GPUWorldMaterial.h" />
     <ClInclude Include="..\include\IImage.h" />
@@ -138,23 +135,9 @@
     <ClInclude Include="..\include\Vector3.h" />
     <ClInclude Include="..\include\VulkanUtils.h" />
     <ClInclude Include="..\include\World.h" />
-    <ClInclude Include="Shaders\RayIntersection.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CPURenderer.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="Shaders\RayIntersection.comp">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
-      <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(FullPath)</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">glslangValidator.exe -V -e main %(FullPath) -o $(OutDir)\..\bin\%(Filename).comp.spv</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\..\bin\%(FileName).comp.spv</Outputs>
-      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
-      <BuildInParallel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</BuildInParallel>
-    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="GPUSphereIntersector.comp">

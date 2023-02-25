@@ -26,14 +26,15 @@ const std::vector<const char *> VKUtils::DebugDeviceExtensions = {};
 static vk::ValidationFeatureEnableEXT VulkanDebugPrintfInstanceItemEnable = vk::ValidationFeatureEnableEXT::eDebugPrintf;
 vk::ValidationFeaturesEXT VKUtils::VulkanDebugPrintfInstanceItem(1, &VulkanDebugPrintfInstanceItemEnable, 0, nullptr);
 
-// This Vulkan debug callback receives messages from the 
-// debugPrintfEXT (GLSL) or printf (HLSL) functions in the
+// This Vulkan debug callback receives messages from the debugPrintfEXT (GLSL) or printf (HLSL) functions in the
 // compute shaders, along with other vulkan messages. 
 // For more reference, see:
 // https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VkDebugUtilsMessengerEXT.html
 // https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCreateDebugUtilsMessengerEXT.html
 // https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkDestroyDebugUtilsMessengerEXT.html
-// for more info
+// for more info.
+// NOTE: This default callback will take the portion of the string after the last '|' character and print
+// that due to the default formatting of Vulkan callback messages containing a lot of extra information
 VKAPI_ATTR VkBool32 VKAPI_CALL VKUtils::DefaultVulkanDebugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
@@ -43,39 +44,10 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VKUtils::DefaultVulkanDebugCallback(
 {
 #ifdef _DEBUG
     std::cout << "[VULKAN DEBUG] : ";
-    
-    switch (messageSeverity)
-    {
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-    {
-        std::cout << "[VERBOSE]";
-        break;
-    }
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-    {
-        std::cout << "[INFO]   ";
-        break;
-    }
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-    {
-        std::cout << "[WARNING]";
-        break;
-    }
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-    {
-        std::cout << "[ERROR]  ";
-        break;
-    }
-    default:
-    {
-        std::cout << "[UNKNOWN]";
-        break;
-    }
-    }
-
-    std::cout << " : [FLAGS]: " << messageType << "\t" << pCallbackData->pMessage << "\n";
+    std::string full_message(pCallbackData->pMessage);
+    std::string user_message = full_message.substr(full_message.find_last_of('|') + 1);
+    std::cout << user_message << "\n";
 #endif
-
     return VK_FALSE;
 }
 

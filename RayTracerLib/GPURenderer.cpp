@@ -1,485 +1,349 @@
 #include "GPURenderer.h"
-#include <chrono>
+#include <vulkan/vulkan.hpp>
 #include <iostream>
-#include <Sphere.h>
+#include "ElapsedTimer.h"
+#include "VulkanUtils.h"
+#include "GPURayInitializer.h"
+#include "GPURayIntersector.h"
+#include "GPUMaterialCalculator.h"
+#include "GPUSampleAccumulator.h"
+#include "GPUStructs.h"
 
-#include "Shaders/RayIntersection.h"
+#include "DiffuseBSDF.h"
 
 using RayTracer::GPURenderer;
 using RayTracer::Camera;
 using RayTracer::IScene;
-using RayTracer::Sphere;
-using RayTracer::Image;
-using RayTracer::Color;
-using RayTracer::RayIntersectionComputeShader;
+using RayTracer::IImage;
+using RayTracer::ElapsedTimer;
 
-#define EXIT_ON_BAD_RESULT(result) if (VK_SUCCESS != result) { fprintf(stderr, "Failure at %u %s\n", __LINE__, __FILE__); exit(-1); }
-#define RETURN_ON_BAD_RETCODE(retcode) do { if(VK_SUCCESS != retcode) { return retcode; } }while(0)
+using RayTracer::GPURayInitializer;
+using RayTracer::GPURayIntersector;
+using RayTracer::GPUMaterialCalculator;
+using RayTracer::GPUSampleAccumulator;
 
-#define SHOW_ONLY_DEBUG_PRINTF_EXT_MESSAGES false
+using RayTracer::GPURay;
+using RayTracer::GPUSphere;
+using RayTracer::GPUDiffuseMaterialParameters;
 
-static const size_t shader_local_size_x = 1024;
+using RayTracer::DiffuseBSDF;
 
-// This Vulkan debug callback receives messages from the 
-// debugPrintfEXT (GLSL) or printf (HLSL) functions in the
-// compute shaders, along with other vulkan messages. 
-// For more reference, see:
-// https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VkDebugUtilsMessengerEXT.html
-// https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCreateDebugUtilsMessengerEXT.html
-// https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkDestroyDebugUtilsMessengerEXT.html
-// for more info
-static VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugCallback(
-    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-    VkDebugUtilsMessageTypeFlagsEXT messageType,
-    const VkDebugUtilsMessengerCallbackDataEXT * pCallbackData,
-    void *pUserData
-)
+GPURenderer::GPURenderer(const Camera &camera, unsigned int samples, const IScene &scene) 
+	: camera(camera), samples(samples), scene(scene)
 {
-#if SHOW_ONLY_DEBUG_PRINTF_EXT_MESSAGES
-    // NOTE:
-    // This message filtering can (and probably should) be done as part of the 
-    // intialization in "vkCreateDebugUtilsMessengerEXT", using the 
-    // VkDebugUtilsMessengerCreateInfoEXT.messageType variable. 
-    // The initialization in "CreateDebugMessenger()" does not do any filtering 
-    // and it is instead done here to demonstrate one potential usage of the 
-    // messageType parameter, but is not optimal.
-    if (VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT != messageType)
-    {
-        return VK_FALSE;
-    }
+	ElapsedTimer performance_timer;
+
+	std::cout << "Perf counter created" << ": line " << __LINE__ << ": time (ms): " << performance_timer.Poll().count() << "\n";
+
+	RayBufferSize = camera.Resolution().X * camera.Resolution().Y;
+
+	if (!VKUtils::VerifyInstanceLayers(VKUtils::DebugInstanceLayers) ||
+		!VKUtils::VerifyInstanceExtensions(VKUtils::DebugInstanceExtensions))
+	{
+		throw std::exception("Failed to verify instance layers or extensions");
+	}
+
+	instance = VKUtils::CreateHeadlessVulkanInstance(VKUtils::DebugInstanceLayers, VKUtils::DebugInstanceExtensions,
+		(void *)&VKUtils::VulkanDebugPrintfInstanceItem);
+
+#if defined _DEBUG
+	debugMessenger = VKUtils::CreateDebugMessenger(instance, VKUtils::DefaultVulkanDebugCallback);
 #endif
 
-    std::cout << "[VULKAN DEBUG] : ";
+	std::vector<vk::PhysicalDevice> devices;
+	VKUtils::EnumerateDevices(instance, devices);
+	if (devices.size() == 0)
+	{
+		throw std::exception("Failed to enumerate devices");
+	}
 
-    switch (messageSeverity)
-    {
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-    {
-        std::cout << "[VERBOSE]";
-        break;
-    }
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-    {
-        std::cout << "[INFO]   ";
-        break;
-    }
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-    {
-        std::cout << "[WARNING]";
-        break;
-    }
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-    {
-        std::cout << "[ERROR]  ";
-        break;
-    }
-    default:
-    {
-        std::cout << "[UNKNOWN]";
-        break;
-    }
-    }
+	PhysicalDevice = devices[0];
 
-    std::cout << " : [FLAGS]: " << messageType << "\t" << pCallbackData->pMessage << std::endl;
+	if (!VKUtils::VerifyDeviceExtensions(PhysicalDevice, VKUtils::DebugDeviceExtensions))
+	{
+		throw std::exception("Failed to verify device layers or extensions");
+	}
 
-    return VK_FALSE;
+	if (vk::Result::eSuccess != VKUtils::GetBestComputeQueue(PhysicalDevice, ComputeQueueIndex))
+	{
+		throw std::exception("Failed to get best compute queue");
+	}
+
+	device = VKUtils::CreateDevice(PhysicalDevice, VKUtils::DebugDeviceExtensions, ComputeQueueIndex);
+
+	BufferData.resize((size_t)GPUBufferBindings::GPUBufferBindingCount);
+
+	BufferData[(int)GPUBufferBindings::ray_buffer].buffer_size = sizeof(GPURay) * RayBufferSize;
+	BufferData[(int)GPUBufferBindings::ray_buffer].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
+	BufferData[(int)GPUBufferBindings::ray_buffer].descriptor_type = vk::DescriptorType::eStorageBuffer;
+	BufferData[(int)GPUBufferBindings::ray_buffer].data_pointer = &gpu_ray_buffer;
+
+	BufferData[(int)GPUBufferBindings::intersection_buffer].buffer_size = sizeof(GPUIntersection) * RayBufferSize;
+	BufferData[(int)GPUBufferBindings::intersection_buffer].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
+	BufferData[(int)GPUBufferBindings::intersection_buffer].descriptor_type = vk::DescriptorType::eStorageBuffer;
+	BufferData[(int)GPUBufferBindings::intersection_buffer].data_pointer = &gpu_intersection_buffer;
+
+	std::vector<GPUSphere> spheres;
+	for (const auto &object : scene.Objects())
+	{
+		const Sphere *sphere = dynamic_cast<const Sphere *>(object);
+		if (nullptr != sphere)
+		{
+			spheres.emplace_back(sphere);
+		}
+	}
+
+	BufferData[(int)GPUBufferBindings::sphere_buffer].buffer_size = sizeof(GPUSphere) * spheres.size();
+	BufferData[(int)GPUBufferBindings::sphere_buffer].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
+	BufferData[(int)GPUBufferBindings::sphere_buffer].descriptor_type = vk::DescriptorType::eStorageBuffer;
+	BufferData[(int)GPUBufferBindings::sphere_buffer].data_pointer = &gpu_sphere_buffer;
+
+	BufferData[(int)GPUBufferBindings::sample_buffer].buffer_size = sizeof(GPUSample) * RayBufferSize;
+	BufferData[(int)GPUBufferBindings::sample_buffer].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
+	BufferData[(int)GPUBufferBindings::sample_buffer].descriptor_type = vk::DescriptorType::eStorageBuffer;
+	BufferData[(int)GPUBufferBindings::sample_buffer].data_pointer = &gpu_sample_buffer;
+
+	std::vector<GPUDiffuseMaterialParameters> diffuse_material_parameters;
+	for (const auto &material : scene.Materials())
+	{
+		const DiffuseBSDF *diffuse_material = dynamic_cast<const DiffuseBSDF *>(material);
+		if (nullptr != diffuse_material)
+		{
+			diffuse_material_parameters.emplace_back(diffuse_material);
+		}
+	}
+
+	BufferData[(int)GPUBufferBindings::diffuse_material_parameters].buffer_size = sizeof(GPUDiffuseMaterialParameters) * diffuse_material_parameters.size();
+	BufferData[(int)GPUBufferBindings::diffuse_material_parameters].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
+	BufferData[(int)GPUBufferBindings::diffuse_material_parameters].descriptor_type = vk::DescriptorType::eStorageBuffer;
+	BufferData[(int)GPUBufferBindings::diffuse_material_parameters].data_pointer = &gpu_diffuse_material_parameters_buffer;
+
+	if (vk::Result::eSuccess != CreateAndMapMemories(ComputeQueueIndex))
+	{
+		throw std::exception("Failed to create and map memories for compute shader");
+	}
+
+	if (nullptr == gpu_ray_buffer)
+	{
+		throw std::exception("Ray initialization buffer data for GPU compute failed to allocate");
+	}
+
+	if (nullptr == gpu_intersection_buffer)
+	{
+		throw std::exception("Ray intersection buffer data for GPU compute failed to allocate");
+	}
+
+	if (nullptr == gpu_sphere_buffer)
+	{
+		throw std::exception("Sphere buffer data for GPU compute failed to allocate");
+	}
+
+	if (nullptr == gpu_sample_buffer)
+	{
+		throw std::exception("Sample buffer data for GPU compute failed to allocate");
+	}
+
+	if (nullptr == gpu_diffuse_material_parameters_buffer)
+	{
+		throw std::exception("Diffuse material parameters for GPU compute failed to allocate");
+	}
+
+	memcpy(gpu_sphere_buffer, spheres.data(), spheres.size() * sizeof(GPUSphere));
+	memcpy(gpu_diffuse_material_parameters_buffer, diffuse_material_parameters.data(), diffuse_material_parameters.size() * sizeof(GPUDiffuseMaterialParameters));
+
+	std::cout << "GPU Renderer initialization took" << ": line " << __LINE__ << ": time (ms): " << performance_timer.Poll().count() << "\n";
 }
 
-// Verifies the instance layers in requiredInstanceLayers are available
-bool GPURenderer::VerifyInstanceLayers()
+void *GPURenderer::CreateAndMapMemory(uint32_t queueFamilyIndex, const vk::DeviceSize memorySize, const vk::BufferUsageFlags usage_flags,
+	vk::Buffer &vk_buffer, vk::DeviceMemory &device_memory)
 {
-    if (GPUDebugEnabled)
-    {
-        // VK_LAYER_KHRONOS_validation device extension must be enabled
-        requiredInstanceLayers.emplace_back("VK_LAYER_KHRONOS_validation");
-    }
-    
-    if (requiredInstanceLayers.size() == 0)
-    {
-        return true;
-    }
+	if (memorySize == 0)
+	{
+		return nullptr;
+	}
 
-    uint32_t layerCount = 0;
-    vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+	vk::PhysicalDeviceMemoryProperties properties = {};
+	PhysicalDevice.getMemoryProperties(&properties);
 
-    std::vector<VkLayerProperties> availableLayers(layerCount);
-    vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+	// set memoryTypeIndex to an invalid entry in the properties.memoryTypes array
+	uint32_t memoryTypeIndex = VK_MAX_MEMORY_TYPES;
 
-    for (const char *layerName : requiredInstanceLayers)
-    {
-        bool layerFound = false;
+	for (uint32_t k = 0; k < properties.memoryTypeCount; k++)
+	{
+		
+		if ((vk::MemoryPropertyFlagBits::eHostVisible & properties.memoryTypes[k].propertyFlags) &&
+			(vk::MemoryPropertyFlagBits::eHostCoherent & properties.memoryTypes[k].propertyFlags) &&
+			(vk::MemoryPropertyFlagBits::eHostCached & properties.memoryTypes[k].propertyFlags) &&
+			(memorySize < properties.memoryHeaps[properties.memoryTypes[k].heapIndex].size))
+		{
+			memoryTypeIndex = k;
+			break;
+		}
+	}
 
-        for (const auto &layerProperties : availableLayers)
-        {
-            if (strcmp(layerName, layerProperties.layerName) == 0)
-            {
-                layerFound = true;
-                break;
-            }
-        }
+	if (memoryTypeIndex == VK_MAX_MEMORY_TYPES)
+	{
+		return nullptr;
+	}
 
-        if (!layerFound)
-        {
-            return false;
-        }
-    }
+	vk::MemoryAllocateInfo memoryAllocateInfo = {};
+	memoryAllocateInfo.allocationSize = memorySize;
+	memoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
 
-    return true;
+	device_memory = device.allocateMemory(memoryAllocateInfo);
+
+	vk::BufferCreateInfo bufferCreateInfo = {};
+	bufferCreateInfo.size = memorySize;
+	bufferCreateInfo.usage = usage_flags;
+	bufferCreateInfo.sharingMode = vk::SharingMode::eExclusive;
+	bufferCreateInfo.queueFamilyIndexCount = 1;
+	bufferCreateInfo.pQueueFamilyIndices = &queueFamilyIndex;
+
+	vk_buffer = device.createBuffer(bufferCreateInfo);
+	device.bindBufferMemory(vk_buffer, device_memory, 0);
+	
+	return device.mapMemory(device_memory, 0, memorySize);
 }
 
-// Verifies the instance extensions in requiredInstanceExtensions are available
-bool GPURenderer::VerifyInstanceExtensions()
+vk::Result GPURenderer::CreateAndMapMemories(uint32_t queueFamilyIndex)
 {
-    if (GPUDebugEnabled)
-    {
-        // VK_EXT_debug_utils instance extensions must be enabled for the VulkanDebugCallback function
-        requiredInstanceExtensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-    }
+	vk::Result result = vk::Result::eSuccess;
 
-    if (requiredInstanceExtensions.size() == 0)
-    {
-        return true;
-    }
+	for (auto &buffer_data : BufferData)
+	{
+		if (nullptr == (*buffer_data.data_pointer = CreateAndMapMemory(queueFamilyIndex, buffer_data.buffer_size, buffer_data.usage_flag_bits,
+			buffer_data.buffer, buffer_data.device_memory)))
+		{
+			result = vk::Result::eErrorMemoryMapFailed;
+		}
+	}
 
-    uint32_t extensionCount = 0;
-    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-
-    std::vector<VkExtensionProperties> availableExtensions(extensionCount);
-    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, availableExtensions.data());
-
-    for (const char *extensionName : requiredInstanceExtensions)
-    {
-        bool layerFound = false;
-
-        for (const auto &extensionProperties : availableExtensions)
-        {
-            if (strcmp(extensionName, extensionProperties.extensionName) == 0)
-            {
-                layerFound = true;
-                break;
-            }
-        }
-
-        if (!layerFound)
-        {
-            return false;
-        }
-    }
-
-    return true;
+	return result;
 }
 
-// Creates a Vulkan Debug Messenger that receives all messages
-VkResult GPURenderer::CreateDebugMessenger(VkInstance instance, VkDebugUtilsMessengerEXT *debugMessenger)
+static bool RayCalculationNeeded(const GPURay * const rays, size_t rays_length, size_t current_bounce, size_t max_bounce)
 {
-    if (nullptr == instance || nullptr == debugMessenger)
-    {
-        return VK_ERROR_UNKNOWN;
-    }
+	if (current_bounce >= max_bounce)
+	{
+		return false;
+	}
 
-    VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
-    createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-    createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-    createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT;
-    createInfo.pfnUserCallback = VulkanDebugCallback;
-    createInfo.pUserData = nullptr;
+	for (size_t i = 0; i < rays_length; i++)
+	{
+		if (rays[i].direction[0] != 0 ||
+			rays[i].direction[1] != 0 ||
+			rays[i].direction[2] != 0)
+		{
+			return true;
+		}
+	}
 
-    // The function must by loaded dynamically by name
-    auto function = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-    if (function != nullptr)
-    {
-        // call dll function vkCreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, debugMessenger);
-        return function(instance, &createInfo, nullptr, debugMessenger);
-    }
-    else
-    {
-        return VK_ERROR_EXTENSION_NOT_PRESENT;
-    }
+	return false;
 }
 
-// Destroys a previously created Vulkan Debug Messenger
-void GPURenderer::DestroyDebugMessenger(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger)
+void GPURenderer::Render(std::shared_ptr<IImage> &out_image)
 {
-    if (nullptr == instance || nullptr == debugMessenger)
-    {
-        return;
-    }
+	ElapsedTimer performance_timer;
 
-    auto function = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
-    // call dll function vkDestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
-    function(instance, debugMessenger, nullptr);
+	std::cout << "[RENDER STARTED]" << ": line " << __LINE__ << ": time (ms): " << performance_timer.Poll().count() << "\n";
+
+	GPURayInitializer ray_initializer(device);
+	GPURayIntersector ray_intersector(device, scene);
+	GPUMaterialCalculator material_calculator(device);
+	GPUSampleAccumulator sample_accumulator(device);
+
+	const size_t max_bounces = 12;
+
+	for (size_t i = 0; i < samples; i++)
+	{
+		std::cout << "############## CALCULATING SAMPLE " << i + 1 << " OF " << samples << " ##############\n";
+
+		ray_initializer.Execute(ComputeQueueIndex, camera, i, BufferData[(int)GPUBufferBindings::ray_buffer].buffer, BufferData[(int)GPUBufferBindings::intersection_buffer].buffer);
+
+#if defined _DEBUG && false
+		std::cout << "---- initialized ray values for ray initialization buffer " << i << " ----" << "\n";
+		for (size_t j = 0, max = 0; j < RayBufferSize && max < 100; j++, max++)
+		{
+			std::cout << std::fixed << std::setprecision(9) << j << ":\t" << ((GPURay *)gpu_ray_buffer)[j].direction[0] << "\t\t"
+				<< ((GPURay *)gpu_ray_buffer)[j].direction[1] << "\t\t" << ((GPURay *)gpu_ray_buffer)[j].direction[2] << "\n";
+		}
+		std::cout << "---- ----" << "\n";
+#endif
+
+		bool ray_calculation_needed = true;
+		size_t current_bounce = 1;
+
+		while (ray_calculation_needed)
+		{
+			ray_intersector.Execute(ComputeQueueIndex, RayBufferSize,
+				BufferData[(int)GPUBufferBindings::ray_buffer].buffer,
+				BufferData[(int)GPUBufferBindings::intersection_buffer].buffer,
+				BufferData[(int)GPUBufferBindings::sphere_buffer].buffer);
+
+	#if defined _DEBUG && false
+			std::cout << "---- Calculated intersections for ray buffer " << i << " ----" << "\n";
+			for (size_t j = 0, max = 0; j < RayBufferSize && max < 100; j++, max++)
+			{
+				std::cout << std::fixed << std::setprecision(9) << j << ":\tMaterial ID: "
+					<< ((GPUIntersection *)gpu_intersection_buffer)[j].material_id << "\n";
+			}
+			std::cout << "---- ----" << "\n";
+	#endif
+
+			material_calculator.Execute(ComputeQueueIndex, RayBufferSize,
+				BufferData[(int)GPUBufferBindings::intersection_buffer].buffer,
+				BufferData[(int)GPUBufferBindings::ray_buffer].buffer,
+				BufferData[(int)GPUBufferBindings::diffuse_material_parameters].buffer);
+
+	#if defined _DEBUG && false
+			std::cout << "---- Calculated materials for ray buffer " << i << " ----" << "\n";
+	#endif
+
+			ray_calculation_needed = RayCalculationNeeded((const GPURay * const)gpu_ray_buffer, RayBufferSize, current_bounce, max_bounces);
+
+			current_bounce++;
+		}
+
+		sample_accumulator.Execute(ComputeQueueIndex, RayBufferSize,
+			BufferData[(int)GPUBufferBindings::intersection_buffer].buffer,
+			BufferData[(int)GPUBufferBindings::sample_buffer].buffer);
+
+#if defined _DEBUG && false
+		std::cout << "---- Accumulated samples for ray buffer " << i << " ----" << "\n";
+#endif
+	}
+
+#if defined _DEBUG && true
+	std::cout << "---- Finalizing Samples ----" << "\n";
+#endif
+	// Finalize the samples
+	sample_accumulator.Execute(ComputeQueueIndex, RayBufferSize,
+		BufferData[(int)GPUBufferBindings::intersection_buffer].buffer,
+		BufferData[(int)GPUBufferBindings::sample_buffer].buffer,
+		true, samples);
+
+	Image *output_image = new Image(camera.Resolution());
+
+	for (size_t y = 0; y < camera.Resolution().Y; y++)
+	{
+		size_t offset = y * camera.Resolution().X;
+		for (size_t x = 0; x < camera.Resolution().X; x++)
+		{
+			const GPUSample &sample = ((GPUSample *)gpu_sample_buffer)[offset + x];
+			output_image->SetPixelColor(x, y, Color(sample.color[0],
+				sample.color[1], sample.color[2], sample.color[3]));
+		}
+	}
+
+	out_image = std::shared_ptr<IImage>(output_image);
+
+	std::cout << "[RENDER TIME]" << ": line " << __LINE__ << ": time (ms): " << performance_timer.Poll().count() << "\n";
 }
 
-VkResult GPURenderer::CreateHeadlessVulkanInstance(VkInstance & instance)
+GPURenderer::~GPURenderer()
 {
-    VkResult result = VK_SUCCESS;
-
-    VkApplicationInfo applicationInfo{};
-    applicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    applicationInfo.pNext = 0;
-    applicationInfo.pApplicationName = "GPURenderer";
-    applicationInfo.applicationVersion = 0;
-    applicationInfo.pEngineName = "";
-    applicationInfo.engineVersion = 0;
-    applicationInfo.apiVersion = VK_HEADER_VERSION_COMPLETE;
-
-    VkInstanceCreateInfo createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    createInfo.pApplicationInfo = &applicationInfo;
-
-    if (GPUDebugEnabled)
-    {
-        createInfo.enabledLayerCount = static_cast<uint32_t>(requiredInstanceLayers.size());
-        createInfo.ppEnabledLayerNames = requiredInstanceLayers.data();
-        createInfo.enabledExtensionCount = static_cast<uint32_t>(requiredInstanceExtensions.size());
-        createInfo.ppEnabledExtensionNames = requiredInstanceExtensions.data();
-
-        VkValidationFeatureEnableEXT enabled = VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT;
-        VkValidationFeaturesEXT features = {};
-        features.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
-        features.disabledValidationFeatureCount = 0;
-        features.enabledValidationFeatureCount = 1;
-        features.pDisabledValidationFeatures = nullptr;
-        features.pEnabledValidationFeatures = &enabled;
-
-        createInfo.pNext = &features;
-    }
-
-    result =  vkCreateInstance(&createInfo, nullptr, &instance);
-    return result;
+#if defined _DEBUG
+	VKUtils::DestroyDebugMessenger(instance, debugMessenger);
+#endif
 }
 
-VkResult GPURenderer::EnumerateDevices(VkInstance instance, VkPhysicalDevice*& devices, uint32_t& device_count)
-{
-    VkResult result = VK_SUCCESS;
-
-    result = vkEnumeratePhysicalDevices(instance, &device_count, 0);
-    RETURN_ON_BAD_RETCODE(result);
-
-    devices = (VkPhysicalDevice*)malloc(sizeof(VkPhysicalDevice) * device_count);
-
-    return vkEnumeratePhysicalDevices(instance, &device_count, devices);
-}
-
-VkResult GPURenderer::GetBestComputeQueue(VkPhysicalDevice physicalDevice, uint32_t& queueFamilyIndex)
-{
-    uint32_t queueFamilyPropertiesCount = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyPropertiesCount, 0);
-
-    VkQueueFamilyProperties* const queueFamilyProperties = (VkQueueFamilyProperties*)_malloca(sizeof(VkQueueFamilyProperties) * queueFamilyPropertiesCount);
-    if (nullptr == queueFamilyProperties)
-    {
-        return VK_ERROR_OUT_OF_DEVICE_MEMORY;
-    }
-
-    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyPropertiesCount, queueFamilyProperties);
-
-    // first try and find a queue that has just the compute bit set
-    for (uint32_t i = 0; i < queueFamilyPropertiesCount; i++)
-    {
-        // mask out the sparse binding bit that we aren't caring about (yet!) and the transfer bit
-        const VkQueueFlags maskedFlags = (~(VK_QUEUE_TRANSFER_BIT | VK_QUEUE_SPARSE_BINDING_BIT) & queueFamilyProperties[i].queueFlags);
-
-        if (!(VK_QUEUE_GRAPHICS_BIT & maskedFlags) && (VK_QUEUE_COMPUTE_BIT & maskedFlags))
-        {
-            queueFamilyIndex = i;
-            return VK_SUCCESS;
-        }
-    }
-
-    // lastly get any queue that'll work for us
-    for (uint32_t i = 0; i < queueFamilyPropertiesCount; i++)
-    {
-        // mask out the sparse binding bit that we aren't caring about (yet!) and the transfer bit
-        const VkQueueFlags maskedFlags = (~(VK_QUEUE_TRANSFER_BIT | VK_QUEUE_SPARSE_BINDING_BIT) & queueFamilyProperties[i].queueFlags);
-
-        if (VK_QUEUE_COMPUTE_BIT & maskedFlags)
-        {
-            queueFamilyIndex = i;
-            return VK_SUCCESS;
-        }
-    }
-
-    return VK_ERROR_INITIALIZATION_FAILED;
-}
-
-VkResult GPURenderer::CreateDevice(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, VkDevice& device)
-{
-    const float queuePrioritory = 1.0f;
-    VkDeviceQueueCreateInfo deviceQueueCreateInfo = {};
-    deviceQueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    deviceQueueCreateInfo.queueFamilyIndex = queueFamilyIndex;
-    deviceQueueCreateInfo.queueCount = 1;
-    deviceQueueCreateInfo.pQueuePriorities = &queuePrioritory;
-
-    VkDeviceCreateInfo deviceCreateInfo = {};
-    deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    deviceCreateInfo.queueCreateInfoCount = 1;
-    deviceCreateInfo.pQueueCreateInfos = &deviceQueueCreateInfo;
-    deviceCreateInfo.enabledExtensionCount = 0;
-    deviceCreateInfo.ppEnabledExtensionNames = nullptr;
-
-    return vkCreateDevice(physicalDevice, &deviceCreateInfo, 0, &device);
-}
-
-void GPURenderer::Render(const Camera& camera, unsigned int samples, const std::shared_ptr<IScene> scene, std::shared_ptr<IImage> &out_image)
-{
-    auto time = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> cpuTime;
-#define PRINT_TIME(message) \
-do \
-{   \
-    cpuTime = std::chrono::high_resolution_clock::now() - time; \
-    time = std::chrono::high_resolution_clock::now(); \
-    std::cout << message << ": line " << __LINE__ << ": time (ms): " << cpuTime.count() << std::endl ;    \
-} while(0)
-
-    if (!VerifyInstanceLayers())
-    {
-        return;
-    }
-
-    if (!VerifyInstanceExtensions())
-    {
-        return;
-    }
-
-    VkInstance instance = nullptr;
-    EXIT_ON_BAD_RESULT(CreateHeadlessVulkanInstance(instance));
-
-    VkDebugUtilsMessengerEXT debugMessenger = {};
-    if (GPUDebugEnabled)
-    {
-        EXIT_ON_BAD_RESULT(CreateDebugMessenger(instance, &debugMessenger));
-    }
-
-    PRINT_TIME("\t[SETUP]: Create headless vulkan instance");
-
-    VkPhysicalDevice* physicalDevices = nullptr;
-    uint32_t physicalDeviceCount = 0;
-    EXIT_ON_BAD_RESULT(EnumerateDevices(instance, physicalDevices, physicalDeviceCount));
-
-    if (0 == physicalDeviceCount)
-    {
-        return;
-    }
-
-    PRINT_TIME("\t[SETUP]: Enumerate devices");
-
-    uint32_t queueFamilyIndex = 0;
-    EXIT_ON_BAD_RESULT(GetBestComputeQueue(physicalDevices[0], queueFamilyIndex));
-
-    PRINT_TIME("\t[SETUP]: Get best compute queue");
-
-    VkDevice device = nullptr;
-    EXIT_ON_BAD_RESULT(CreateDevice(physicalDevices[0], queueFamilyIndex, device));
-
-    PRINT_TIME("\t[SETUP]: Create device");
-
-    std::vector<RayIntersectionComputeShader::InputSphere> input_spheres;
-    for (const auto &object : scene->Objects())
-    {
-        const Sphere *sphere = dynamic_cast<const Sphere *>(object);
-        if (nullptr == sphere)
-        {
-            continue;
-        }
-
-        input_spheres.emplace_back(*sphere);
-    }
-
-    std::vector<RayIntersectionComputeShader::InputMaterial> input_materials;
-    for (const auto &material : scene->Materials())
-    {
-        input_materials.emplace_back(*material);
-    }
-
-    RayIntersectionComputeShader::InputCamera input_camera(camera);
-
-    VkPipelineLayout pipelineLayout = nullptr;
-    VkPipeline pipeline = nullptr; 
-    VkDescriptorSet descriptorSet = {};
-    RayIntersectionComputeShader ray_intersection_shader(physicalDevices[0], device, queueFamilyIndex, pipelineLayout, pipeline, descriptorSet,
-        samples, input_camera, input_spheres, input_materials, {(unsigned int)camera.Resolution().X, (unsigned int)camera.Resolution().Y});
-    
-    PRINT_TIME("\t[SETUP]: Creating ray intersection shader");
-
-    VkCommandPoolCreateInfo commandPoolCreateInfo = {};
-    commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-    commandPoolCreateInfo.queueFamilyIndex = queueFamilyIndex;
-
-    VkCommandPool commandPool;
-    EXIT_ON_BAD_RESULT(vkCreateCommandPool(device, &commandPoolCreateInfo, 0, &commandPool));
-
-    PRINT_TIME("\t[SETUP]: Creating command pool");
-
-    VkCommandBufferAllocateInfo commandBufferAllocateInfo = {};
-    commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    commandBufferAllocateInfo.commandPool = commandPool;
-    commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    commandBufferAllocateInfo.commandBufferCount = 1;
-
-    VkCommandBuffer commandBuffer = {};
-    EXIT_ON_BAD_RESULT(vkAllocateCommandBuffers(device, &commandBufferAllocateInfo, &commandBuffer));
-
-    PRINT_TIME("\t[SETUP]: Allocating command buffers");
-
-    VkCommandBufferBeginInfo commandBufferBeginInfo = {};
-    commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    commandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-    EXIT_ON_BAD_RESULT(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
-    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &descriptorSet, 0, 0);
-
-    uint32_t group_count_x = (uint32_t)std::ceil((float)(camera.Resolution().X * camera.Resolution().Y) / (float)shader_local_size_x);
-    vkCmdDispatch(commandBuffer, group_count_x, 1, 1);
-    EXIT_ON_BAD_RESULT(vkEndCommandBuffer(commandBuffer));
-
-    PRINT_TIME("\t[SETUP]: Creating command buffer");
-
-    VkQueue queue = {};
-    vkGetDeviceQueue(device, queueFamilyIndex, 0, &queue);
-
-    VkSubmitInfo submitInfo = {};
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &commandBuffer;
-
-    auto tm0 = std::chrono::high_resolution_clock::now();
-
-    EXIT_ON_BAD_RESULT(vkQueueSubmit(queue, 1, &submitInfo, 0));
-    EXIT_ON_BAD_RESULT(vkQueueWaitIdle(queue));
-
-    PRINT_TIME("[RENDER TIME]");
-
-    Image* output_image = new Image(camera.Resolution());
-    const RayIntersectionComputeShader::OutputColor* output_colors = ray_intersection_shader.GetOutputColors();
-    for (int y = 0; y < camera.Resolution().Y; y++)
-    {
-        for (int x = 0; x < camera.Resolution().X; x++)
-        {
-            size_t index = y * camera.Resolution().X + x;
-
-            float r = output_colors[index].rgb[0];
-            float g = output_colors[index].rgb[1];
-            float b = output_colors[index].rgb[2];
-
-            output_image->SetPixelColor(x, y, Color(r, g, b, 1.0));
-        }
-    }
-    out_image = std::shared_ptr<IImage>(output_image);
-
-    PRINT_TIME("\t[TEARDOWN]: Reading results");
-
-    ray_intersection_shader.UnmapAndDestroyMemories();
-    
-    PRINT_TIME("\t[TEARDOWN]: Unmap memory");
-
-    if (GPUDebugEnabled)
-    {
-        DestroyDebugMessenger(instance, debugMessenger);
-    }
-}
-
-#undef EXIT_ON_BAD_RESULT
