@@ -11,15 +11,9 @@ namespace RayTracer
 	{
 	public:
 		GPUWorldMaterial(vk::Device device);
-		void Execute(uint32_t ComputeQueueIndex, size_t incoming_ray_count, 
+		void Execute(uint32_t compute_queue_index, size_t incoming_ray_count,
 			vk::Buffer input_gpu_intersection_buffer, vk::Buffer output_gpu_ray_buffer);
 	private:
-		vk::DescriptorSetLayout DescribeShader();
-		vk::Result CreatePipeline();
-		std::vector<vk::DescriptorSet> AllocateDescriptorSets();
-		void UpdateDescriptorSets(std::vector<vk::DescriptorSet> &descriptorSet,
-			vk::Buffer input_gpu_intersection_buffer, vk::Buffer output_gpu_ray_buffer);
-
 		GPUWorldMaterial(const GPUWorldMaterial &other) = delete;
 		GPUWorldMaterial(const GPUWorldMaterial &&other) = delete;
 
