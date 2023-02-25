@@ -1,31 +1,67 @@
 #pragma once
-#include <vulkan/vulkan.h>
 
-#include "IImage.h"
-#include "IScene.h"
 #include "Camera.h"
+#include "IScene.h"
+#include "GPUStructs.h"
+#include <vulkan/vulkan.hpp>
 
 namespace RayTracer
 {
 	class GPURenderer
 	{
 	public:
-		void Render(const Camera& camera, unsigned int samples, const std::shared_ptr<IScene> scene, std::shared_ptr<IImage> &out_image);
-		bool GPUDebugEnabled;
-
-		GPURenderer() : GPUDebugEnabled(false) {}
+		GPURenderer(const Camera &camera, unsigned int samples, const IScene &scene);
+		~GPURenderer();
+		void Render(std::shared_ptr<IImage> &out_image);
+		bool GPUDebugEnabled = false;
 	private:
-		VkResult CreateDevice(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, VkDevice &device);
-		VkResult GetBestComputeQueue(VkPhysicalDevice physicalDevice, uint32_t &queueFamilyIndex);
-		VkResult EnumerateDevices(VkInstance instance, VkPhysicalDevice *&devices, uint32_t &device_count);
-		VkResult CreateHeadlessVulkanInstance(VkInstance &instance);
-		void DestroyDebugMessenger(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger);
-		VkResult CreateDebugMessenger(VkInstance instance, VkDebugUtilsMessengerEXT *debugMessenger);
-		bool VerifyInstanceExtensions();
-		bool VerifyInstanceLayers();
+		vk::Instance instance = nullptr;
+		vk::DebugUtilsMessengerEXT debugMessenger = nullptr;
+		vk::PhysicalDevice PhysicalDevice = nullptr;
+		vk::Device device = nullptr;
+		uint32_t ComputeQueueIndex = 0;
+		vk::DeviceSize RayBufferSize = 0;
 
-		std::vector<const char *> requiredInstanceLayers = {};
-		std::vector<const char *> requiredInstanceExtensions = {};
+		enum class GPUBufferBindings
+		{
+			ray_buffer,
+			intersection_buffer,
+			sphere_buffer,
+			sample_buffer,
+			diffuse_material_parameters,
+			GPUBufferBindingCount
+		};
+
+		class BufferCreationAndMappingData
+		{
+		public:
+			vk::DeviceSize buffer_size = 0;
+			vk::BufferUsageFlagBits usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
+			vk::DescriptorType descriptor_type = vk::DescriptorType::eStorageBuffer;
+			vk::Buffer buffer;
+			vk::DeviceMemory device_memory;
+			void **data_pointer = nullptr;
+		};
+
+		Camera camera;
+		unsigned int samples;
+		const IScene &scene;
+
+		std::vector<BufferCreationAndMappingData> BufferData;
+
+		// Pointers are of type GPURay*
+		void *gpu_ray_buffer;
+		// Pointers are of type GPUIntersection*
+		void *gpu_intersection_buffer;
+		// Pointers are of type GPUSphere*
+		void *gpu_sphere_buffer;
+		// Pointers are of type GPUSample*
+		void *gpu_sample_buffer;
+		// Pointers are of type GPUDiffuseMaterialParameters*
+		void *gpu_diffuse_material_parameters_buffer;
+		
+		void *CreateAndMapMemory(uint32_t queueFamilyIndex, const vk::DeviceSize memorySize, const vk::BufferUsageFlags usage_flags,
+			vk::Buffer &vk_buffer, vk::DeviceMemory &device_memory);
+		vk::Result CreateAndMapMemories(uint32_t queueFamilyIndex);
 	};
 }
-

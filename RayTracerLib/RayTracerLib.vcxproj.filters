@@ -9,41 +9,17 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="Shader Files">
-      <UniqueIdentifier>{cb722c92-ecba-492d-9ac8-bee9a3b6f909}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\CPU Rendering">
       <UniqueIdentifier>{049fc58c-1d31-414e-94fc-10c97dfbaafb}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\CPU Rendering\Materials">
       <UniqueIdentifier>{9bd4023e-08fa-4b01-a77f-8fee317d45f6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\GPU Rendering">
-      <UniqueIdentifier>{187a4f3a-6da2-4281-a709-6ffc488eaf94}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\CPU Rendering">
       <UniqueIdentifier>{558df0ba-f002-4c5c-be97-2b11dae9d9b1}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\CPU Rendering\Materials">
       <UniqueIdentifier>{3a5213b3-2e1d-4ad0-a3cb-890dd13629cd}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\GPU Rendering">
-      <UniqueIdentifier>{db030e6d-07ae-4b6e-b5f4-90ea7887f8f0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Shader Files V2">
-      <UniqueIdentifier>{ca49132c-8928-4140-b013-5c76b78a2c7d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Shader Files V2\Materials">
-      <UniqueIdentifier>{e4a7b9d4-9b9a-4fab-a4f3-f8f0cd69054f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Shader Files V2\Sampling">
-      <UniqueIdentifier>{a47c68c8-9f00-49a9-8384-2582f5115cb0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\GPU Rendering V2">
-      <UniqueIdentifier>{a31f32fc-063b-4632-83c5-25cc49e91321}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\GPU Rendering V2">
-      <UniqueIdentifier>{6b4968f3-7cb5-4144-a3a4-7dbf30d27a83}</UniqueIdentifier>
     </Filter>
     <Filter Include="Utilities">
       <UniqueIdentifier>{a3947163-0f50-4720-96b8-6883771d9269}</UniqueIdentifier>
@@ -54,33 +30,42 @@
     <Filter Include="Utilities\Vulkan">
       <UniqueIdentifier>{973b9a23-1c38-4121-a0e1-d91c7dc78664}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shader Files V2\RayIntersection">
-      <UniqueIdentifier>{78c1dbd1-c82a-47de-8cfa-3a6dee6fcad8}</UniqueIdentifier>
+    <Filter Include="Source Files\GPU Rendering">
+      <UniqueIdentifier>{a31f32fc-063b-4632-83c5-25cc49e91321}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shader Files V2\Header Files">
-      <UniqueIdentifier>{187d7e11-78a4-442d-8c4b-da422a66dcc4}</UniqueIdentifier>
+    <Filter Include="Shader Files">
+      <UniqueIdentifier>{ca49132c-8928-4140-b013-5c76b78a2c7d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shader Files V2\RayInitialization">
-      <UniqueIdentifier>{aeb1d1e1-7d6c-4e66-81a4-2a1fc6458639}</UniqueIdentifier>
+    <Filter Include="Shader Files\Materials">
+      <UniqueIdentifier>{e4a7b9d4-9b9a-4fab-a4f3-f8f0cd69054f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shader Files V2\Materials\Diffuse">
+    <Filter Include="Shader Files\Materials\Diffuse">
       <UniqueIdentifier>{141ee42c-9420-4030-9cdb-8e2c09060ed0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shader Files V2\Materials\World">
+    <Filter Include="Shader Files\Materials\World">
       <UniqueIdentifier>{20369b63-9877-43f8-879a-df7d119c36de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader Files\Sampling">
+      <UniqueIdentifier>{a47c68c8-9f00-49a9-8384-2582f5115cb0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader Files\RayIntersection">
+      <UniqueIdentifier>{78c1dbd1-c82a-47de-8cfa-3a6dee6fcad8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader Files\Header Files">
+      <UniqueIdentifier>{187d7e11-78a4-442d-8c4b-da422a66dcc4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader Files\RayInitialization">
+      <UniqueIdentifier>{aeb1d1e1-7d6c-4e66-81a4-2a1fc6458639}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\GPU Rendering">
+      <UniqueIdentifier>{6b4968f3-7cb5-4144-a3a4-7dbf30d27a83}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Shaders\RayIntersection.h">
-      <Filter>Shader Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\Color.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\CPURenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\IImage.h">
@@ -131,9 +116,6 @@
     <ClInclude Include="..\include\PrincipledBSDF.h">
       <Filter>Header Files\CPU Rendering\Materials</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\GPURenderer.h">
-      <Filter>Header Files\GPU Rendering</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\IIntersectable.h">
       <Filter>Header Files\CPU Rendering</Filter>
     </ClInclude>
@@ -155,41 +137,41 @@
     <ClInclude Include="..\include\ElapsedTimer.h">
       <Filter>Utilities\Timers</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\GPURendererV2.h">
-      <Filter>Header Files\GPU Rendering V2</Filter>
+    <ClInclude Include="..\include\GPURenderer.h">
+      <Filter>Header Files\GPU Rendering</Filter>
     </ClInclude>
     <ClInclude Include="..\include\VulkanUtils.h">
       <Filter>Utilities\Vulkan</Filter>
     </ClInclude>
     <ClInclude Include="..\include\GPURayInitializer.h">
-      <Filter>Shader Files V2\RayInitialization</Filter>
+      <Filter>Shader Files\RayInitialization</Filter>
     </ClInclude>
     <ClInclude Include="..\include\GPUSampleAccumulator.h">
-      <Filter>Shader Files V2\Sampling</Filter>
+      <Filter>Shader Files\Sampling</Filter>
     </ClInclude>
     <ClInclude Include="..\include\GPURayIntersector.h">
-      <Filter>Shader Files V2\RayIntersection</Filter>
+      <Filter>Shader Files\RayIntersection</Filter>
     </ClInclude>
     <ClInclude Include="..\include\GPUStructs.h">
-      <Filter>Shader Files V2\Header Files</Filter>
+      <Filter>Shader Files\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\GPUComputeShader.h">
-      <Filter>Shader Files V2\Header Files</Filter>
+      <Filter>Shader Files\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\GPUDiffuseMaterial.h">
-      <Filter>Shader Files V2\Materials\Diffuse</Filter>
+      <Filter>Shader Files\Materials\Diffuse</Filter>
     </ClInclude>
     <ClInclude Include="..\include\GPUWorldMaterial.h">
-      <Filter>Shader Files V2\Materials\World</Filter>
+      <Filter>Shader Files\Materials\World</Filter>
     </ClInclude>
     <ClInclude Include="..\include\GPUMaterialCalculator.h">
-      <Filter>Shader Files V2\Materials</Filter>
+      <Filter>Shader Files\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\CPURenderer.h">
+      <Filter>Header Files\CPU Rendering</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Shaders\RayIntersection.cpp">
-      <Filter>Shader Files</Filter>
-    </ClCompile>
     <ClCompile Include="Material.cpp">
       <Filter>Source Files\CPU Rendering\Materials</Filter>
     </ClCompile>
@@ -211,64 +193,58 @@
     <ClCompile Include="World.cpp">
       <Filter>Source Files\CPU Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="GPURenderer.cpp">
-      <Filter>Source Files\GPU Rendering</Filter>
-    </ClCompile>
     <ClCompile Include="ThreadPool.cpp">
       <Filter>Source Files\CPU Rendering</Filter>
     </ClCompile>
     <ClCompile Include="PixelRenderTask.cpp">
       <Filter>Source Files\CPU Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="GPURendererV2.cpp">
-      <Filter>Source Files\GPU Rendering V2</Filter>
+    <ClCompile Include="GPURenderer.cpp">
+      <Filter>Source Files\GPU Rendering</Filter>
     </ClCompile>
     <ClCompile Include="VulkanUtils.cpp">
       <Filter>Utilities\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="GPURayInitializer.cpp">
-      <Filter>Shader Files V2\RayInitialization</Filter>
+      <Filter>Shader Files\RayInitialization</Filter>
     </ClCompile>
     <ClCompile Include="GPUSampleAccumulator.cpp">
-      <Filter>Shader Files V2\Sampling</Filter>
+      <Filter>Shader Files\Sampling</Filter>
     </ClCompile>
     <ClCompile Include="GPURayIntersector.cpp">
-      <Filter>Shader Files V2\RayIntersection</Filter>
+      <Filter>Shader Files\RayIntersection</Filter>
     </ClCompile>
     <ClCompile Include="GPUComputeShader.cpp">
-      <Filter>Shader Files V2</Filter>
+      <Filter>Shader Files</Filter>
     </ClCompile>
     <ClCompile Include="GPUDiffuseMaterial.cpp">
-      <Filter>Shader Files V2\Materials\Diffuse</Filter>
+      <Filter>Shader Files\Materials\Diffuse</Filter>
     </ClCompile>
     <ClCompile Include="GPUWorldMaterial.cpp">
-      <Filter>Shader Files V2\Materials\World</Filter>
+      <Filter>Shader Files\Materials\World</Filter>
     </ClCompile>
     <ClCompile Include="GPUMaterialCalculator.cpp">
-      <Filter>Shader Files V2\Materials</Filter>
+      <Filter>Shader Files\Materials</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="Shaders\RayIntersection.comp">
-      <Filter>Shader Files</Filter>
-    </CustomBuild>
     <CustomBuild Include="GPURayInitializer.comp">
-      <Filter>Shader Files V2\RayInitialization</Filter>
+      <Filter>Shader Files\RayInitialization</Filter>
     </CustomBuild>
     <CustomBuild Include="GPUSampleAccumulator.comp">
-      <Filter>Shader Files V2\Sampling</Filter>
+      <Filter>Shader Files\Sampling</Filter>
     </CustomBuild>
     <CustomBuild Include="GPUSphereIntersector.comp">
-      <Filter>Shader Files V2\RayIntersection</Filter>
+      <Filter>Shader Files\RayIntersection</Filter>
     </CustomBuild>
     <CustomBuild Include="GPUDiffuseMaterial.comp">
-      <Filter>Shader Files V2\Materials\Diffuse</Filter>
+      <Filter>Shader Files\Materials\Diffuse</Filter>
     </CustomBuild>
     <CustomBuild Include="GPUWorldMaterial.comp">
-      <Filter>Shader Files V2\Materials\World</Filter>
+      <Filter>Shader Files\Materials\World</Filter>
     </CustomBuild>
     <CustomBuild Include="GPUWorldIntersector.comp">
-      <Filter>Shader Files V2\RayIntersection</Filter>
+      <Filter>Shader Files\RayIntersection</Filter>
     </CustomBuild>
   </ItemGroup>
 </Project>
