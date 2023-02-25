@@ -11,17 +11,10 @@ namespace RayTracer
 	{
 	public:
 		GPUDiffuseMaterial(vk::Device device);
-		void Execute(uint32_t ComputeQueueIndex, size_t incoming_ray_count,
+		void Execute(uint32_t compute_queue_index, size_t incoming_ray_count,
 			vk::Buffer input_gpu_intersection_buffer, vk::Buffer output_gpu_ray_buffer, 
-			vk::Buffer input_material_parameters);
+			vk::Buffer input_gpu_material_parameters);
 	private:
-		vk::DescriptorSetLayout DescribeShader();
-		vk::Result CreatePipeline();
-		std::vector<vk::DescriptorSet> AllocateDescriptorSets();
-		void UpdateDescriptorSets(std::vector<vk::DescriptorSet> &descriptorSet,
-			vk::Buffer input_gpu_intersection_buffer, vk::Buffer output_gpu_ray_buffer, 
-			vk::Buffer input_material_parameters);
-
 		GPUDiffuseMaterial(const GPUDiffuseMaterial &other) = delete;
 		GPUDiffuseMaterial(const GPUDiffuseMaterial &&other) = delete;
 

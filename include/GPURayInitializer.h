@@ -12,13 +12,8 @@ namespace RayTracer
 	{
 	public:
 		GPURayInitializer(vk::Device device);
-		void Execute(uint32_t ComputeQueueIndex, Camera camera, size_t seed, vk::Buffer output_ray_buffer, vk::Buffer output_intersection_buffer);
+		void Execute(uint32_t ComputeQueueIndex, Camera camera, size_t seed, vk::Buffer output_gpu_ray_buffer, vk::Buffer output_gpu_intersection_buffer);
 	private:
-		vk::DescriptorSetLayout DescribeShader();
-		vk::Result CreatePipeline();
-		std::vector<vk::DescriptorSet> AllocateDescriptorSets();
-		void UpdateDescriptorSets(std::vector<vk::DescriptorSet> &descriptorSet, vk::Buffer output_ray_buffer, vk::Buffer output_intersection_buffer);
-
 		GPURayInitializer(const GPURayInitializer &other) = delete;
 		GPURayInitializer(const GPURayInitializer &&other) = delete;
 

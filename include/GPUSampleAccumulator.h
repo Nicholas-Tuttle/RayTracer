@@ -16,12 +16,6 @@ namespace RayTracer
 			bool finalize = false,
 			uint32_t sample_count = 0);
 	private:
-		vk::DescriptorSetLayout DescribeShader();
-		vk::Result CreatePipeline();
-		std::vector<vk::DescriptorSet> AllocateDescriptorSets();
-		void UpdateDescriptorSets(std::vector<vk::DescriptorSet> &descriptorSet, 
-			vk::Buffer input_gpu_intersection_buffer, vk::Buffer output_ray_buffer);
-
 		GPUSampleAccumulator(const GPUSampleAccumulator &other) = delete;
 		GPUSampleAccumulator(const GPUSampleAccumulator &&other) = delete;
 
