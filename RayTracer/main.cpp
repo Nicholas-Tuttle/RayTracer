@@ -293,53 +293,29 @@ int main(int argc, char **argv)
 
     CreatePresetScene1(scene, camera, resolution);
 
+    // Provide an output pointer for the image
+    std::shared_ptr<IImage> out_image = nullptr;
+    auto tm0 = std::chrono::high_resolution_clock::now();
+
     if (arguments.RenderCPU)
     {
         std::cout << std::endl << "Rendering on CPU" << std::endl;
         CPURenderer cpu_renderer;
-
-        // Provide an output pointer for the CPU image
-        std::shared_ptr<IImage> out_cpu_image = nullptr;
-
-        // Render on the CPU
-        auto tm0 = std::chrono::high_resolution_clock::now();
-        cpu_renderer.Render(arguments.MaxThreads, *camera, arguments.Samples, *scene, out_cpu_image);
-        auto tm1 = std::chrono::high_resolution_clock::now();
-
-        std::chrono::duration<double, std::milli> cpuTime = tm1 - tm0;
-        std::cout << "Total CPU Time (ms): " << cpuTime.count() << std::endl;
-
-        write_png_file("..\\demo_cpu.png", out_cpu_image->GetColorRGBAValues());
+        cpu_renderer.Render(arguments.MaxThreads, *camera, arguments.Samples, *scene, out_image);
     }
 
     if (arguments.RenderGPU)
     {
-        /*
         std::cout << std::endl << "Rendering on GPU" << std::endl;
-        GPURenderer gpu_renderer;
-        gpu_renderer.GPUDebugEnabled = arguments.GPUDebugEnabled;
-        
-        // Provide an output pointer for the GPU image
-        std::shared_ptr<IImage> out_gpu_image = nullptr;
-        
-        // Render on the GPU
-        auto tm2 = std::chrono::high_resolution_clock::now();
-        gpu_renderer.Render(*camera, arguments.Samples, scene, out_gpu_image);
-        auto tm3 = std::chrono::high_resolution_clock::now();
-        
-        std::chrono::duration<double, std::milli> gpuTime = tm3 - tm2;
-        std::cout << "Total GPU Time (ms): " << gpuTime.count() << std::endl;
-        
-        write_png_file("..\\demo_gpu.png", out_gpu_image->GetColorRGBAValues());
-        */
-
-        std::cout << std::endl << "Rendering on GPU V2" << std::endl;
-        GPURenderer gpu_renderer_v2(*camera, arguments.Samples, *scene);
-        std::shared_ptr<IImage> out_gpu_image = nullptr;
-        gpu_renderer_v2.Render(out_gpu_image);
-        write_png_file("..\\demo_gpu.png", out_gpu_image->GetColorRGBAValues());
+        GPURenderer gpu_renderer(*camera, arguments.Samples, *scene);
+        gpu_renderer.Render(out_image);
     }
 
+    auto tm1 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> total_time = tm1 - tm0;
+    std::cout << "Total Render Time (ms): " << total_time.count() << std::endl;
+
+    write_png_file("..\\image.png", out_image->GetColorRGBAValues());
 
     std::cout << std::endl;
 
