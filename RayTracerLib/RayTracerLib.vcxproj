@@ -86,13 +86,11 @@
     <ClCompile Include="EmissiveBSDF.cpp" />
     <ClCompile Include="GlossyBSDF.cpp" />
     <ClCompile Include="GPUComputeShader.cpp" />
-    <ClCompile Include="GPUDiffuseMaterial.cpp" />
     <ClCompile Include="GPUMaterialCalculator.cpp" />
     <ClCompile Include="GPURayInitializer.cpp" />
     <ClCompile Include="GPURayIntersector.cpp" />
     <ClCompile Include="GPURenderer.cpp" />
     <ClCompile Include="GPUSampleAccumulator.cpp" />
-    <ClCompile Include="GPUWorldMaterial.cpp" />
     <ClCompile Include="PixelRenderTask.cpp" />
     <ClCompile Include="PrincipledBSDF.cpp" />
     <ClCompile Include="ThreadPool.cpp" />
@@ -102,7 +100,6 @@
     <ClInclude Include="..\include\Color.h" />
     <ClInclude Include="..\include\CPURenderer.h" />
     <ClInclude Include="..\include\GPUComputeShader.h" />
-    <ClInclude Include="..\include\GPUDiffuseMaterial.h" />
     <ClInclude Include="..\include\DiffuseBSDF.h" />
     <ClInclude Include="..\include\ElapsedTimer.h" />
     <ClInclude Include="..\include\EmissiveBSDF.h" />
@@ -113,7 +110,6 @@
     <ClInclude Include="..\include\GPUStructs.h" />
     <ClInclude Include="..\include\GPURenderer.h" />
     <ClInclude Include="..\include\GPUSampleAccumulator.h" />
-    <ClInclude Include="..\include\GPUWorldMaterial.h" />
     <ClInclude Include="..\include\IImage.h" />
     <ClInclude Include="..\include\IIntersectable.h" />
     <ClInclude Include="..\include\Image.h" />
