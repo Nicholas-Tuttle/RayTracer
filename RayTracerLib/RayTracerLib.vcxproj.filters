@@ -39,12 +39,6 @@
     <Filter Include="Shader Files\Materials">
       <UniqueIdentifier>{e4a7b9d4-9b9a-4fab-a4f3-f8f0cd69054f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shader Files\Materials\Diffuse">
-      <UniqueIdentifier>{141ee42c-9420-4030-9cdb-8e2c09060ed0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Shader Files\Materials\World">
-      <UniqueIdentifier>{20369b63-9877-43f8-879a-df7d119c36de}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Shader Files\Sampling">
       <UniqueIdentifier>{a47c68c8-9f00-49a9-8384-2582f5115cb0}</UniqueIdentifier>
     </Filter>
@@ -155,12 +149,6 @@
     <ClInclude Include="..\include\GPUComputeShader.h">
       <Filter>Shader Files\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\GPUDiffuseMaterial.h">
-      <Filter>Shader Files\Materials\Diffuse</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\GPUWorldMaterial.h">
-      <Filter>Shader Files\Materials\World</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\GPUMaterialCalculator.h">
       <Filter>Shader Files\Materials</Filter>
     </ClInclude>
@@ -211,12 +199,6 @@
     <ClCompile Include="GPUComputeShader.cpp">
       <Filter>Shader Files</Filter>
     </ClCompile>
-    <ClCompile Include="GPUDiffuseMaterial.cpp">
-      <Filter>Shader Files\Materials\Diffuse</Filter>
-    </ClCompile>
-    <ClCompile Include="GPUWorldMaterial.cpp">
-      <Filter>Shader Files\Materials\World</Filter>
-    </ClCompile>
     <ClCompile Include="GPUMaterialCalculator.cpp">
       <Filter>Shader Files\Materials</Filter>
     </ClCompile>
@@ -231,14 +213,14 @@
     <CustomBuild Include="GPUSphereIntersector.comp">
       <Filter>Shader Files\RayIntersection</Filter>
     </CustomBuild>
-    <CustomBuild Include="GPUDiffuseMaterial.comp">
-      <Filter>Shader Files\Materials\Diffuse</Filter>
-    </CustomBuild>
-    <CustomBuild Include="GPUWorldMaterial.comp">
-      <Filter>Shader Files\Materials\World</Filter>
-    </CustomBuild>
     <CustomBuild Include="GPUWorldIntersector.comp">
       <Filter>Shader Files\RayIntersection</Filter>
+    </CustomBuild>
+    <CustomBuild Include="GPUDiffuseMaterial.comp">
+      <Filter>Shader Files\Materials</Filter>
+    </CustomBuild>
+    <CustomBuild Include="GPUWorldMaterial.comp">
+      <Filter>Shader Files\Materials</Filter>
     </CustomBuild>
   </ItemGroup>
 </Project>
