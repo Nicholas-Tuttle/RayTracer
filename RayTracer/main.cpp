@@ -9,7 +9,6 @@
 #include <GPURenderer.h>
 #include <Scene.h>
 #include <Sphere.h>
-#include <Material.h>
 #include <Utilities.h>
 
 #include <PresetScenes.h>

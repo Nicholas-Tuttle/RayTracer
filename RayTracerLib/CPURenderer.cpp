@@ -6,7 +6,6 @@
 #include "Color.h"
 #include "IWorld.h"
 #include "IMaterial.h"
-#include "Material.h"
 #include "ThreadPool.h"
 #include "PixelRenderTask.h"
 #include <chrono>
@@ -22,7 +21,6 @@ using RayTracer::IWorld;
 using RayTracer::Intersection;
 using RayTracer::IScene;
 using RayTracer::IMaterial;
-using RayTracer::Material;
 using RayTracer::Color;
 using RayTracer::IImage;
 using RayTracer::Image;

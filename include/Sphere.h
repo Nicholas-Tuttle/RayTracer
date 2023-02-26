@@ -3,6 +3,7 @@
 #include <Vector3.h>
 #include <IIntersectable.h>
 #include <Intersection.h>
+#include "DiffuseBSDF.h"
 
 namespace RayTracer
 {
@@ -11,12 +12,12 @@ namespace RayTracer
 	private:
 		Vector3<float> position;
 		float radius;
-		int material_index;
+		const std::shared_ptr<const IMaterial> material;
 	public:
-		Sphere(const Vector3<float> &position, const float radius, const int material_index)
-			: position(position), radius(radius), material_index(material_index) {}
+		Sphere(const Vector3<float> &position, const float radius, const std::shared_ptr<const IMaterial> material)
+			: position(position), radius(radius), material(material) {}
 		Sphere(const Vector3<float> &position, const float radius)
-			: position(position), radius(radius), material_index(-1) {}
+			: position(position), radius(radius), material(std::make_shared<const DiffuseBSDF>(Color(), 1.0f)) {}
 
 		Vector3<float> Position() const
 		{
@@ -28,9 +29,9 @@ namespace RayTracer
 			return radius;
 		}
 
-		int MaterialIndex() const
+		const std::shared_ptr<const IMaterial> Material() const override
 		{
-			return material_index;
+			return material;
 		}
 
 		bool IntersectsRay(const Ray &incoming_ray, Intersection &out_intersection_info) const override

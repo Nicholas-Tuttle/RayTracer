@@ -11,7 +11,6 @@ namespace RayTracer
 	{
 	public:
 		virtual const std::vector<const IIntersectable*> &Objects() const = 0;
-		virtual const std::vector<const IMaterial *> &Materials() const = 0;
 		virtual const IWorld *World() const = 0;
 	};
 }

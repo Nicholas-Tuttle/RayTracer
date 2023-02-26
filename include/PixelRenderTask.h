@@ -4,7 +4,6 @@
 #include "Pixel.h"
 #include "Scene.h"
 #include "Ray.h"
-#include "Material.h"
 #include "IImage.h"
 
 namespace RayTracer

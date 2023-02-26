@@ -10,24 +10,10 @@ using RayTracer::Intersection;
 using RayTracer::IMaterial;
 using RayTracer::IWorld;
 using RayTracer::IImage;
-using RayTracer::Material;
 using RayTracer::Vector3;
 
 PixelRenderTask::PixelRenderTask(Pixel &pixel, unsigned int samples, const IScene &scene, std::shared_ptr<IImage> out_image) :
 	pixel(pixel), samples(samples), scene(scene), out_image(out_image) {}
-
-static const IMaterial *GetMaterial(const IScene &scene, int materialIndex)
-{
-	const auto &materials = scene.Materials();
-	if (materialIndex < 0 || materialIndex >= materials.size())
-	{
-		return &Material::DefaultMaterial;
-	}
-	else
-	{
-		return materials.at(materialIndex);
-	}
-}
 
 static void TraceRay(Ray &ray, const IScene &scene)
 {
@@ -54,7 +40,7 @@ static void TraceRay(Ray &ray, const IScene &scene)
 			{
 				closest_intersection = current_intersection;
 				min_depth = closest_intersection.Depth();
-				closest_intersection_mat = GetMaterial(scene, intersectable->MaterialIndex());
+				closest_intersection_mat = intersectable->Material().get();
 			}
 		}
 

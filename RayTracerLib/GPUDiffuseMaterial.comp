@@ -80,7 +80,7 @@ void main()
 
 	if(Intersections.intersections[gID].material_index < 0 || Intersections.intersections[gID].material_index >= MaterialParameters.params.length())
 	{
-		// TODO: Use a default material here
+		// TODO: Make a better default material here
 		Intersections.intersections[gID].ray_color *= vec4(0.8f, 0.8f, 0.8f, 1.0f);
 	}
 	else
