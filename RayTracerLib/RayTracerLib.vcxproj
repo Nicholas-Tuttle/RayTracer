@@ -93,7 +93,6 @@
     <ClCompile Include="GPURenderer.cpp" />
     <ClCompile Include="GPUSampleAccumulator.cpp" />
     <ClCompile Include="GPUWorldMaterial.cpp" />
-    <ClCompile Include="Material.cpp" />
     <ClCompile Include="PixelRenderTask.cpp" />
     <ClCompile Include="PrincipledBSDF.cpp" />
     <ClCompile Include="ThreadPool.cpp" />
@@ -122,7 +121,6 @@
     <ClInclude Include="..\include\Intersection.h" />
     <ClInclude Include="..\include\IScene.h" />
     <ClInclude Include="..\include\IWorld.h" />
-    <ClInclude Include="..\include\Material.h" />
     <ClInclude Include="..\include\Pixel.h" />
     <ClInclude Include="..\include\PixelRenderTask.h" />
     <ClInclude Include="..\include\PresetScenes.h" />

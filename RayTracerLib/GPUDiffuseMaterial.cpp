@@ -17,8 +17,6 @@ GPUDiffuseMaterial::GPUDiffuseMaterial(vk::Device device)
 void GPUDiffuseMaterial::Execute(uint32_t compute_queue_index, size_t incoming_ray_count,
 	vk::Buffer input_gpu_intersection_buffer, vk::Buffer output_gpu_ray_buffer, vk::Buffer input_gpu_material_parameters)
 {
-	DiffuseMaterialPushConstants.material_id = 1;
-
 	GPUComputeShader::Execute(compute_queue_index, incoming_ray_count, std::vector<vk::Buffer>{input_gpu_intersection_buffer, output_gpu_ray_buffer, input_gpu_material_parameters}, static_cast<void *>(&DiffuseMaterialPushConstants));
 }
 

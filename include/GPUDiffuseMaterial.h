@@ -4,6 +4,7 @@
 #include <vulkan/vulkan.hpp>
 #include "GPUStructs.h"
 #include <iostream>
+#include "GPURenderer.h"
 
 namespace RayTracer
 {
@@ -22,10 +23,10 @@ namespace RayTracer
 		{
 			push_constants()
 			{
-				material_id = 0;
+				material_id = static_cast<uint32_t>(RayTracer::GPURenderer::MaterialTypeID::diffuse);
 			}
 
-			unsigned int material_id;
+			uint32_t material_id;
 		} DiffuseMaterialPushConstants;
 	};
 }

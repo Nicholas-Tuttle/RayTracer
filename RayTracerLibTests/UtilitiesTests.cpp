@@ -8,7 +8,7 @@ namespace LerpTests
 	TEST(LerpTests, LerpTest_01)
 	{
 		unsigned int test_count = 100;
-		for (int i = 0; i < test_count; i++)
+		for (unsigned int i = 0; i < test_count; i++)
 		{
 			float float_i = ((float)i) / test_count;
 			ASSERT_EQ(float_i, Lerp<float>(0, 1, float_i));

@@ -38,6 +38,16 @@ namespace RayTracer
 
 	struct GPUSphere
 	{
+		GPUSphere()
+		{
+			position[0] = 0;
+			position[1] = 0;
+			position[2] = 0;
+			position[3] = 0;
+			radius = 0;
+			material_id = 0;
+		}
+
 		GPUSphere(const Sphere &sphere)
 		{
 			const Vector3<float> &sphere_position = sphere.Position();
@@ -47,7 +57,6 @@ namespace RayTracer
 			position[3] = 0;
 
 			radius = sphere.Radius();
-			material_index = sphere.MaterialIndex();
 		}
 
 		GPUSphere(const Sphere *sphere)
@@ -64,13 +73,13 @@ namespace RayTracer
 			position[3] = 0;
 
 			radius = sphere->Radius();
-			material_index = sphere->MaterialIndex();
 		}
 
 		float position[4];
 		float radius;
-		uint32_t material_index;
-		GPU_PADDING_BYTES(8);
+		uint32_t material_id;
+		int32_t material_index;
+		GPU_PADDING_BYTES(4);
 	};
 
 	struct GPUSample

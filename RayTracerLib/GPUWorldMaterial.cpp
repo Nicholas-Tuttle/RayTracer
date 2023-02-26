@@ -17,8 +17,6 @@ GPUWorldMaterial::GPUWorldMaterial(vk::Device device)
 void GPUWorldMaterial::Execute(uint32_t compute_queue_index, size_t incoming_ray_count,
 	vk::Buffer input_gpu_intersection_buffer, vk::Buffer output_gpu_ray_buffer)
 {
-	WorldMaterialPushConstants.material_id = 0;
-
 	GPUComputeShader::Execute(compute_queue_index, incoming_ray_count, std::vector<vk::Buffer>{input_gpu_intersection_buffer, output_gpu_ray_buffer}, static_cast<void *>(&WorldMaterialPushConstants));
 }
 

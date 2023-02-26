@@ -14,6 +14,12 @@ namespace RayTracer
 		~GPURenderer();
 		void Render(std::shared_ptr<IImage> &out_image);
 		bool GPUDebugEnabled = false;
+
+		enum class MaterialTypeID
+		{
+			world,
+			diffuse
+		};
 	private:
 		vk::Instance instance = nullptr;
 		vk::DebugUtilsMessengerEXT debugMessenger = nullptr;

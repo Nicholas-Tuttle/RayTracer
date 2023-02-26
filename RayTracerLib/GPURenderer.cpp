@@ -15,7 +15,9 @@ using RayTracer::GPURenderer;
 using RayTracer::Camera;
 using RayTracer::IScene;
 using RayTracer::IImage;
+using RayTracer::IMaterial;
 using RayTracer::ElapsedTimer;
+using RayTracer::Sphere;
 
 using RayTracer::GPURayInitializer;
 using RayTracer::GPURayIntersector;
@@ -28,6 +30,78 @@ using RayTracer::GPUDiffuseMaterialParameters;
 
 using RayTracer::DiffuseBSDF;
 
+static void ParseSceneData(const IScene &scene, std::vector<GPUSphere> &out_gpu_spheres, std::vector<GPUDiffuseMaterialParameters> &out_diffuse_material_parameters)
+{
+	using MaterialIndex = int32_t;
+	struct GPUDiffuseMaterialParameterTracking
+	{
+		MaterialIndex material_index;
+		GPUDiffuseMaterialParameters material_parameters;
+	};
+
+	std::unordered_map<const DiffuseBSDF *, GPUDiffuseMaterialParameterTracking> diffuse_materials;
+	
+	for (const auto &object : scene.Objects())
+	{
+		const std::shared_ptr<const IMaterial> material = object->Material();
+		uint32_t material_id = -1;
+		MaterialIndex material_index = 0;
+
+		// TODO: Add more material types
+		if (const DiffuseBSDF *diffuse = dynamic_cast<const DiffuseBSDF *>(material.get()))
+		{
+			material_id = static_cast<uint32_t>(GPURenderer::MaterialTypeID::diffuse);
+			const auto &entry = diffuse_materials.find(diffuse);
+			if (entry != diffuse_materials.end())
+			{
+				material_index = entry->second.material_index;
+			}
+			else
+			{
+				material_index = diffuse_materials.size();
+				GPUDiffuseMaterialParameters new_parameters(diffuse);
+				GPUDiffuseMaterialParameterTracking new_material_tracker
+				{
+					.material_index = static_cast<MaterialIndex>(material_index),
+					.material_parameters = new_parameters
+				};
+
+				diffuse_materials.emplace(diffuse, new_material_tracker);
+			}
+		}
+
+		// TODO: Add more object types
+		const Sphere *sphere = dynamic_cast<const Sphere *>(object);
+		if (nullptr != sphere)
+		{
+			out_gpu_spheres.emplace_back(sphere);
+			GPUSphere &back = out_gpu_spheres.back();
+			back.material_id = material_id;
+			back.material_index = material_index;
+		}
+	}
+
+	out_diffuse_material_parameters.resize(diffuse_materials.size());
+	for (const auto &kvp : diffuse_materials)
+	{
+		out_diffuse_material_parameters[kvp.second.material_index] = kvp.second.material_parameters;
+	}
+
+	// If there are no diffuse materials add a dummy one so that the buffer will still exist
+	// TODO: allow null buffers in shaders?
+	if (out_diffuse_material_parameters.size() == 0)
+	{
+		out_diffuse_material_parameters.emplace_back();
+	}
+
+	// If there are no spheres provided add a dummy one so that the buffer will still exist
+	// TODO: allow null buffers in shaders?
+	if (out_gpu_spheres.size() == 0)
+	{
+		out_gpu_spheres.emplace_back();
+	}
+}
+
 GPURenderer::GPURenderer(const Camera &camera, unsigned int samples, const IScene &scene) 
 	: camera(camera), samples(samples), scene(scene)
 {
@@ -36,6 +110,10 @@ GPURenderer::GPURenderer(const Camera &camera, unsigned int samples, const IScen
 	std::cout << "Perf counter created" << ": line " << __LINE__ << ": time (ms): " << performance_timer.Poll().count() << "\n";
 
 	RayBufferSize = camera.Resolution().X * camera.Resolution().Y;
+
+	std::vector<GPUSphere> gpu_spheres;
+	std::vector<GPUDiffuseMaterialParameters> diffuse_material_parameters;
+	ParseSceneData(scene, gpu_spheres, diffuse_material_parameters);
 
 	if (!VKUtils::VerifyInstanceLayers(VKUtils::DebugInstanceLayers) ||
 		!VKUtils::VerifyInstanceExtensions(VKUtils::DebugInstanceExtensions))
@@ -83,17 +161,7 @@ GPURenderer::GPURenderer(const Camera &camera, unsigned int samples, const IScen
 	BufferData[(int)GPUBufferBindings::intersection_buffer].descriptor_type = vk::DescriptorType::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::intersection_buffer].data_pointer = &gpu_intersection_buffer;
 
-	std::vector<GPUSphere> spheres;
-	for (const auto &object : scene.Objects())
-	{
-		const Sphere *sphere = dynamic_cast<const Sphere *>(object);
-		if (nullptr != sphere)
-		{
-			spheres.emplace_back(sphere);
-		}
-	}
-
-	BufferData[(int)GPUBufferBindings::sphere_buffer].buffer_size = sizeof(GPUSphere) * spheres.size();
+	BufferData[(int)GPUBufferBindings::sphere_buffer].buffer_size = sizeof(GPUSphere) * gpu_spheres.size();
 	BufferData[(int)GPUBufferBindings::sphere_buffer].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::sphere_buffer].descriptor_type = vk::DescriptorType::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::sphere_buffer].data_pointer = &gpu_sphere_buffer;
@@ -102,16 +170,6 @@ GPURenderer::GPURenderer(const Camera &camera, unsigned int samples, const IScen
 	BufferData[(int)GPUBufferBindings::sample_buffer].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::sample_buffer].descriptor_type = vk::DescriptorType::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::sample_buffer].data_pointer = &gpu_sample_buffer;
-
-	std::vector<GPUDiffuseMaterialParameters> diffuse_material_parameters;
-	for (const auto &material : scene.Materials())
-	{
-		const DiffuseBSDF *diffuse_material = dynamic_cast<const DiffuseBSDF *>(material);
-		if (nullptr != diffuse_material)
-		{
-			diffuse_material_parameters.emplace_back(diffuse_material);
-		}
-	}
 
 	BufferData[(int)GPUBufferBindings::diffuse_material_parameters].buffer_size = sizeof(GPUDiffuseMaterialParameters) * diffuse_material_parameters.size();
 	BufferData[(int)GPUBufferBindings::diffuse_material_parameters].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
@@ -148,7 +206,7 @@ GPURenderer::GPURenderer(const Camera &camera, unsigned int samples, const IScen
 		throw std::exception("Diffuse material parameters for GPU compute failed to allocate");
 	}
 
-	memcpy(gpu_sphere_buffer, spheres.data(), spheres.size() * sizeof(GPUSphere));
+	memcpy(gpu_sphere_buffer, gpu_spheres.data(), gpu_spheres.size() * sizeof(GPUSphere));
 	memcpy(gpu_diffuse_material_parameters_buffer, diffuse_material_parameters.data(), diffuse_material_parameters.size() * sizeof(GPUDiffuseMaterialParameters));
 
 	std::cout << "GPU Renderer initialization took" << ": line " << __LINE__ << ": time (ms): " << performance_timer.Poll().count() << "\n";

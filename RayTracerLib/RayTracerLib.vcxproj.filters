@@ -98,9 +98,6 @@
     <ClInclude Include="..\include\Vector3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\Material.h">
-      <Filter>Header Files\CPU Rendering\Materials</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\IMaterial.h">
       <Filter>Header Files\CPU Rendering\Materials</Filter>
     </ClInclude>
@@ -172,9 +169,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Material.cpp">
-      <Filter>Source Files\CPU Rendering\Materials</Filter>
-    </ClCompile>
     <ClCompile Include="PrincipledBSDF.cpp">
       <Filter>Source Files\CPU Rendering\Materials</Filter>
     </ClCompile>
