@@ -58,7 +58,7 @@ static void ParseSceneData(const IScene &scene, std::vector<GPUSphere> &out_gpu_
 			}
 			else
 			{
-				material_index = diffuse_materials.size();
+				material_index = static_cast<MaterialIndex>(diffuse_materials.size());
 				GPUDiffuseMaterialParameters new_parameters(diffuse);
 				GPUDiffuseMaterialParameterTracking new_material_tracker
 				{
@@ -279,31 +279,11 @@ vk::Result GPURenderer::CreateAndMapMemories(uint32_t queueFamilyIndex)
 	return result;
 }
 
-static bool RayCalculationNeeded(const GPURay * const rays, size_t rays_length, size_t current_bounce, size_t max_bounce)
-{
-	if (current_bounce >= max_bounce)
-	{
-		return false;
-	}
-
-	for (size_t i = 0; i < rays_length; i++)
-	{
-		if (rays[i].direction[0] != 0 ||
-			rays[i].direction[1] != 0 ||
-			rays[i].direction[2] != 0)
-		{
-			return true;
-		}
-	}
-
-	return false;
-}
-
 void GPURenderer::Render(std::shared_ptr<IImage> &out_image)
 {
 	ElapsedTimer performance_timer;
 
-	std::cout << "[RENDER STARTED]" << ": line " << __LINE__ << ": time (ms): " << performance_timer.Poll().count() << "\n";
+	std::cout << "[RENDER STARTED]: line " << __LINE__ << ": time (ms): " << performance_timer.Poll().count() << "\n";
 
 	GPURayInitializer ray_initializer(device);
 	GPURayIntersector ray_intersector(device, scene);
@@ -312,11 +292,14 @@ void GPURenderer::Render(std::shared_ptr<IImage> &out_image)
 
 	const size_t max_bounces = 12;
 
+	ElapsedTimer rendering_timer;
 	for (size_t i = 0; i < samples; i++)
 	{
 		std::cout << "############## CALCULATING SAMPLE " << i + 1 << " OF " << samples << " ##############\n";
 
 		ray_initializer.Execute(ComputeQueueIndex, camera, i, BufferData[(int)GPUBufferBindings::ray_buffer].buffer, BufferData[(int)GPUBufferBindings::intersection_buffer].buffer);
+
+		std::cout << "\t[Ray Initialization] time (ms): " << rendering_timer.Poll().count() << "\n";
 
 #if defined _DEBUG && false
 		std::cout << "---- initialized ray values for ray initialization buffer " << i << " ----" << "\n";
@@ -329,14 +312,16 @@ void GPURenderer::Render(std::shared_ptr<IImage> &out_image)
 #endif
 
 		bool ray_calculation_needed = true;
-		size_t current_bounce = 1;
+		size_t current_bounce_index = 0;
 
-		while (ray_calculation_needed)
+		while (current_bounce_index < max_bounces)
 		{
 			ray_intersector.Execute(ComputeQueueIndex, RayBufferSize,
 				BufferData[(int)GPUBufferBindings::ray_buffer].buffer,
 				BufferData[(int)GPUBufferBindings::intersection_buffer].buffer,
 				BufferData[(int)GPUBufferBindings::sphere_buffer].buffer);
+
+			std::cout << "\t[Ray Intersection] time (ms): " << rendering_timer.Poll().count() << "\n";
 
 	#if defined _DEBUG && false
 			std::cout << "---- Calculated intersections for ray buffer " << i << " ----" << "\n";
@@ -353,18 +338,20 @@ void GPURenderer::Render(std::shared_ptr<IImage> &out_image)
 				BufferData[(int)GPUBufferBindings::ray_buffer].buffer,
 				BufferData[(int)GPUBufferBindings::diffuse_material_parameters].buffer);
 
+			std::cout << "\t[Material Calculation] time (ms): " << rendering_timer.Poll().count() << "\n";
+
 	#if defined _DEBUG && false
 			std::cout << "---- Calculated materials for ray buffer " << i << " ----" << "\n";
 	#endif
 
-			ray_calculation_needed = RayCalculationNeeded((const GPURay * const)gpu_ray_buffer, RayBufferSize, current_bounce, max_bounces);
-
-			current_bounce++;
+			current_bounce_index++;
 		}
 
 		sample_accumulator.Execute(ComputeQueueIndex, RayBufferSize,
 			BufferData[(int)GPUBufferBindings::intersection_buffer].buffer,
 			BufferData[(int)GPUBufferBindings::sample_buffer].buffer);
+
+		std::cout << "\t[Sample Accumulation] time (ms): " << rendering_timer.Poll().count() << "\n";
 
 #if defined _DEBUG && false
 		std::cout << "---- Accumulated samples for ray buffer " << i << " ----" << "\n";
@@ -379,6 +366,10 @@ void GPURenderer::Render(std::shared_ptr<IImage> &out_image)
 		BufferData[(int)GPUBufferBindings::intersection_buffer].buffer,
 		BufferData[(int)GPUBufferBindings::sample_buffer].buffer,
 		true, samples);
+
+	std::cout << "\t[Sample Finalization] time (ms): " << rendering_timer.Poll().count() << "\n";
+
+	std::cout << "[RENDER TIME]" << ": line " << __LINE__ << ": time (ms): " << performance_timer.Poll().count() << "\n";
 
 	Image *output_image = new Image(camera.Resolution());
 
@@ -395,7 +386,7 @@ void GPURenderer::Render(std::shared_ptr<IImage> &out_image)
 
 	out_image = std::shared_ptr<IImage>(output_image);
 
-	std::cout << "[RENDER TIME]" << ": line " << __LINE__ << ": time (ms): " << performance_timer.Poll().count() << "\n";
+	std::cout << "[IMAGE CREATION TIME]" << ": line " << __LINE__ << ": time (ms): " << performance_timer.Poll().count() << "\n";
 }
 
 GPURenderer::~GPURenderer()

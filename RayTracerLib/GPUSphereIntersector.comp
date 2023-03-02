@@ -1,15 +1,7 @@
 // glslangValidator.exe -V -e main %(FullPath) -o $(OutDir)\..\bin\%(Filename).comp.spv
 
-// TODO: this could be threaded per-ray per-object
-
 #version 450
 #extension GL_EXT_debug_printf : enable
-
-//	Incoming data
-//		origin, direction, pixel
-//		sphere data
-//	Outgoing data
-//		intersection location, normal, material ID, (eventualy object ID too)
 
 struct Ray
 {
@@ -59,30 +51,19 @@ layout(std430, set = 0, binding = 2) buffer in_spheres
 struct RayIntersectionInfo
 {
 	bool intersects;
-	vec3 location;
-	vec3 normal;
 	float depth;
-	uint material_id;
-	int material_index;
 };
 
-RayIntersectionInfo ray_intersects_sphere(Ray ray, Sphere sphere)
+RayIntersectionInfo ray_intersects_sphere(vec3 ray_origin, vec3 ray_direction_normalized, vec3 sphere_position, float sphere_radius)
 {
 	RayIntersectionInfo info;
 	info.intersects = false;
-	info.normal = vec3(0.0);
-	info.depth = 0;
-	info.material_id = 0;
 
-	vec3 sphere_position = sphere.position.xyz;
-
-	vec3 line_origin_to_sphere_center_O_minus_C = sphere_position - ray.origin.xyz;
-	float u_dot = dot(line_origin_to_sphere_center_O_minus_C, normalize(ray.direction.xyz));
-
+	vec3 line_origin_to_sphere_center_O_minus_C = sphere_position - ray_origin;
+	float u_dot = dot(line_origin_to_sphere_center_O_minus_C, ray_direction_normalized);
 	float dot_squared = u_dot * u_dot;
 	float magnitude_squared = dot(line_origin_to_sphere_center_O_minus_C, line_origin_to_sphere_center_O_minus_C);
-	float radius_squared = sphere.radius * sphere.radius;
-	
+	float radius_squared = sphere_radius * sphere_radius;
 	float delta = dot_squared + radius_squared - magnitude_squared;
 	
 	if (delta < 0)
@@ -100,15 +81,7 @@ RayIntersectionInfo ray_intersects_sphere(Ray ray, Sphere sphere)
 	}
 
 	info.intersects = true;
-
-	vec3 intersection_location = ray.origin.xyz + normalize(ray.direction.xyz) * depth;
-	vec3 intersection_normal = normalize((intersection_location - sphere_position));
-
-	info.location = intersection_location;
-	info.normal = intersection_normal;
 	info.depth = depth;
-	info.material_id = sphere.material_id;
-	info.material_index = sphere.material_index;
 
 	return info;
 }
@@ -118,6 +91,7 @@ void main()
 {
 	uint gID = gl_GlobalInvocationID.x;
 
+#ifdef DEBUG
 	if(gID == 0)
 	{
 		debugPrintfEXT("Sphere Intersection: %u, %u, %u", Rays.rays.length(), Intersections.intersections.length(), Spheres.spheres.length());
@@ -126,24 +100,31 @@ void main()
 			debugPrintfEXT("Sphere 0 data: [%3.2v4f], %f, %u, %u", Spheres.spheres[0].position, Spheres.spheres[0].radius, Spheres.spheres[0].material_id, Spheres.spheres[0].material_index);
 		}
 	}
+#endif
 	
 	if (gID > Rays.rays.length())
 	{
 		return;
 	}
 	
+	vec3 ray_origin = Rays.rays[gID].origin.xyz;
+	vec3 ray_direction_normalized = normalize(Rays.rays[gID].direction.xyz);
+
 	for(int i = 0; i < Spheres.spheres.length(); i++)
 	{
-		RayIntersectionInfo info = ray_intersects_sphere(Rays.rays[gID], Spheres.spheres[i]);
+		RayIntersectionInfo info = ray_intersects_sphere(ray_origin, ray_direction_normalized, Spheres.spheres[i].position.xyz, Spheres.spheres[i].radius);
 		
 		if(info.intersects && info.depth < Intersections.intersections[gID].depth)
 		{
+			vec3 intersection_location = ray_origin + ray_direction_normalized * info.depth;
+			vec3 intersection_normal = normalize((intersection_location - Spheres.spheres[i].position.xyz));
+
 			// Fill in all the intersection info
 			Intersections.intersections[gID].depth = info.depth;
-			Intersections.intersections[gID].intersection_location = vec4(info.location, 0.0);
-			Intersections.intersections[gID].intersection_normal = vec4(info.normal, 0.0);
-			Intersections.intersections[gID].material_id = info.material_id;
-			Intersections.intersections[gID].material_index = info.material_index;
+			Intersections.intersections[gID].intersection_location = vec4(intersection_location, 0.0);
+			Intersections.intersections[gID].intersection_normal = vec4(intersection_normal, 0.0);
+			Intersections.intersections[gID].material_id = Spheres.spheres[i].material_id;
+			Intersections.intersections[gID].material_index = Spheres.spheres[i].material_index;
 		}
 	}
 }

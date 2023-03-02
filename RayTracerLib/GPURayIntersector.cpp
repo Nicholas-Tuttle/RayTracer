@@ -1,11 +1,13 @@
 #include "GPURayIntersector.h"
 #include "VulkanUtils.h"
+#include "ElapsedTimer.h"
 
 using RayTracer::GPURayIntersector;
 using RayTracer::GPURay;
 using RayTracer::IScene;
 using RayTracer::Sphere;
 using RayTracer::VKUtils;
+using RayTracer::ElapsedTimer;
 
 const static size_t shader_local_size_x = 1024;
 
@@ -30,8 +32,16 @@ void GPURayIntersector::Execute(uint32_t compute_queue_index,
 
 	// The world intersector should be first since everything will intersect with it and
 	// it just sets up the max depth and starting color information in each intersection
+
+	ElapsedTimer timer;
+
 	world_intersector.Execute(compute_queue_index, incoming_ray_count, input_gpu_ray_buffer, output_gpu_intersection_buffer);
+
+	std::cout << "\t\t[World Intersection] time (ms): " << timer.Poll().count() << "\n";
+
 	sphere_intersector.Execute(compute_queue_index, incoming_ray_count, input_gpu_ray_buffer, output_gpu_intersection_buffer, input_gpu_sphere_buffer);
+
+	std::cout << "\t\t[Sphere Intersection] time (ms): " << timer.Poll().count() << "\n";
 }
 
 #pragma endregion
