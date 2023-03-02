@@ -7,12 +7,6 @@
 #define FLOAT_MAX 0x7f7fffff
 #define NO_MATERIAL_ID 0xffffffff
 
-//	Incoming data
-//		origin, direction, pixel
-//		sphere data
-//	Outgoing data
-//		intersection location, normal, material ID, (eventualy object ID too)
-
 struct Ray
 {
 	vec4 origin;
@@ -51,10 +45,12 @@ void main()
 {
 	uint gID = gl_GlobalInvocationID.x;
 
+#ifdef DEBUG
 	if(gID == 0)
 	{
 		debugPrintfEXT("World Intersection: %u, %u", Rays.rays.length(), Intersections.intersections.length());
 	}
+#endif
 	
 	if (gID > Rays.rays.length())
 	{
@@ -76,5 +72,4 @@ void main()
 	Intersections.intersections[gID].depth = FLOAT_MAX;
 	Intersections.intersections[gID].material_id = 0;
 	Intersections.intersections[gID].material_index = 0;
-
 }

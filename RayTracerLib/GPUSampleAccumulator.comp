@@ -3,11 +3,6 @@
 #version 450
 #extension GL_EXT_debug_printf : enable
 
-//	Incoming data for colors
-//		ray intersection info
-//	Outgoing data for image
-//		colors (accumulated or finalized)
-
 layout (push_constant) uniform accumulation_data
 {
 	uint sample_count;
@@ -48,10 +43,12 @@ void main()
 {
 	uint gID = gl_GlobalInvocationID.x;
 
+#ifdef DEBUG
 	if(gID == 0)
 	{
 		debugPrintfEXT("Running SampleAccumulator.comp Main");
 	}
+#endif
 
 	if(gID > Intersections.intersections.length())
 	{

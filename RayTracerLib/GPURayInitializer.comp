@@ -4,11 +4,6 @@
 #extension GL_EXT_debug_printf : enable
 #define NO_MATERIAL_ID 0xffffffff
 
-//	Incoming data
-//		camera origin, camera direction, image resolution, seed
-//	Outgoing data for rays
-//		ray origins, ray directions
-
 layout (push_constant) uniform camera_data
 {
 	vec4 Origin;
@@ -66,6 +61,7 @@ void main()
 {
 	uint gID = gl_GlobalInvocationID.x;
 
+#ifdef DEBUG
 	if(gID == 0)
 	{
 		debugPrintfEXT("RayInitializationV2: [%3.2v4f], [%3.2v4f], [%3.2v4f], [%3.2v4f]", CameraData.Origin,
@@ -73,6 +69,7 @@ void main()
 		debugPrintfEXT("%u, %u, %u, %u, %u, %u", CameraData.FocalLengthMM, CameraData.SensorWidthMM,
 			CameraData.ResolutionX, CameraData.ResolutionY, CameraData.Seed, OutRays.rays.length());
 	}
+#endif
 
 	if (gID > OutRays.rays.length())
 	{

@@ -3,13 +3,6 @@
 #version 450
 #extension GL_EXT_debug_printf : enable
 
-//	Incoming shader data
-//		the material ID of this material
-//	Incoming data for rays
-//		intersection location, direction, material ID, (eventualy object ID too)
-//	Outgoing data for rays
-//		origin, direction, color
-
 layout (push_constant) uniform material_data
 {
 	uint ID;
@@ -52,10 +45,12 @@ void main()
 {
 	uint gID = gl_GlobalInvocationID.x;
 	
+#ifdef DEBUG
 	if(gID == 0)
 	{
 		debugPrintfEXT("GPU World Material: %u, %u", Rays.rays.length(), Intersections.intersections.length());
 	}
+#endif
 	
 	if (gID > Intersections.intersections.length())
 	{

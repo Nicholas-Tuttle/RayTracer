@@ -57,9 +57,11 @@ namespace RayTracer
 				push_constants()
 				{
 					material_id = static_cast<uint32_t>(GPURenderer::MaterialTypeID::diffuse);
+					random_seed = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 				}
 
 				uint32_t material_id;
+				float random_seed;
 			} DiffuseMaterialPushConstants;
 		};
 
