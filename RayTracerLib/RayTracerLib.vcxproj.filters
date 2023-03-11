@@ -33,26 +33,26 @@
     <Filter Include="Source Files\GPU Rendering">
       <UniqueIdentifier>{a31f32fc-063b-4632-83c5-25cc49e91321}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shader Files">
-      <UniqueIdentifier>{ca49132c-8928-4140-b013-5c76b78a2c7d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Shader Files\Materials">
-      <UniqueIdentifier>{e4a7b9d4-9b9a-4fab-a4f3-f8f0cd69054f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Shader Files\Sampling">
-      <UniqueIdentifier>{a47c68c8-9f00-49a9-8384-2582f5115cb0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Shader Files\RayIntersection">
-      <UniqueIdentifier>{78c1dbd1-c82a-47de-8cfa-3a6dee6fcad8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Shader Files\Header Files">
-      <UniqueIdentifier>{187d7e11-78a4-442d-8c4b-da422a66dcc4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Shader Files\RayInitialization">
-      <UniqueIdentifier>{aeb1d1e1-7d6c-4e66-81a4-2a1fc6458639}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\GPU Rendering">
       <UniqueIdentifier>{6b4968f3-7cb5-4144-a3a4-7dbf30d27a83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GPU Rendering\Shader Files">
+      <UniqueIdentifier>{ca49132c-8928-4140-b013-5c76b78a2c7d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GPU Rendering\Shader Files\Materials">
+      <UniqueIdentifier>{e4a7b9d4-9b9a-4fab-a4f3-f8f0cd69054f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GPU Rendering\Shader Files\Sampling">
+      <UniqueIdentifier>{a47c68c8-9f00-49a9-8384-2582f5115cb0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GPU Rendering\Shader Files\RayIntersection">
+      <UniqueIdentifier>{78c1dbd1-c82a-47de-8cfa-3a6dee6fcad8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GPU Rendering\Shader Files\Header Files">
+      <UniqueIdentifier>{187d7e11-78a4-442d-8c4b-da422a66dcc4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GPU Rendering\Shader Files\RayInitialization">
+      <UniqueIdentifier>{aeb1d1e1-7d6c-4e66-81a4-2a1fc6458639}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -135,22 +135,22 @@
       <Filter>Utilities\Vulkan</Filter>
     </ClInclude>
     <ClInclude Include="..\include\GPURayInitializer.h">
-      <Filter>Shader Files\RayInitialization</Filter>
+      <Filter>Source Files\GPU Rendering\Shader Files\RayInitialization</Filter>
     </ClInclude>
     <ClInclude Include="..\include\GPUSampleAccumulator.h">
-      <Filter>Shader Files\Sampling</Filter>
+      <Filter>Source Files\GPU Rendering\Shader Files\Sampling</Filter>
     </ClInclude>
     <ClInclude Include="..\include\GPURayIntersector.h">
-      <Filter>Shader Files\RayIntersection</Filter>
+      <Filter>Source Files\GPU Rendering\Shader Files\RayIntersection</Filter>
     </ClInclude>
     <ClInclude Include="..\include\GPUStructs.h">
-      <Filter>Shader Files\Header Files</Filter>
+      <Filter>Source Files\GPU Rendering\Shader Files\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\GPUComputeShader.h">
-      <Filter>Shader Files\Header Files</Filter>
+      <Filter>Source Files\GPU Rendering\Shader Files\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\GPUMaterialCalculator.h">
-      <Filter>Shader Files\Materials</Filter>
+      <Filter>Source Files\GPU Rendering\Shader Files\Materials</Filter>
     </ClInclude>
     <ClInclude Include="..\include\CPURenderer.h">
       <Filter>Header Files\CPU Rendering</Filter>
@@ -188,42 +188,42 @@
       <Filter>Utilities\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="GPURayInitializer.cpp">
-      <Filter>Shader Files\RayInitialization</Filter>
+      <Filter>Source Files\GPU Rendering\Shader Files\RayInitialization</Filter>
     </ClCompile>
     <ClCompile Include="GPUSampleAccumulator.cpp">
-      <Filter>Shader Files\Sampling</Filter>
+      <Filter>Source Files\GPU Rendering\Shader Files\Sampling</Filter>
     </ClCompile>
     <ClCompile Include="GPURayIntersector.cpp">
-      <Filter>Shader Files\RayIntersection</Filter>
+      <Filter>Source Files\GPU Rendering\Shader Files\RayIntersection</Filter>
     </ClCompile>
     <ClCompile Include="GPUComputeShader.cpp">
-      <Filter>Shader Files</Filter>
+      <Filter>Source Files\GPU Rendering\Shader Files</Filter>
     </ClCompile>
     <ClCompile Include="GPUMaterialCalculator.cpp">
-      <Filter>Shader Files\Materials</Filter>
+      <Filter>Source Files\GPU Rendering\Shader Files\Materials</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="GPURayInitializer.comp">
-      <Filter>Shader Files\RayInitialization</Filter>
+      <Filter>Source Files\GPU Rendering\Shader Files\RayInitialization</Filter>
     </CustomBuild>
     <CustomBuild Include="GPUSampleAccumulator.comp">
-      <Filter>Shader Files\Sampling</Filter>
+      <Filter>Source Files\GPU Rendering\Shader Files\Sampling</Filter>
     </CustomBuild>
     <CustomBuild Include="GPUSphereIntersector.comp">
-      <Filter>Shader Files\RayIntersection</Filter>
+      <Filter>Source Files\GPU Rendering\Shader Files\RayIntersection</Filter>
     </CustomBuild>
     <CustomBuild Include="GPUWorldIntersector.comp">
-      <Filter>Shader Files\RayIntersection</Filter>
+      <Filter>Source Files\GPU Rendering\Shader Files\RayIntersection</Filter>
     </CustomBuild>
     <CustomBuild Include="GPUDiffuseMaterial.comp">
-      <Filter>Shader Files\Materials</Filter>
+      <Filter>Source Files\GPU Rendering\Shader Files\Materials</Filter>
     </CustomBuild>
     <CustomBuild Include="GPUWorldMaterial.comp">
-      <Filter>Shader Files\Materials</Filter>
+      <Filter>Source Files\GPU Rendering\Shader Files\Materials</Filter>
     </CustomBuild>
     <CustomBuild Include="GPUEmissiveMaterial.comp">
-      <Filter>Shader Files\Materials</Filter>
+      <Filter>Source Files\GPU Rendering\Shader Files\Materials</Filter>
     </CustomBuild>
   </ItemGroup>
 </Project>
