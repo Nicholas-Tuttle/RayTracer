@@ -2,6 +2,7 @@
 
 #include "Sphere.h"
 #include "DiffuseBSDF.h"
+#include "EmissiveBSDF.h"
 
 #define GPU_PADDING_BYTES(byte_count) char _[byte_count] = { 0 };
 
@@ -107,6 +108,7 @@ namespace RayTracer
 		}
 
 		GPUDiffuseMaterialParameters(const RayTracer::DiffuseBSDF *diffuse)
+			: GPUDiffuseMaterialParameters()
 		{
 			if (nullptr == diffuse)
 			{
@@ -118,6 +120,37 @@ namespace RayTracer
 			color[2] = diffuse->SurfaceColor().B_float();
 			color[3] = 1;
 			roughness = diffuse->Roughness();
+		}
+	};
+
+	struct GPUEmissiveMaterialParameters
+	{
+		float color[4];
+		float strength;
+		GPU_PADDING_BYTES(12);
+
+		GPUEmissiveMaterialParameters()
+		{
+			color[0] = 1;
+			color[1] = 1;
+			color[2] = 1;
+			color[3] = 1;
+			strength = 1;
+		}
+
+		GPUEmissiveMaterialParameters(const RayTracer::EmissiveBSDF *emissive)
+			: GPUEmissiveMaterialParameters()
+		{
+			if (nullptr == emissive)
+			{
+				return;
+			}
+
+			color[0] = emissive->SurfaceColor().R_float();
+			color[1] = emissive->SurfaceColor().G_float();
+			color[2] = emissive->SurfaceColor().B_float();
+			color[3] = 1;
+			strength = emissive->Strength();
 		}
 	};
 

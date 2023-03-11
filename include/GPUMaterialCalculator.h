@@ -15,7 +15,8 @@ namespace RayTracer
 			size_t incoming_ray_count,
 			vk::Buffer input_gpu_intersection_buffer,
 			vk::Buffer output_gpu_ray_buffer,
-			vk::Buffer input_diffuse_material_parameters);
+			vk::Buffer input_diffuse_material_parameters,
+			vk::Buffer input_emissive_material_parameters);
 
 	private:
 		vk::Device device;
@@ -65,7 +66,30 @@ namespace RayTracer
 			} DiffuseMaterialPushConstants;
 		};
 
+		class GPUEmissiveMaterial : protected GPUComputeShader
+		{
+		public:
+			GPUEmissiveMaterial(vk::Device device);
+			void Execute(uint32_t compute_queue_index, size_t incoming_ray_count,
+				vk::Buffer input_gpu_intersection_buffer, vk::Buffer output_gpu_ray_buffer,
+				vk::Buffer input_emissive_material_parameters);
+		private:
+			GPUEmissiveMaterial(const GPUEmissiveMaterial &other) = delete;
+			GPUEmissiveMaterial(const GPUEmissiveMaterial &&other) = delete;
+
+			struct push_constants
+			{
+				push_constants()
+				{
+					material_id = static_cast<uint32_t>(GPURenderer::MaterialTypeID::emissive);
+				}
+
+				uint32_t material_id;
+			} EmissiveMaterialPushConstants;
+		};
+
 		GPUWorldMaterial world_material;
 		GPUDiffuseMaterial diffuse_material;
+		GPUEmissiveMaterial emissive_material;
 	};
 }

@@ -18,7 +18,8 @@ namespace RayTracer
 		enum class MaterialTypeID
 		{
 			world,
-			diffuse
+			diffuse,
+			emissive
 		};
 	private:
 		vk::Instance instance = nullptr;
@@ -35,6 +36,7 @@ namespace RayTracer
 			sphere_buffer,
 			sample_buffer,
 			diffuse_material_parameters,
+			emissive_material_parameters,
 			GPUBufferBindingCount
 		};
 
@@ -65,6 +67,8 @@ namespace RayTracer
 		void *gpu_sample_buffer;
 		// Pointers are of type GPUDiffuseMaterialParameters*
 		void *gpu_diffuse_material_parameters_buffer;
+		// Pointers are of type GPUEmissiveMaterialParameters*
+		void *gpu_emissive_material_parameters_buffer;
 		
 		void *CreateAndMapMemory(uint32_t queueFamilyIndex, const vk::DeviceSize memorySize, const vk::BufferUsageFlags usage_flags,
 			vk::Buffer &vk_buffer, vk::DeviceMemory &device_memory);
