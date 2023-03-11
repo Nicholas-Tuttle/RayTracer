@@ -10,6 +10,7 @@
 #include "GPUStructs.h"
 
 #include "DiffuseBSDF.h"
+#include "EmissiveBSDF.h"
 
 using RayTracer::GPURenderer;
 using RayTracer::Camera;
@@ -27,10 +28,12 @@ using RayTracer::GPUSampleAccumulator;
 using RayTracer::GPURay;
 using RayTracer::GPUSphere;
 using RayTracer::GPUDiffuseMaterialParameters;
+using RayTracer::GPUEmissiveMaterialParameters;
 
 using RayTracer::DiffuseBSDF;
+using RayTracer::EmissiveBSDF;
 
-static void ParseSceneData(const IScene &scene, std::vector<GPUSphere> &out_gpu_spheres, std::vector<GPUDiffuseMaterialParameters> &out_diffuse_material_parameters)
+static void ParseSceneData(const IScene &scene, std::vector<GPUSphere> &out_gpu_spheres, std::vector<GPUDiffuseMaterialParameters> &out_diffuse_material_parameters, std::vector<GPUEmissiveMaterialParameters> &out_emissive_material_parameters)
 {
 	using MaterialIndex = int32_t;
 	struct GPUDiffuseMaterialParameterTracking
@@ -39,7 +42,14 @@ static void ParseSceneData(const IScene &scene, std::vector<GPUSphere> &out_gpu_
 		GPUDiffuseMaterialParameters material_parameters;
 	};
 
+	struct GPUEmissiveMaterialParameterTracking
+	{
+		MaterialIndex material_index;
+		GPUEmissiveMaterialParameters material_parameters;
+	};
+
 	std::unordered_map<const DiffuseBSDF *, GPUDiffuseMaterialParameterTracking> diffuse_materials;
+	std::unordered_map<const EmissiveBSDF *, GPUEmissiveMaterialParameterTracking> emissive_materials;
 	
 	for (const auto &object : scene.Objects())
 	{
@@ -48,7 +58,7 @@ static void ParseSceneData(const IScene &scene, std::vector<GPUSphere> &out_gpu_
 		MaterialIndex material_index = 0;
 
 		// TODO: Add more material types
-		if (const DiffuseBSDF *diffuse = dynamic_cast<const DiffuseBSDF *>(material.get()))
+		if (const DiffuseBSDF * const diffuse = dynamic_cast<const DiffuseBSDF * const>(material.get()))
 		{
 			material_id = static_cast<uint32_t>(GPURenderer::MaterialTypeID::diffuse);
 			const auto &entry = diffuse_materials.find(diffuse);
@@ -69,6 +79,28 @@ static void ParseSceneData(const IScene &scene, std::vector<GPUSphere> &out_gpu_
 				diffuse_materials.emplace(diffuse, new_material_tracker);
 			}
 		}
+		else if (const EmissiveBSDF *const emissive = dynamic_cast<const EmissiveBSDF *const>(material.get()))
+		{
+			material_id = static_cast<uint32_t>(GPURenderer::MaterialTypeID::emissive);
+			const auto &entry = emissive_materials.find(emissive);
+			if (entry != emissive_materials.end())
+			{
+				material_index = entry->second.material_index;
+			}
+			else
+			{
+				material_index = static_cast<MaterialIndex>(emissive_materials.size());
+				GPUEmissiveMaterialParameters new_parameters(emissive);
+				GPUEmissiveMaterialParameterTracking new_material_tracker
+				{
+					.material_index = static_cast<MaterialIndex>(material_index),
+					.material_parameters = new_parameters
+				};
+
+				emissive_materials.emplace(emissive, new_material_tracker);
+			}
+		}
+
 
 		// TODO: Add more object types
 		const Sphere *sphere = dynamic_cast<const Sphere *>(object);
@@ -87,15 +119,25 @@ static void ParseSceneData(const IScene &scene, std::vector<GPUSphere> &out_gpu_
 		out_diffuse_material_parameters[kvp.second.material_index] = kvp.second.material_parameters;
 	}
 
-	// If there are no diffuse materials add a dummy one so that the buffer will still exist
+	out_emissive_material_parameters.resize(emissive_materials.size());
+	for (const auto &kvp : emissive_materials)
+	{
+		out_emissive_material_parameters[kvp.second.material_index] = kvp.second.material_parameters;
+	}
+
+	// If there are no enties in a buffer add a dummy one so that the buffer will still exist
 	// TODO: allow null buffers in shaders?
+
 	if (out_diffuse_material_parameters.size() == 0)
 	{
 		out_diffuse_material_parameters.emplace_back();
 	}
 
-	// If there are no spheres provided add a dummy one so that the buffer will still exist
-	// TODO: allow null buffers in shaders?
+	if (out_emissive_material_parameters.size() == 0)
+	{
+		out_emissive_material_parameters.emplace_back();
+	}
+
 	if (out_gpu_spheres.size() == 0)
 	{
 		out_gpu_spheres.emplace_back();
@@ -113,7 +155,8 @@ GPURenderer::GPURenderer(const Camera &camera, unsigned int samples, const IScen
 
 	std::vector<GPUSphere> gpu_spheres;
 	std::vector<GPUDiffuseMaterialParameters> diffuse_material_parameters;
-	ParseSceneData(scene, gpu_spheres, diffuse_material_parameters);
+	std::vector<GPUEmissiveMaterialParameters> emissive_material_parameters;
+	ParseSceneData(scene, gpu_spheres, diffuse_material_parameters, emissive_material_parameters);
 
 	if (!VKUtils::VerifyInstanceLayers(VKUtils::DebugInstanceLayers) ||
 		!VKUtils::VerifyInstanceExtensions(VKUtils::DebugInstanceExtensions))
@@ -175,7 +218,12 @@ GPURenderer::GPURenderer(const Camera &camera, unsigned int samples, const IScen
 	BufferData[(int)GPUBufferBindings::diffuse_material_parameters].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::diffuse_material_parameters].descriptor_type = vk::DescriptorType::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::diffuse_material_parameters].data_pointer = &gpu_diffuse_material_parameters_buffer;
-
+	
+	BufferData[(int)GPUBufferBindings::emissive_material_parameters].buffer_size = sizeof(GPUEmissiveMaterialParameters) * emissive_material_parameters.size();
+	BufferData[(int)GPUBufferBindings::emissive_material_parameters].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
+	BufferData[(int)GPUBufferBindings::emissive_material_parameters].descriptor_type = vk::DescriptorType::eStorageBuffer;
+	BufferData[(int)GPUBufferBindings::emissive_material_parameters].data_pointer = &gpu_emissive_material_parameters_buffer;
+	
 	if (vk::Result::eSuccess != CreateAndMapMemories(ComputeQueueIndex))
 	{
 		throw std::exception("Failed to create and map memories for compute shader");
@@ -206,8 +254,14 @@ GPURenderer::GPURenderer(const Camera &camera, unsigned int samples, const IScen
 		throw std::exception("Diffuse material parameters for GPU compute failed to allocate");
 	}
 
+	if (nullptr == gpu_emissive_material_parameters_buffer)
+	{
+		throw std::exception("Emissive material parameters for GPU compute failed to allocate");
+	}
+
 	memcpy(gpu_sphere_buffer, gpu_spheres.data(), gpu_spheres.size() * sizeof(GPUSphere));
 	memcpy(gpu_diffuse_material_parameters_buffer, diffuse_material_parameters.data(), diffuse_material_parameters.size() * sizeof(GPUDiffuseMaterialParameters));
+	memcpy(gpu_emissive_material_parameters_buffer, emissive_material_parameters.data(), emissive_material_parameters.size() * sizeof(GPUEmissiveMaterialParameters));
 
 	std::cout << "GPU Renderer initialization took" << ": line " << __LINE__ << ": time (ms): " << performance_timer.Poll().count() << "\n";
 }
@@ -336,7 +390,8 @@ void GPURenderer::Render(std::shared_ptr<IImage> &out_image)
 			material_calculator.Execute(ComputeQueueIndex, RayBufferSize,
 				BufferData[(int)GPUBufferBindings::intersection_buffer].buffer,
 				BufferData[(int)GPUBufferBindings::ray_buffer].buffer,
-				BufferData[(int)GPUBufferBindings::diffuse_material_parameters].buffer);
+				BufferData[(int)GPUBufferBindings::diffuse_material_parameters].buffer,
+				BufferData[(int)GPUBufferBindings::emissive_material_parameters].buffer);
 
 			std::cout << "\t[Material Calculation] time (ms): " << rendering_timer.Poll().count() << "\n";
 

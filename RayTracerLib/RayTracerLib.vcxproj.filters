@@ -222,5 +222,8 @@
     <CustomBuild Include="GPUWorldMaterial.comp">
       <Filter>Shader Files\Materials</Filter>
     </CustomBuild>
+    <CustomBuild Include="GPUEmissiveMaterial.comp">
+      <Filter>Shader Files\Materials</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

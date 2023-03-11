@@ -14,6 +14,7 @@ namespace RayTracer
 		virtual float Roughness() const override;
 		virtual void GetResultantRay(const Intersection &intersection,
 			const Ray &incoming_ray, Ray &outgoing_ray) const override;
+		float Strength() const { return strength; }
 	private:
 		Color color;
 		float strength;

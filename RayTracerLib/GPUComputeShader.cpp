@@ -181,8 +181,7 @@ void GPUComputeShader::Execute(uint32_t compute_queue_index, size_t total_comput
 	commandBufferAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
 	commandBufferAllocateInfo.commandBufferCount = 1;
 
-	std::vector<vk::CommandBuffer> commandBuffers = {};
-	commandBuffers = Device.allocateCommandBuffers(commandBufferAllocateInfo);
+	std::vector<vk::CommandBuffer> commandBuffers = Device.allocateCommandBuffers(commandBufferAllocateInfo);
 
 	vk::CommandBufferBeginInfo commandBufferBeginInfo = {};
 	commandBufferBeginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
