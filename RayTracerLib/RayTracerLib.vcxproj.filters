@@ -54,6 +54,9 @@
     <Filter Include="Source Files\GPU Rendering\Shader Files\RayInitialization">
       <UniqueIdentifier>{aeb1d1e1-7d6c-4e66-81a4-2a1fc6458639}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Utilities\Performance">
+      <UniqueIdentifier>{ba484baa-ee98-43db-ac8e-ad029e948e04}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Camera.h">
@@ -154,6 +157,9 @@
     </ClInclude>
     <ClInclude Include="..\include\CPURenderer.h">
       <Filter>Header Files\CPU Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\PerformanceLogger.h">
+      <Filter>Utilities\Performance</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

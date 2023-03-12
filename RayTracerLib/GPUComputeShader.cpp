@@ -3,15 +3,14 @@
 #include <iostream>
 
 using RayTracer::GPUComputeShader;
+using RayTracer::PerformanceTracking::PerformanceSession;
 
 const static size_t shader_local_size_x = 1024;
 
-GPUComputeShader::GPUComputeShader(const std::string &shader_file_name, size_t buffer_count, size_t push_constants_size, vk::Device device)
-	: ShaderFileName(shader_file_name), BufferCount(buffer_count), PushConstantsSize(push_constants_size), Device(device)
+GPUComputeShader::GPUComputeShader(const std::string &shader_file_name, size_t buffer_count, size_t push_constants_size, vk::Device device, PerformanceSession *const session)
+	: ShaderFileName(shader_file_name), BufferCount(buffer_count), PushConstantsSize(push_constants_size), Device(device), performance_session(session)
 {
-#ifdef _DEBUG
-	std::cout << __FUNCTION__ << std::endl;
-#endif
+	TRACE_FUNCTION(performance_session);
 
 	ShaderModule = CreateShaderModule();
 	if (ShaderModule == static_cast<vk::ShaderModule>(nullptr))
@@ -35,6 +34,8 @@ GPUComputeShader::GPUComputeShader(const std::string &shader_file_name, size_t b
 
 vk::ShaderModule GPUComputeShader::CreateShaderModule()
 {
+	TRACE_FUNCTION(performance_session);
+
 	std::vector<uint8_t> shaderCode = VKUtils::ReadShaderFileToBytes(ShaderFileName);
 	if (0 == shaderCode.size())
 	{
@@ -50,6 +51,8 @@ vk::ShaderModule GPUComputeShader::CreateShaderModule()
 
 vk::DescriptorSetLayout GPUComputeShader::DescribeShader()
 {
+	TRACE_FUNCTION(performance_session);
+
 	std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings;
 	descriptorSetLayoutBindings.resize(BufferCount, vk::DescriptorSetLayoutBinding());
 
@@ -70,6 +73,8 @@ vk::DescriptorSetLayout GPUComputeShader::DescribeShader()
 
 vk::Result GPUComputeShader::CreatePipeline(size_t push_constants_size)
 {
+	TRACE_FUNCTION(performance_session);
+
 	vk::PushConstantRange push_constants;
 	push_constants.offset = 0;
 	
@@ -107,6 +112,8 @@ vk::Result GPUComputeShader::CreatePipeline(size_t push_constants_size)
 
 std::vector<vk::DescriptorSet> GPUComputeShader::AllocateDescriptorSets()
 {
+	TRACE_FUNCTION(performance_session);
+
 	std::vector<vk::DescriptorPoolSize> descriptorPoolSizes;
 	descriptorPoolSizes.resize(BufferCount, vk::DescriptorPoolSize());
 
@@ -137,6 +144,8 @@ std::vector<vk::DescriptorSet> GPUComputeShader::AllocateDescriptorSets()
 
 void GPUComputeShader::UpdateDescriptorSets(const std::vector<vk::DescriptorSet> &descriptor_set, const std::vector<vk::Buffer> &buffers)
 {
+	TRACE_FUNCTION(performance_session);
+
 	if (buffers.size() != BufferCount)
 	{
 #ifdef _DEBUG
@@ -169,6 +178,8 @@ void GPUComputeShader::UpdateDescriptorSets(const std::vector<vk::DescriptorSet>
 
 void GPUComputeShader::Execute(uint32_t compute_queue_index, size_t total_compute_count, const std::vector<vk::Buffer> &buffers, void *push_constants)
 {
+	TRACE_FUNCTION(performance_session);
+
 	UpdateDescriptorSets(DescriptorSets, buffers);
 	
 	vk::CommandPoolCreateInfo commandPoolCreateInfo = {};

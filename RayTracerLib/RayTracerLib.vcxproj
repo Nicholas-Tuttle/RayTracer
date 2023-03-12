@@ -117,6 +117,7 @@
     <ClInclude Include="..\include\Intersection.h" />
     <ClInclude Include="..\include\IScene.h" />
     <ClInclude Include="..\include\IWorld.h" />
+    <ClInclude Include="..\include\PerformanceLogger.h" />
     <ClInclude Include="..\include\Pixel.h" />
     <ClInclude Include="..\include\PixelRenderTask.h" />
     <ClInclude Include="..\include\PresetScenes.h" />

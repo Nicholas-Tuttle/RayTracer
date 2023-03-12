@@ -7,12 +7,14 @@
 #include <iostream>
 #include <vulkan/vulkan.hpp>
 
+#include "PerformanceLogger.h"
+
 namespace RayTracer
 {
 	class GPURayIntersector
 	{
 	public:
-		GPURayIntersector(vk::Device device, const IScene &scene);
+		GPURayIntersector(vk::Device device, const IScene &scene, PerformanceTracking::PerformanceSession *const session);
 		void Execute(uint32_t compute_queue_index,
 			size_t incoming_ray_count,
 			vk::Buffer input_gpu_ray_buffer, 
@@ -25,25 +27,31 @@ namespace RayTracer
 		class GPUWorldIntersector : protected GPUComputeShader
 		{
 		public:
-			GPUWorldIntersector(vk::Device device);
+			GPUWorldIntersector(vk::Device device, PerformanceTracking::PerformanceSession *const session);
 			void Execute(uint32_t compute_queue_index,
 				size_t incoming_ray_count,
 				vk::Buffer input_gpu_ray_buffer,
 				vk::Buffer output_gpu_intersection_buffer);
+		private:
+			PerformanceTracking::PerformanceSession *performance_session;
 		};
 
 		class GPUSphereIntersector : protected GPUComputeShader
 		{
 		public:
-			GPUSphereIntersector(vk::Device device, const IScene &scene);
+			GPUSphereIntersector(vk::Device device, const IScene &scene, PerformanceTracking::PerformanceSession *const session);
 			void Execute(uint32_t compute_queue_index,
 				size_t incoming_ray_count,
 				vk::Buffer input_gpu_ray_buffer,
 				vk::Buffer output_gpu_intersection_buffer,
 				vk::Buffer input_gpu_sphere_buffer);
+		private:
+			PerformanceTracking::PerformanceSession *performance_session;
 		};
 
 		GPUWorldIntersector world_intersector;
 		GPUSphereIntersector sphere_intersector;
+
+		PerformanceTracking::PerformanceSession *performance_session;
 	};
 }

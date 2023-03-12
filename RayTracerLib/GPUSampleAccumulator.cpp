@@ -3,16 +3,13 @@
 
 using RayTracer::GPUSampleAccumulator;
 using RayTracer::VKUtils;
+using RayTracer::PerformanceTracking::PerformanceSession;
 
 const static size_t shader_local_size_x = 1024;
 
-GPUSampleAccumulator::GPUSampleAccumulator(vk::Device device)
-	: SampleAccumulatorPushConstants(), GPUComputeShader("GPUSampleAccumulator.comp.spv", 2, sizeof(GPUSampleAccumulator::SampleAccumulatorPushConstants), device)
-{
-#ifdef _DEBUG
-	std::cout << __FUNCTION__ << std::endl;
-#endif
-}
+GPUSampleAccumulator::GPUSampleAccumulator(vk::Device device, PerformanceSession *const session)
+	: SampleAccumulatorPushConstants(), GPUComputeShader("GPUSampleAccumulator.comp.spv", 2, sizeof(GPUSampleAccumulator::SampleAccumulatorPushConstants), device, session), performance_session(session)
+{}
 
 void GPUSampleAccumulator::Execute(uint32_t compute_queue_index,
 	size_t incoming_ray_count,
@@ -21,6 +18,8 @@ void GPUSampleAccumulator::Execute(uint32_t compute_queue_index,
 	bool finalize,
 	uint32_t sample_count)
 {
+	TRACE_FUNCTION(performance_session);
+
 	SampleAccumulatorPushConstants.finalize = finalize;
 	SampleAccumulatorPushConstants.sample_count = sample_count;
 
