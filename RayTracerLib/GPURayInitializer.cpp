@@ -3,21 +3,19 @@
 
 using RayTracer::GPURayInitializer;
 using RayTracer::Camera;
-using RayTracer::GPURay;
 using RayTracer::VKUtils;
+using RayTracer::PerformanceTracking::PerformanceSession;
 
 const static size_t shader_local_size_x = 1024;
 
-GPURayInitializer::GPURayInitializer(vk::Device device)
-	: CameraDataPushConstants(), GPUComputeShader("GPURayInitializer.comp.spv", 2, sizeof(GPURayInitializer::CameraDataPushConstants), device)
-{
-#ifdef _DEBUG
-	std::cout << __FUNCTION__ << std::endl;
-#endif
-}
+GPURayInitializer::GPURayInitializer(vk::Device device, PerformanceSession *const session)
+	: CameraDataPushConstants(), GPUComputeShader("GPURayInitializer.comp.spv", 2, sizeof(GPURayInitializer::CameraDataPushConstants), device, session), performance_session(session)
+{}
 
 void GPURayInitializer::Execute(uint32_t compute_queue_index, Camera camera, size_t seed, vk::Buffer output_gpu_ray_buffer, vk::Buffer output_gpu_intersection_buffer)
 {
+	TRACE_FUNCTION(performance_session);
+
 	CameraDataPushConstants.camera_origin[0] = camera.Position().X;
 	CameraDataPushConstants.camera_origin[1] = camera.Position().Y;
 	CameraDataPushConstants.camera_origin[2] = camera.Position().Z;

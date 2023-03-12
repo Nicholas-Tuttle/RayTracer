@@ -6,12 +6,14 @@
 #include <iostream>
 #include <vulkan/vulkan.hpp>
 
+#include "PerformanceLogger.h"
+
 namespace RayTracer
 {
 	class GPURayInitializer : protected GPUComputeShader
 	{
 	public:
-		GPURayInitializer(vk::Device device);
+		GPURayInitializer(vk::Device device, PerformanceTracking::PerformanceSession *const session);
 		void Execute(uint32_t ComputeQueueIndex, Camera camera, size_t seed, vk::Buffer output_gpu_ray_buffer, vk::Buffer output_gpu_intersection_buffer);
 	private:
 		GPURayInitializer(const GPURayInitializer &other) = delete;
@@ -42,5 +44,7 @@ namespace RayTracer
 			unsigned int resolution_y;
 			unsigned int seed;
 		} CameraDataPushConstants;
+
+		PerformanceTracking::PerformanceSession *performance_session;
 	};
 }

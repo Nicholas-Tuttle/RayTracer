@@ -2,12 +2,14 @@
 
 #include <vulkan/vulkan.hpp>
 
+#include "PerformanceLogger.h"
+
 namespace RayTracer
 {
 	class GPUComputeShader
 	{
 	protected:
-		GPUComputeShader(const std::string &shader_file_name, size_t buffer_count, size_t push_constants_size, vk::Device device);
+		GPUComputeShader(const std::string &shader_file_name, size_t buffer_count, size_t push_constants_size, vk::Device device, PerformanceTracking::PerformanceSession *const session);
 		void Execute(uint32_t compute_queue_index, size_t total_compute_count, const std::vector<vk::Buffer> &buffers, void *push_constants = nullptr);
 
 	private:
@@ -31,5 +33,7 @@ namespace RayTracer
 		
 		GPUComputeShader(const GPUComputeShader &other) = delete;
 		GPUComputeShader(const GPUComputeShader &&other) = delete;
+
+		PerformanceTracking::PerformanceSession *performance_session;
 	};
 }

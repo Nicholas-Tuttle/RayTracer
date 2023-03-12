@@ -4,6 +4,7 @@
 #include "IScene.h"
 #include "GPUStructs.h"
 #include <vulkan/vulkan.hpp>
+#include "PerformanceLogger.h"
 
 namespace RayTracer
 {
@@ -12,6 +13,7 @@ namespace RayTracer
 	public:
 		GPURenderer(const Camera &camera, unsigned int samples, const IScene &scene);
 		~GPURenderer();
+
 		void Render(std::shared_ptr<IImage> &out_image);
 		bool GPUDebugEnabled = false;
 
@@ -49,6 +51,7 @@ namespace RayTracer
 			vk::Buffer buffer;
 			vk::DeviceMemory device_memory;
 			void **data_pointer = nullptr;
+			vk::MemoryPropertyFlags memory_property_bits;
 		};
 
 		Camera camera;
@@ -57,10 +60,6 @@ namespace RayTracer
 
 		std::vector<BufferCreationAndMappingData> BufferData;
 
-		// Pointers are of type GPURay*
-		void *gpu_ray_buffer;
-		// Pointers are of type GPUIntersection*
-		void *gpu_intersection_buffer;
 		// Pointers are of type GPUSphere*
 		void *gpu_sphere_buffer;
 		// Pointers are of type GPUSample*
@@ -70,8 +69,10 @@ namespace RayTracer
 		// Pointers are of type GPUEmissiveMaterialParameters*
 		void *gpu_emissive_material_parameters_buffer;
 		
-		void *CreateAndMapMemory(uint32_t queueFamilyIndex, const vk::DeviceSize memorySize, const vk::BufferUsageFlags usage_flags,
-			vk::Buffer &vk_buffer, vk::DeviceMemory &device_memory);
+		void ParseSceneData(const IScene &scene, std::vector<GPUSphere> &out_gpu_spheres, std::vector<GPUDiffuseMaterialParameters> &out_diffuse_material_parameters, std::vector<GPUEmissiveMaterialParameters> &out_emissive_material_parameters);
+		void *CreateAndMapMemory(uint32_t queueFamilyIndex, GPURenderer::BufferCreationAndMappingData &buffer_data);
 		vk::Result CreateAndMapMemories(uint32_t queueFamilyIndex);
+
+		PerformanceTracking::PerformanceSession *performance_session;
 	};
 }

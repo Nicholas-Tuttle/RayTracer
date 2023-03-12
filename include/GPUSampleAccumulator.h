@@ -3,12 +3,14 @@
 #include "GPUComputeShader.h"
 #include <iostream>
 
+#include "PerformanceLogger.h"
+
 namespace RayTracer
 {
 	class GPUSampleAccumulator : protected GPUComputeShader
 	{
 	public:
-		GPUSampleAccumulator(vk::Device device);
+		GPUSampleAccumulator(vk::Device device, PerformanceTracking::PerformanceSession *const session);
 		void Execute(uint32_t compute_queue_index,
 			size_t incoming_ray_count,
 			vk::Buffer input_gpu_intersection_buffer,
@@ -30,5 +32,7 @@ namespace RayTracer
 			uint32_t sample_count;
 			bool finalize;
 		} SampleAccumulatorPushConstants;
+
+		PerformanceTracking::PerformanceSession *performance_session;
 	};
 }
