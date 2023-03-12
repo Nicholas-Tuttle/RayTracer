@@ -13,7 +13,7 @@ const static size_t shader_local_size_x = 1024;
 
 #pragma region GPURayIntersector
 
-GPURayIntersector::GPURayIntersector(vk::Device device, const IScene &scene, PerformanceSession *const session)
+GPURayIntersector::GPURayIntersector(vk::Device device, const IScene &scene, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session)
 	: world_intersector(device, session), sphere_intersector(device, scene, session), performance_session(session)
 {}
 
@@ -40,7 +40,7 @@ void GPURayIntersector::Execute(uint32_t compute_queue_index,
 
 #pragma region GPUWorldIntersector
 
-GPURayIntersector::GPUWorldIntersector::GPUWorldIntersector(vk::Device device, PerformanceSession *const session)
+GPURayIntersector::GPUWorldIntersector::GPUWorldIntersector(vk::Device device, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session)
 	: GPUComputeShader("GPUWorldIntersector.comp.spv", 2, 0, device, session), performance_session(session)
 {}
 
@@ -58,7 +58,7 @@ void GPURayIntersector::GPUWorldIntersector::Execute(uint32_t compute_queue_inde
 
 #pragma region GPUSphereIntersector
 
-GPURayIntersector::GPUSphereIntersector::GPUSphereIntersector(vk::Device device, const IScene &scene, PerformanceSession *const session)
+GPURayIntersector::GPUSphereIntersector::GPUSphereIntersector(vk::Device device, const IScene &scene, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session)
 	: GPUComputeShader("GPUSphereIntersector.comp.spv", 3, 0, device, session), performance_session(session)
 {}
 

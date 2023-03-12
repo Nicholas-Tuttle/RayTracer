@@ -7,7 +7,7 @@ using RayTracer::PerformanceTracking::PerformanceSession;
 
 const static size_t shader_local_size_x = 1024;
 
-GPUSampleFinalizer::GPUSampleFinalizer(vk::Device device, PerformanceSession *const session)
+GPUSampleFinalizer::GPUSampleFinalizer(vk::Device device, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session)
 	: SampleFinalizerPushConstants(), GPUComputeShader("GPUSampleFinalizer.comp.spv", 2, sizeof(GPUSampleFinalizer::SampleFinalizerPushConstants), device, session), performance_session(session)
 {}
 

@@ -62,7 +62,7 @@ namespace RayTracer::PerformanceTracking
 	class PerformanceSection
 	{
 	public:
-		PerformanceSection(PerformanceSession *const session, const char *name)
+		PerformanceSection(const std::unique_ptr<PerformanceSession> &session, const char *name)
 			: session(session), name(name)
 		{
 			if (session)
@@ -82,11 +82,11 @@ namespace RayTracer::PerformanceTracking
 		}
 
 	private:
-		PerformanceSession *const session;
+		const std::unique_ptr<PerformanceSession> &session;
 		const std::string name;
 	};
 }
 
-#define TRACE_SCOPE(performance_session, name) RayTracer::PerformanceTracking::PerformanceSection perf_section_ ## name(performance_session, # name)
-#define TRACE_FUNCTION(performance_session) RayTracer::PerformanceTracking::PerformanceSection perf_function(performance_session, __FUNCTION__)
+#define TRACE_SCOPE(performance_session_unique_ptr, name) RayTracer::PerformanceTracking::PerformanceSection perf_section_ ## name(performance_session, # name)
+#define TRACE_FUNCTION(performance_session_unique_ptr) RayTracer::PerformanceTracking::PerformanceSection perf_function(performance_session, __FUNCTION__)
 

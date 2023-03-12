@@ -11,7 +11,20 @@ namespace RayTracer
 	class GPURenderer
 	{
 	public:
-		GPURenderer(const Camera &camera, unsigned int samples, const IScene &scene);
+		struct GPURendererInitParameters
+		{
+			const Camera &camera;
+			unsigned int samples;
+			size_t max_bounces;
+			const IScene &scene;
+			bool trace_performance;
+
+			GPURendererInitParameters(const Camera &camera, const IScene &scene)
+				: camera(camera), scene(scene), samples(1), max_bounces(8), trace_performance(false)
+			{}
+		};
+
+		GPURenderer(const GPURendererInitParameters &params);
 		~GPURenderer();
 
 		void Render(std::shared_ptr<IImage> &out_image);
@@ -47,8 +60,6 @@ namespace RayTracer
 		{
 		public:
 			vk::DeviceSize buffer_size = 0;
-			vk::BufferUsageFlagBits usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
-			vk::DescriptorType descriptor_type = vk::DescriptorType::eStorageBuffer;
 			vk::Buffer buffer = VK_NULL_HANDLE;
 			vk::DeviceMemory device_memory = VK_NULL_HANDLE;
 			void **data_pointer = nullptr;
@@ -56,6 +67,7 @@ namespace RayTracer
 
 		Camera camera;
 		unsigned int samples;
+		size_t max_bounces;
 		const IScene &scene;
 
 		std::vector<BufferCreationAndMappingData> BufferData;
@@ -73,6 +85,6 @@ namespace RayTracer
 		void *CreateAndMapMemory(uint32_t queueFamilyIndex, GPURenderer::BufferCreationAndMappingData &buffer_data);
 		vk::Result CreateAndMapMemories(uint32_t queueFamilyIndex);
 
-		PerformanceTracking::PerformanceSession *performance_session;
+		std::unique_ptr<PerformanceTracking::PerformanceSession> performance_session;
 	};
 }

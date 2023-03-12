@@ -9,7 +9,7 @@ namespace RayTracer
 	class GPUSampleFinalizer : public GPUComputeShader
 	{
 	public:
-		GPUSampleFinalizer(vk::Device device, PerformanceTracking::PerformanceSession *const session);
+		GPUSampleFinalizer(vk::Device device, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session);
 		void Execute(uint32_t compute_queue_index,
 			size_t incoming_ray_count,
 			vk::Buffer input_gpu_intersection_buffer,
@@ -29,6 +29,6 @@ namespace RayTracer
 			uint32_t sample_count;
 		} SampleFinalizerPushConstants;
 
-		PerformanceTracking::PerformanceSession *performance_session;
+		const std::unique_ptr<PerformanceTracking::PerformanceSession> &performance_session;
 	};
 }

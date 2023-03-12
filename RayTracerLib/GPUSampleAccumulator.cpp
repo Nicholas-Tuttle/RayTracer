@@ -7,7 +7,7 @@ using RayTracer::PerformanceTracking::PerformanceSession;
 
 const static size_t shader_local_size_x = 1024;
 
-GPUSampleAccumulator::GPUSampleAccumulator(vk::Device device, PerformanceSession *const session)
+GPUSampleAccumulator::GPUSampleAccumulator(vk::Device device, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session)
 	: GPUComputeShader("GPUSampleAccumulator.comp.spv", 2, 0, device, session), performance_session(session)
 {}
 

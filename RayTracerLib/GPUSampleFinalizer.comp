@@ -13,7 +13,7 @@ struct Sample
 	vec4 color;
 };
 
-layout(std430, set = 0, binding = 1) buffer in_samples
+layout(std430, set = 0, binding = 0) buffer in_samples
 {
 	Sample samples[];
 } InAccumulatedSamples;
@@ -45,5 +45,5 @@ void main()
 		return;
 	}
 
-	OutFinalizedColors.colors[gID].color = InAccumulatedSamples.samples[gID].color / FinalizationData.sample_count;
+	OutFinalizedColors.colors[gID].color = InAccumulatedSamples.samples[gID].color / vec4(FinalizationData.sample_count);
 }

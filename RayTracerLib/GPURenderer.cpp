@@ -42,9 +42,18 @@ using RayTracer::EmissiveBSDF;
 
 using RayTracer::PerformanceTracking::PerformanceSession;
 
-GPURenderer::GPURenderer(const Camera &camera, unsigned int samples, const IScene &scene) 
-	: camera(camera), samples(samples), scene(scene), performance_session(new PerformanceSession(PerformanceSession::PerformanceTrackingGranularity::VeryGranular, "performance_log.json"))
+GPURenderer::GPURenderer(const GPURendererInitParameters &params)
+	: camera(params.camera), samples(params.samples), scene(params.scene), max_bounces(params.max_bounces)
 {
+	if (params.trace_performance)
+	{
+		performance_session = std::make_unique<PerformanceSession>(PerformanceSession(PerformanceSession::PerformanceTrackingGranularity::VeryGranular, "performance_log.json"));
+	}
+	else
+	{
+		performance_session = std::unique_ptr<PerformanceSession>(nullptr);
+	}
+
 	TRACE_FUNCTION(performance_session);
 
 	RayBufferSize = camera.Resolution().X * camera.Resolution().Y;
@@ -91,38 +100,24 @@ GPURenderer::GPURenderer(const Camera &camera, unsigned int samples, const IScen
 	BufferData.resize((size_t)GPUBufferBindings::GPUBufferBindingCount);
 
 	BufferData[(int)GPUBufferBindings::ray_buffer].buffer_size = sizeof(GPURay) * RayBufferSize;
-	BufferData[(int)GPUBufferBindings::ray_buffer].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
-	BufferData[(int)GPUBufferBindings::ray_buffer].descriptor_type = vk::DescriptorType::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::ray_buffer].data_pointer = nullptr;
 
 	BufferData[(int)GPUBufferBindings::intersection_buffer].buffer_size = sizeof(GPUIntersection) * RayBufferSize;
-	BufferData[(int)GPUBufferBindings::intersection_buffer].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
-	BufferData[(int)GPUBufferBindings::intersection_buffer].descriptor_type = vk::DescriptorType::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::intersection_buffer].data_pointer = nullptr;
 
 	BufferData[(int)GPUBufferBindings::sphere_buffer].buffer_size = sizeof(GPUSphere) * gpu_spheres.size();
-	BufferData[(int)GPUBufferBindings::sphere_buffer].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
-	BufferData[(int)GPUBufferBindings::sphere_buffer].descriptor_type = vk::DescriptorType::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::sphere_buffer].data_pointer = &gpu_sphere_buffer;
 
 	BufferData[(int)GPUBufferBindings::sample_buffer].buffer_size = sizeof(GPUSample) * RayBufferSize;
-	BufferData[(int)GPUBufferBindings::sample_buffer].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
-	BufferData[(int)GPUBufferBindings::sample_buffer].descriptor_type = vk::DescriptorType::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::sample_buffer].data_pointer = nullptr;
 
 	BufferData[(int)GPUBufferBindings::colors_buffer].buffer_size = sizeof(GPUColor) * RayBufferSize;
-	BufferData[(int)GPUBufferBindings::colors_buffer].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
-	BufferData[(int)GPUBufferBindings::colors_buffer].descriptor_type = vk::DescriptorType::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::colors_buffer].data_pointer = &gpu_color_buffer;
 
 	BufferData[(int)GPUBufferBindings::diffuse_material_parameters].buffer_size = sizeof(GPUDiffuseMaterialParameters) * diffuse_material_parameters.size();
-	BufferData[(int)GPUBufferBindings::diffuse_material_parameters].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
-	BufferData[(int)GPUBufferBindings::diffuse_material_parameters].descriptor_type = vk::DescriptorType::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::diffuse_material_parameters].data_pointer = &gpu_diffuse_material_parameters_buffer;
 	
 	BufferData[(int)GPUBufferBindings::emissive_material_parameters].buffer_size = sizeof(GPUEmissiveMaterialParameters) * emissive_material_parameters.size();
-	BufferData[(int)GPUBufferBindings::emissive_material_parameters].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
-	BufferData[(int)GPUBufferBindings::emissive_material_parameters].descriptor_type = vk::DescriptorType::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::emissive_material_parameters].data_pointer = &gpu_emissive_material_parameters_buffer;
 	
 	if (vk::Result::eSuccess != CreateAndMapMemories(ComputeQueueIndex))
@@ -283,7 +278,7 @@ void *GPURenderer::CreateAndMapMemory(uint32_t queueFamilyIndex, GPURenderer::Bu
 	// set memoryTypeIndex to an invalid entry in the properties.memoryTypes array
 	uint32_t memoryTypeIndex = VK_MAX_MEMORY_TYPES;
 
-	vk::MemoryPropertyFlags memory_flags = (nullptr != buffer_data.data_pointer) ? (vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostCached) : (vk::MemoryPropertyFlagBits::eDeviceLocal);
+	vk::MemoryPropertyFlags memory_flags = (nullptr == buffer_data.data_pointer) ? (vk::MemoryPropertyFlagBits::eDeviceLocal) : (vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostCached);
 
 	for (uint32_t k = 0; k < properties.memoryTypeCount; k++)
 	{
@@ -307,7 +302,7 @@ void *GPURenderer::CreateAndMapMemory(uint32_t queueFamilyIndex, GPURenderer::Bu
 
 	vk::BufferCreateInfo bufferCreateInfo = {};
 	bufferCreateInfo.size = buffer_data.buffer_size;
-	bufferCreateInfo.usage = buffer_data.usage_flag_bits;
+	bufferCreateInfo.usage = vk::BufferUsageFlagBits::eStorageBuffer;
 	bufferCreateInfo.sharingMode = vk::SharingMode::eExclusive;
 	bufferCreateInfo.queueFamilyIndexCount = 1;
 	bufferCreateInfo.pQueueFamilyIndices = &queueFamilyIndex;
@@ -361,9 +356,6 @@ void GPURenderer::Render(std::shared_ptr<IImage> &out_image)
 	GPUMaterialCalculator material_calculator(device, performance_session);
 	GPUSampleAccumulator sample_accumulator(device, performance_session);
 	GPUSampleFinalizer sample_finalizer(device, performance_session);
-
-	// TODO: parameterize this
-	const size_t max_bounces = 12;
 
 	for (size_t i = 0; i < samples; i++)
 	{
@@ -429,6 +421,5 @@ GPURenderer::~GPURenderer()
 #if defined _DEBUG
 	VKUtils::DestroyDebugMessenger(instance, debugMessenger);
 #endif
-	delete performance_session;
 }
 

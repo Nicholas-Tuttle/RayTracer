@@ -7,7 +7,7 @@ using RayTracer::PerformanceTracking::PerformanceSession;
 
 const static size_t shader_local_size_x = 1024;
 
-GPUComputeShader::GPUComputeShader(const std::string &shader_file_name, size_t buffer_count, size_t push_constants_size, vk::Device device, PerformanceSession *const session)
+GPUComputeShader::GPUComputeShader(const std::string &shader_file_name, size_t buffer_count, size_t push_constants_size, vk::Device device, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session)
 	: ShaderFileName(shader_file_name), BufferCount(buffer_count), PushConstantsSize(push_constants_size), Device(device), performance_session(session)
 {
 	TRACE_FUNCTION(performance_session);

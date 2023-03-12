@@ -3,12 +3,6 @@
 #version 450
 #extension GL_EXT_debug_printf : enable
 
-layout (push_constant) uniform accumulation_data
-{
-	uint sample_count;
-	bool finalize;
-} AccumulationData;
-
 struct Intersection
 {
 	vec4 ray_origin;

@@ -94,10 +94,9 @@ void main()
 #ifdef DEBUG
 	if(gID == 0)
 	{
-		debugPrintfEXT("Sphere Intersection: %u, %u, %u", Rays.rays.length(), Intersections.intersections.length(), Spheres.spheres.length());
 		if(Spheres.spheres.length() > 0)
 		{
-			debugPrintfEXT("Sphere 0 data: [%3.2v4f], %f, %u, %u", Spheres.spheres[0].position, Spheres.spheres[0].radius, Spheres.spheres[0].material_id, Spheres.spheres[0].material_index);
+			debugPrintfEXT("Sphere Intersection: %u, %u, %u. Sphere 0 data: [%3.2v3f], %f, %u, %u", Rays.rays.length(), Intersections.intersections.length(), Spheres.spheres.length(), Spheres.spheres[0].position.xyz, Spheres.spheres[0].radius, Spheres.spheres[0].material_id, Spheres.spheres[0].material_index);
 		}
 	}
 #endif
@@ -107,6 +106,12 @@ void main()
 		return;
 	}
 	
+	// If the ray is inactive don't do anything
+	if(Rays.rays[gID].direction.x == 0 && Rays.rays[gID].direction.y == 0 && Rays.rays[gID].direction.z == 0)
+	{
+		return;
+	}
+
 	vec3 ray_origin = Rays.rays[gID].origin.xyz;
 	vec3 ray_direction_normalized = normalize(Rays.rays[gID].direction.xyz);
 
@@ -127,4 +132,14 @@ void main()
 			Intersections.intersections[gID].material_index = Spheres.spheres[i].material_index;
 		}
 	}
+
+#ifdef DEBUG
+	if(gID == 0)
+	{
+		if(Spheres.spheres.length() > 0)
+		{
+			debugPrintfEXT("Sphere Intersection Result: %u, [%3.2v3f], [%3.2v3f], %u, %d", Intersections.intersections[gID].depth, Intersections.intersections[gID].intersection_location.xyz, Intersections.intersections[gID].intersection_normal.xyz, Intersections.intersections[gID].material_id, Intersections.intersections[gID].material_index);
+		}
+	}
+#endif
 }

@@ -8,7 +8,7 @@ using RayTracer::PerformanceTracking::PerformanceSession;
 
 const static size_t shader_local_size_x = 1024;
 
-GPURayInitializer::GPURayInitializer(vk::Device device, PerformanceSession *const session)
+GPURayInitializer::GPURayInitializer(vk::Device device, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session)
 	: CameraDataPushConstants(), GPUComputeShader("GPURayInitializer.comp.spv", 2, sizeof(GPURayInitializer::CameraDataPushConstants), device, session), performance_session(session)
 {}
 

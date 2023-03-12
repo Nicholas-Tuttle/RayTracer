@@ -7,7 +7,7 @@ using RayTracer::PerformanceTracking::PerformanceSession;
 
 #pragma region Material Calculator
 
-GPUMaterialCalculator::GPUMaterialCalculator(vk::Device device, PerformanceSession *const session)
+GPUMaterialCalculator::GPUMaterialCalculator(vk::Device device, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session)
 	: device(device), diffuse_material(device, session), world_material(device, session), emissive_material(device, session), performance_session(session)
 {}
 
@@ -32,7 +32,7 @@ void GPUMaterialCalculator::Execute(uint32_t compute_queue_index,
 
 #pragma region World Material
 
-GPUMaterialCalculator::GPUWorldMaterial::GPUWorldMaterial(vk::Device device, PerformanceSession *const session)
+GPUMaterialCalculator::GPUWorldMaterial::GPUWorldMaterial(vk::Device device, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session)
 	: WorldMaterialPushConstants(), GPUComputeShader("GPUWorldMaterial.comp.spv", 2, sizeof(GPUWorldMaterial::WorldMaterialPushConstants), device, session), performance_session(session)
 {}
 
@@ -48,7 +48,7 @@ void GPUMaterialCalculator::GPUWorldMaterial::Execute(uint32_t compute_queue_ind
 
 #pragma region Diffuse Material
 
-GPUMaterialCalculator::GPUDiffuseMaterial::GPUDiffuseMaterial(vk::Device device, PerformanceSession *const session)
+GPUMaterialCalculator::GPUDiffuseMaterial::GPUDiffuseMaterial(vk::Device device, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session)
 	: DiffuseMaterialPushConstants(), GPUComputeShader("GPUDiffuseMaterial.comp.spv", 3, sizeof(GPUDiffuseMaterial::DiffuseMaterialPushConstants), device, session), performance_session(session)
 {}
 
@@ -66,7 +66,7 @@ void GPUMaterialCalculator::GPUDiffuseMaterial::Execute(uint32_t compute_queue_i
 
 #pragma region Emissive Material
 
-GPUMaterialCalculator::GPUEmissiveMaterial::GPUEmissiveMaterial(vk::Device device, PerformanceSession *const session)
+GPUMaterialCalculator::GPUEmissiveMaterial::GPUEmissiveMaterial(vk::Device device, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session)
 	: EmissiveMaterialPushConstants(), GPUComputeShader("GPUEmissiveMaterial.comp.spv", 3, sizeof(GPUEmissiveMaterial::EmissiveMaterialPushConstants), device, session), performance_session(session)
 {}
 

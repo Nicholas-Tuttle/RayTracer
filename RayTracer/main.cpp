@@ -27,17 +27,17 @@ class InputParser
 public:
     InputParser(int& argc, char** argv) 
     {
-        tokens.reserve((size_t)argc - 1);
+        arguments.reserve((size_t)argc - 1);
         for (int i = 1; i < argc; ++i)
         {
-            tokens.push_back(std::string(argv[i]));
+            arguments.push_back(std::string(argv[i]));
         }
     }
 
-    const std::string& GetCommandOption(const std::string& option) const 
+    const std::string GetCommandOption(const std::string& option) const 
     {
-        std::vector<std::string>::const_iterator itr = std::find(tokens.begin(), tokens.end(), option);
-        if (itr != tokens.end() && ++itr != tokens.end()) 
+        auto itr = std::find(arguments.begin(), arguments.end(), option);
+        if (itr != arguments.end() && ++itr != arguments.end()) 
         {
             return *itr;
         }
@@ -46,10 +46,10 @@ public:
 
     bool CommandOptionExists(const std::string& option) const 
     {
-        return std::find(tokens.begin(), tokens.end(), option) != tokens.end();
+        return std::find(arguments.begin(), arguments.end(), option) != arguments.end();
     }
 private:
-    std::vector <std::string> tokens;
+    std::vector <std::string> arguments;
 };
 
 struct CommandLineArguments
@@ -306,7 +306,11 @@ int main(int argc, char **argv)
     if (arguments.RenderGPU)
     {
         std::cout << std::endl << "Rendering on GPU" << std::endl;
-        GPURenderer gpu_renderer(*camera, arguments.Samples, *scene);
+        GPURenderer::GPURendererInitParameters init_params(*camera, *scene);
+        init_params.samples = arguments.Samples;
+        init_params.max_bounces = 2;
+        init_params.trace_performance = false;
+        GPURenderer gpu_renderer(init_params);
         gpu_renderer.Render(out_image);
     }
 

@@ -12,7 +12,7 @@ namespace RayTracer
 	class GPUMaterialCalculator
 	{
 	public:
-		GPUMaterialCalculator(vk::Device device, PerformanceTracking::PerformanceSession *const session);
+		GPUMaterialCalculator(vk::Device device, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session);
 		void Execute(uint32_t compute_queue_index,
 			size_t incoming_ray_count,
 			vk::Buffer input_gpu_intersection_buffer,
@@ -26,7 +26,7 @@ namespace RayTracer
 		class GPUWorldMaterial : protected GPUComputeShader
 		{
 		public:
-			GPUWorldMaterial(vk::Device device, PerformanceTracking::PerformanceSession *const session);
+			GPUWorldMaterial(vk::Device device, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session);
 			void Execute(uint32_t compute_queue_index, size_t incoming_ray_count,
 				vk::Buffer input_gpu_intersection_buffer, vk::Buffer output_gpu_ray_buffer);
 		private:
@@ -43,13 +43,13 @@ namespace RayTracer
 				uint32_t material_id;
 			} WorldMaterialPushConstants;
 
-			PerformanceTracking::PerformanceSession *performance_session;
+			const std::unique_ptr<PerformanceTracking::PerformanceSession> &performance_session;
 		};
 
 		class GPUDiffuseMaterial : protected GPUComputeShader
 		{
 		public:
-			GPUDiffuseMaterial(vk::Device device, PerformanceTracking::PerformanceSession *const session);
+			GPUDiffuseMaterial(vk::Device device, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session);
 			void Execute(uint32_t compute_queue_index, size_t incoming_ray_count,
 				vk::Buffer input_gpu_intersection_buffer, vk::Buffer output_gpu_ray_buffer,
 				vk::Buffer input_gpu_material_parameters);
@@ -69,13 +69,13 @@ namespace RayTracer
 				float random_seed;
 			} DiffuseMaterialPushConstants;
 
-			PerformanceTracking::PerformanceSession *performance_session;
+			const std::unique_ptr<PerformanceTracking::PerformanceSession> &performance_session;
 		};
 
 		class GPUEmissiveMaterial : protected GPUComputeShader
 		{
 		public:
-			GPUEmissiveMaterial(vk::Device device, PerformanceTracking::PerformanceSession *const session);
+			GPUEmissiveMaterial(vk::Device device, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session);
 			void Execute(uint32_t compute_queue_index, size_t incoming_ray_count,
 				vk::Buffer input_gpu_intersection_buffer, vk::Buffer output_gpu_ray_buffer,
 				vk::Buffer input_emissive_material_parameters);
@@ -93,13 +93,13 @@ namespace RayTracer
 				uint32_t material_id;
 			} EmissiveMaterialPushConstants;
 
-			PerformanceTracking::PerformanceSession *performance_session;
+			const std::unique_ptr<PerformanceTracking::PerformanceSession> &performance_session;
 		};
 
 		GPUWorldMaterial world_material;
 		GPUDiffuseMaterial diffuse_material;
 		GPUEmissiveMaterial emissive_material;
 
-		PerformanceTracking::PerformanceSession *performance_session;
+		const std::unique_ptr<PerformanceTracking::PerformanceSession> &performance_session;
 	};
 }

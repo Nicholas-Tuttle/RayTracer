@@ -57,7 +57,7 @@ void main()
 		return;
 	}
 	
-	// If the ray is finished don't do anything
+	// If the ray is inactive don't do anything
 	if(Rays.rays[gID].direction.x == 0 && Rays.rays[gID].direction.y == 0 && Rays.rays[gID].direction.z == 0)
 	{
 		Intersections.intersections[gID].material_id = NO_MATERIAL_ID;

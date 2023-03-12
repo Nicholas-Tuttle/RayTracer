@@ -51,7 +51,7 @@ namespace RayTracer
 
         Scene *scene = new Scene();
         scene->AddObject(new Sphere(Vector3<float>(5, 0, -1), 0.5f, 
-            std::make_shared<const GlossyBSDF>(Color(1.0f, 0, 1.0f, 1.0f), 0.3f)));
+            std::make_shared<const DiffuseBSDF>(Color(1.0f, 0, 1.0f, 1.0f), 0.3f)));
         scene->AddObject(new Sphere(Vector3<float>(5, 0, 1), 0.1f, 
             std::make_shared<const EmissiveBSDF>(Color(0.0f, 0.0f, 1.0f, 1.0f), 100.0f)));
         out_scene = scene;
@@ -60,18 +60,16 @@ namespace RayTracer
 	static void CreatePresetSceneSphereArray(IScene *&out_scene, Camera *&out_camera, ImageResolution resolution)
 	{
         float sphere_array_count = 15;
-
-        out_camera = new Camera(resolution,
-            Vector3<float>((sphere_array_count - 1) / 2, sphere_array_count * 2.5f, (sphere_array_count - 1) / 2),
-            Vector3<float>(0, -1, 0), 50, 18);
-
+        
+        out_camera = new Camera(resolution, Vector3<float>((sphere_array_count - 1) / 2, sphere_array_count * 2.5f, (sphere_array_count - 1) / 2), Vector3<float>(0, -1, 0), 50, 18);
+        
         Scene *scene = new Scene();
         for (float i = 0; i < sphere_array_count; i++)
         {
             for (float j = 0; j < sphere_array_count; j++)
             {
                 scene->AddObject(new Sphere(Vector3<float>(i, 0, j), 0.4f, 
-                    std::make_shared<const DiffuseBSDF>(Color(1.0f, 1.0f, 1.0f, 1.0f), 0.1f)));
+                    std::make_shared<const EmissiveBSDF>(RandomColor(), 5.0f)));
             }
         }
         out_scene = scene;
