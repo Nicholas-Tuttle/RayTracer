@@ -63,7 +63,7 @@ void main()
 	}
 #endif
 	
-	if (gID > Intersections.intersections.length())
+	if (gID >= Intersections.intersections.length())
 	{
 		return;
 	}

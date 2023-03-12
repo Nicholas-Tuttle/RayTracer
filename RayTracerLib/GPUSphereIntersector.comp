@@ -102,7 +102,7 @@ void main()
 	}
 #endif
 	
-	if (gID > Rays.rays.length())
+	if (gID >= Rays.rays.length())
 	{
 		return;
 	}

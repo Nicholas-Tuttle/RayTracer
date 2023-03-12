@@ -71,7 +71,7 @@ void main()
 	}
 #endif
 
-	if (gID > OutRays.rays.length())
+	if (gID >= OutRays.rays.length())
 	{
 		return;
 	}
