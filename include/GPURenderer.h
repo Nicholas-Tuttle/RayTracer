@@ -37,6 +37,7 @@ namespace RayTracer
 			intersection_buffer,
 			sphere_buffer,
 			sample_buffer,
+			colors_buffer,
 			diffuse_material_parameters,
 			emissive_material_parameters,
 			GPUBufferBindingCount
@@ -51,7 +52,6 @@ namespace RayTracer
 			vk::Buffer buffer = VK_NULL_HANDLE;
 			vk::DeviceMemory device_memory = VK_NULL_HANDLE;
 			void **data_pointer = nullptr;
-			vk::MemoryPropertyFlags memory_property_bits = vk::MemoryPropertyFlagBits::eDeviceLocal;
 		};
 
 		Camera camera;
@@ -62,8 +62,8 @@ namespace RayTracer
 
 		// Pointers are of type GPUSphere*
 		void *gpu_sphere_buffer;
-		// Pointers are of type GPUSample*
-		void *gpu_sample_buffer;
+		// Pointers are of type GPUColor*
+		void *gpu_color_buffer;
 		// Pointers are of type GPUDiffuseMaterialParameters*
 		void *gpu_diffuse_material_parameters_buffer;
 		// Pointers are of type GPUEmissiveMaterialParameters*

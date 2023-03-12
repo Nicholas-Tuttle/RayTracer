@@ -3,11 +3,13 @@
 #include <iostream>
 #include "ElapsedTimer.h"
 #include "VulkanUtils.h"
+#include "GPUStructs.h"
+
 #include "GPURayInitializer.h"
 #include "GPURayIntersector.h"
 #include "GPUMaterialCalculator.h"
 #include "GPUSampleAccumulator.h"
-#include "GPUStructs.h"
+#include "GPUSampleFinalizer.h"
 
 #include "DiffuseBSDF.h"
 #include "EmissiveBSDF.h"
@@ -26,9 +28,12 @@ using RayTracer::GPURayInitializer;
 using RayTracer::GPURayIntersector;
 using RayTracer::GPUMaterialCalculator;
 using RayTracer::GPUSampleAccumulator;
+using RayTracer::GPUSampleFinalizer;
 
 using RayTracer::GPURay;
 using RayTracer::GPUSphere;
+using RayTracer::GPUSample;
+using RayTracer::GPUColor;
 using RayTracer::GPUDiffuseMaterialParameters;
 using RayTracer::GPUEmissiveMaterialParameters;
 
@@ -89,37 +94,36 @@ GPURenderer::GPURenderer(const Camera &camera, unsigned int samples, const IScen
 	BufferData[(int)GPUBufferBindings::ray_buffer].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::ray_buffer].descriptor_type = vk::DescriptorType::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::ray_buffer].data_pointer = nullptr;
-	BufferData[(int)GPUBufferBindings::ray_buffer].memory_property_bits = vk::MemoryPropertyFlagBits::eDeviceLocal;
 
 	BufferData[(int)GPUBufferBindings::intersection_buffer].buffer_size = sizeof(GPUIntersection) * RayBufferSize;
 	BufferData[(int)GPUBufferBindings::intersection_buffer].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::intersection_buffer].descriptor_type = vk::DescriptorType::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::intersection_buffer].data_pointer = nullptr;
-	BufferData[(int)GPUBufferBindings::intersection_buffer].memory_property_bits = vk::MemoryPropertyFlagBits::eDeviceLocal;
 
 	BufferData[(int)GPUBufferBindings::sphere_buffer].buffer_size = sizeof(GPUSphere) * gpu_spheres.size();
 	BufferData[(int)GPUBufferBindings::sphere_buffer].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::sphere_buffer].descriptor_type = vk::DescriptorType::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::sphere_buffer].data_pointer = &gpu_sphere_buffer;
-	BufferData[(int)GPUBufferBindings::sphere_buffer].memory_property_bits = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostCached;
 
 	BufferData[(int)GPUBufferBindings::sample_buffer].buffer_size = sizeof(GPUSample) * RayBufferSize;
 	BufferData[(int)GPUBufferBindings::sample_buffer].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::sample_buffer].descriptor_type = vk::DescriptorType::eStorageBuffer;
-	BufferData[(int)GPUBufferBindings::sample_buffer].data_pointer = &gpu_sample_buffer;
-	BufferData[(int)GPUBufferBindings::sample_buffer].memory_property_bits = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostCached;
+	BufferData[(int)GPUBufferBindings::sample_buffer].data_pointer = nullptr;
+
+	BufferData[(int)GPUBufferBindings::colors_buffer].buffer_size = sizeof(GPUColor) * RayBufferSize;
+	BufferData[(int)GPUBufferBindings::colors_buffer].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
+	BufferData[(int)GPUBufferBindings::colors_buffer].descriptor_type = vk::DescriptorType::eStorageBuffer;
+	BufferData[(int)GPUBufferBindings::colors_buffer].data_pointer = &gpu_color_buffer;
 
 	BufferData[(int)GPUBufferBindings::diffuse_material_parameters].buffer_size = sizeof(GPUDiffuseMaterialParameters) * diffuse_material_parameters.size();
 	BufferData[(int)GPUBufferBindings::diffuse_material_parameters].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::diffuse_material_parameters].descriptor_type = vk::DescriptorType::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::diffuse_material_parameters].data_pointer = &gpu_diffuse_material_parameters_buffer;
-	BufferData[(int)GPUBufferBindings::diffuse_material_parameters].memory_property_bits = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostCached;
 	
 	BufferData[(int)GPUBufferBindings::emissive_material_parameters].buffer_size = sizeof(GPUEmissiveMaterialParameters) * emissive_material_parameters.size();
 	BufferData[(int)GPUBufferBindings::emissive_material_parameters].usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::emissive_material_parameters].descriptor_type = vk::DescriptorType::eStorageBuffer;
 	BufferData[(int)GPUBufferBindings::emissive_material_parameters].data_pointer = &gpu_emissive_material_parameters_buffer;
-	BufferData[(int)GPUBufferBindings::emissive_material_parameters].memory_property_bits = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostCached;
 	
 	if (vk::Result::eSuccess != CreateAndMapMemories(ComputeQueueIndex))
 	{
@@ -131,9 +135,9 @@ GPURenderer::GPURenderer(const Camera &camera, unsigned int samples, const IScen
 		throw std::exception("Sphere buffer data for GPU compute failed to allocate");
 	}
 
-	if (nullptr == gpu_sample_buffer)
+	if (nullptr == gpu_color_buffer)
 	{
-		throw std::exception("Sample buffer data for GPU compute failed to allocate");
+		throw std::exception("Color buffer data for GPU compute failed to allocate");
 	}
 
 	if (nullptr == gpu_diffuse_material_parameters_buffer)
@@ -279,10 +283,11 @@ void *GPURenderer::CreateAndMapMemory(uint32_t queueFamilyIndex, GPURenderer::Bu
 	// set memoryTypeIndex to an invalid entry in the properties.memoryTypes array
 	uint32_t memoryTypeIndex = VK_MAX_MEMORY_TYPES;
 
+	vk::MemoryPropertyFlags memory_flags = (nullptr != buffer_data.data_pointer) ? (vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostCached) : (vk::MemoryPropertyFlagBits::eDeviceLocal);
+
 	for (uint32_t k = 0; k < properties.memoryTypeCount; k++)
 	{
-		if (((properties.memoryTypes[k].propertyFlags & buffer_data.memory_property_bits) == buffer_data.memory_property_bits) &&
-			(buffer_data.buffer_size < properties.memoryHeaps[properties.memoryTypes[k].heapIndex].size))
+		if (((properties.memoryTypes[k].propertyFlags & memory_flags) == memory_flags) && (buffer_data.buffer_size < properties.memoryHeaps[properties.memoryTypes[k].heapIndex].size))
 		{
 			memoryTypeIndex = k;
 			break;
@@ -328,9 +333,15 @@ vk::Result GPURenderer::CreateAndMapMemories(uint32_t queueFamilyIndex)
 	for (auto &buffer_data : BufferData)
 	{
 		void *data_pointer = CreateAndMapMemory(queueFamilyIndex, buffer_data);
-		if (nullptr != buffer_data.data_pointer && (nullptr == (*buffer_data.data_pointer = data_pointer)))
+
+		if (nullptr != buffer_data.data_pointer)
 		{
-			result = vk::Result::eErrorMemoryMapFailed;
+			if (nullptr == data_pointer)
+			{
+				result = vk::Result::eErrorMemoryMapFailed;
+			}
+
+			*buffer_data.data_pointer = data_pointer;
 		}
 	}
 
@@ -349,7 +360,9 @@ void GPURenderer::Render(std::shared_ptr<IImage> &out_image)
 	GPURayIntersector ray_intersector(device, scene, performance_session);
 	GPUMaterialCalculator material_calculator(device, performance_session);
 	GPUSampleAccumulator sample_accumulator(device, performance_session);
+	GPUSampleFinalizer sample_finalizer(device, performance_session);
 
+	// TODO: parameterize this
 	const size_t max_bounces = 12;
 
 	for (size_t i = 0; i < samples; i++)
@@ -382,14 +395,11 @@ void GPURenderer::Render(std::shared_ptr<IImage> &out_image)
 		sample_accumulator.Execute(ComputeQueueIndex, RayBufferSize,
 			BufferData[(int)GPUBufferBindings::intersection_buffer].buffer,
 			BufferData[(int)GPUBufferBindings::sample_buffer].buffer);
-
 	}
 
-	// Finalize the samples
-	sample_accumulator.Execute(ComputeQueueIndex, RayBufferSize,
-		BufferData[(int)GPUBufferBindings::intersection_buffer].buffer,
+	sample_finalizer.Execute(ComputeQueueIndex, RayBufferSize, 
 		BufferData[(int)GPUBufferBindings::sample_buffer].buffer,
-		true, samples);
+		BufferData[(int)GPUBufferBindings::colors_buffer].buffer, samples);
 
 	std::cout << "[RENDER TIME]" << ": line " << __LINE__ << ": time (ms): " << performance_timer.Poll().count() << "\n";
 
@@ -402,7 +412,7 @@ void GPURenderer::Render(std::shared_ptr<IImage> &out_image)
 			size_t offset = y * camera.Resolution().X;
 			for (size_t x = 0; x < camera.Resolution().X; x++)
 			{
-				const GPUSample &sample = ((GPUSample *)gpu_sample_buffer)[offset + x];
+				const GPUColor &sample = ((GPUColor *)gpu_color_buffer)[offset + x];
 				output_image->SetPixelColor(x, y, Color(sample.color[0],
 					sample.color[1], sample.color[2], sample.color[3]));
 			}

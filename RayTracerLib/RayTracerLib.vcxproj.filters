@@ -42,9 +42,6 @@
     <Filter Include="Source Files\GPU Rendering\Shader Files\Materials">
       <UniqueIdentifier>{e4a7b9d4-9b9a-4fab-a4f3-f8f0cd69054f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\GPU Rendering\Shader Files\Sampling">
-      <UniqueIdentifier>{a47c68c8-9f00-49a9-8384-2582f5115cb0}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\GPU Rendering\Shader Files\RayIntersection">
       <UniqueIdentifier>{78c1dbd1-c82a-47de-8cfa-3a6dee6fcad8}</UniqueIdentifier>
     </Filter>
@@ -56,6 +53,12 @@
     </Filter>
     <Filter Include="Utilities\Performance">
       <UniqueIdentifier>{ba484baa-ee98-43db-ac8e-ad029e948e04}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GPU Rendering\Shader Files\SampleAccumulating">
+      <UniqueIdentifier>{a47c68c8-9f00-49a9-8384-2582f5115cb0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GPU Rendering\Shader Files\SampleFinalizing">
+      <UniqueIdentifier>{0b0688c0-1814-438d-8e40-e3ea3debcca1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -141,7 +144,7 @@
       <Filter>Source Files\GPU Rendering\Shader Files\RayInitialization</Filter>
     </ClInclude>
     <ClInclude Include="..\include\GPUSampleAccumulator.h">
-      <Filter>Source Files\GPU Rendering\Shader Files\Sampling</Filter>
+      <Filter>Source Files\GPU Rendering\Shader Files\SampleAccumulating</Filter>
     </ClInclude>
     <ClInclude Include="..\include\GPURayIntersector.h">
       <Filter>Source Files\GPU Rendering\Shader Files\RayIntersection</Filter>
@@ -160,6 +163,9 @@
     </ClInclude>
     <ClInclude Include="..\include\PerformanceLogger.h">
       <Filter>Utilities\Performance</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\GPUSampleFinalizer.h">
+      <Filter>Source Files\GPU Rendering\Shader Files\SampleFinalizing</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -197,7 +203,7 @@
       <Filter>Source Files\GPU Rendering\Shader Files\RayInitialization</Filter>
     </ClCompile>
     <ClCompile Include="GPUSampleAccumulator.cpp">
-      <Filter>Source Files\GPU Rendering\Shader Files\Sampling</Filter>
+      <Filter>Source Files\GPU Rendering\Shader Files\SampleAccumulating</Filter>
     </ClCompile>
     <ClCompile Include="GPURayIntersector.cpp">
       <Filter>Source Files\GPU Rendering\Shader Files\RayIntersection</Filter>
@@ -208,13 +214,16 @@
     <ClCompile Include="GPUMaterialCalculator.cpp">
       <Filter>Source Files\GPU Rendering\Shader Files\Materials</Filter>
     </ClCompile>
+    <ClCompile Include="GPUSampleFinalizer.cpp">
+      <Filter>Source Files\GPU Rendering\Shader Files\SampleFinalizing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="GPURayInitializer.comp">
       <Filter>Source Files\GPU Rendering\Shader Files\RayInitialization</Filter>
     </CustomBuild>
     <CustomBuild Include="GPUSampleAccumulator.comp">
-      <Filter>Source Files\GPU Rendering\Shader Files\Sampling</Filter>
+      <Filter>Source Files\GPU Rendering\Shader Files\SampleAccumulating</Filter>
     </CustomBuild>
     <CustomBuild Include="GPUSphereIntersector.comp">
       <Filter>Source Files\GPU Rendering\Shader Files\RayIntersection</Filter>
@@ -230,6 +239,9 @@
     </CustomBuild>
     <CustomBuild Include="GPUEmissiveMaterial.comp">
       <Filter>Source Files\GPU Rendering\Shader Files\Materials</Filter>
+    </CustomBuild>
+    <CustomBuild Include="GPUSampleFinalizer.comp">
+      <Filter>Source Files\GPU Rendering\Shader Files\SampleFinalizing</Filter>
     </CustomBuild>
   </ItemGroup>
 </Project>

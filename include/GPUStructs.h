@@ -88,6 +88,11 @@ namespace RayTracer
 		float color[4];
 	};
 
+	struct GPUColor
+	{
+		float color[4];
+	};
+
 #pragma endregion
 
 #pragma region Materials

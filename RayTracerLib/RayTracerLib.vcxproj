@@ -91,6 +91,7 @@
     <ClCompile Include="GPURayIntersector.cpp" />
     <ClCompile Include="GPURenderer.cpp" />
     <ClCompile Include="GPUSampleAccumulator.cpp" />
+    <ClCompile Include="GPUSampleFinalizer.cpp" />
     <ClCompile Include="PixelRenderTask.cpp" />
     <ClCompile Include="PrincipledBSDF.cpp" />
     <ClCompile Include="ThreadPool.cpp" />
@@ -107,6 +108,7 @@
     <ClInclude Include="..\include\GPUMaterialCalculator.h" />
     <ClInclude Include="..\include\GPURayInitializer.h" />
     <ClInclude Include="..\include\GPURayIntersector.h" />
+    <ClInclude Include="..\include\GPUSampleFinalizer.h" />
     <ClInclude Include="..\include\GPUStructs.h" />
     <ClInclude Include="..\include\GPURenderer.h" />
     <ClInclude Include="..\include\GPUSampleAccumulator.h" />
@@ -246,6 +248,23 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\..\bin\%(FileName).comp.spv</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
       <BuildInParallel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</BuildInParallel>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <BuildInParallel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</BuildInParallel>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="GPUSampleFinalizer.comp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">glslangValidator.exe -V -e main %(FullPath) -o $(OutDir)\..\bin\%(Filename).comp.spv</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">glslangValidator.exe -V -e main %(FullPath) -o $(OutDir)\..\bin\%(Filename).comp.spv</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(FullPath)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\..\bin\%(FileName).comp.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <BuildInParallel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</BuildInParallel>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\..\bin\%(FileName).comp.spv</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
       <BuildInParallel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</BuildInParallel>
     </CustomBuild>

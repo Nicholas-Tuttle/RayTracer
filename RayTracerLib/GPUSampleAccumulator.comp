@@ -28,14 +28,14 @@ layout(std430, set = 0, binding = 0) buffer in_intersections
 	Intersection intersections[];
 } Intersections;
 
-struct Color
+struct Sample
 {
 	vec4 color;
 };
 
-layout(std430, set = 0, binding = 1) buffer out_colors
+layout(std430, set = 0, binding = 1) buffer out_accumulated_colors
 {
-	Color colors[];
+	Sample samples[];
 } Colors;
 
 layout(local_size_x = 1024, local_size_y = 1, local_size_z = 1) in;
@@ -55,12 +55,6 @@ void main()
 		return;
 	}
 
-	if(AccumulationData.finalize)
-	{
-		Colors.colors[gID].color /= AccumulationData.sample_count;
-	}
-	else
-	{
-		Colors.colors[gID].color += Intersections.intersections[gID].ray_color;
-	}
+	Colors.samples[gID].color += Intersections.intersections[gID].ray_color;
+	
 }
