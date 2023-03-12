@@ -281,10 +281,7 @@ void *GPURenderer::CreateAndMapMemory(uint32_t queueFamilyIndex, GPURenderer::Bu
 
 	for (uint32_t k = 0; k < properties.memoryTypeCount; k++)
 	{
-		if (//(vk::MemoryPropertyFlagBits::eHostVisible & properties.memoryTypes[k].propertyFlags) &&
-			//(vk::MemoryPropertyFlagBits::eHostCoherent & properties.memoryTypes[k].propertyFlags) &&
-			//(vk::MemoryPropertyFlagBits::eHostCached & properties.memoryTypes[k].propertyFlags) &&
-			((properties.memoryTypes[k].propertyFlags & buffer_data.memory_property_bits) == buffer_data.memory_property_bits) &&
+		if (((properties.memoryTypes[k].propertyFlags & buffer_data.memory_property_bits) == buffer_data.memory_property_bits) &&
 			(buffer_data.buffer_size < properties.memoryHeaps[properties.memoryTypes[k].heapIndex].size))
 		{
 			memoryTypeIndex = k;

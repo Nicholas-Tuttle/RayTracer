@@ -48,10 +48,10 @@ namespace RayTracer
 			vk::DeviceSize buffer_size = 0;
 			vk::BufferUsageFlagBits usage_flag_bits = vk::BufferUsageFlagBits::eStorageBuffer;
 			vk::DescriptorType descriptor_type = vk::DescriptorType::eStorageBuffer;
-			vk::Buffer buffer;
-			vk::DeviceMemory device_memory;
+			vk::Buffer buffer = VK_NULL_HANDLE;
+			vk::DeviceMemory device_memory = VK_NULL_HANDLE;
 			void **data_pointer = nullptr;
-			vk::MemoryPropertyFlags memory_property_bits;
+			vk::MemoryPropertyFlags memory_property_bits = vk::MemoryPropertyFlagBits::eDeviceLocal;
 		};
 
 		Camera camera;
