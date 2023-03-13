@@ -60,7 +60,9 @@ struct CommandLineArguments
         RenderCPU = false;
         RenderGPU = true;
         GPUDebugEnabled = false;
+        TracePerformance = false;
         Samples = 1;
+        MaxBounces = 4;
         ResolutionX = 1920;
         ResolutionY = 1080;
         MaxThreads = 0;
@@ -70,7 +72,9 @@ struct CommandLineArguments
     bool RenderCPU;
     bool RenderGPU;
     bool GPUDebugEnabled;
+    bool TracePerformance;
     unsigned int Samples;
+    size_t MaxBounces;
     size_t ResolutionX;
     size_t ResolutionY;
     size_t MaxThreads;
@@ -86,6 +90,13 @@ static void parse_command_line_arguments(int argc, char** argv, CommandLineArgum
     {
         unsigned int samples = (unsigned int)std::stoul(samples_string);
         arguments.Samples = samples;
+    }
+
+    const std::string max_bounces_string = parser.GetCommandOption("-b");
+    if (0 != max_bounces_string.compare(""))
+    {
+        size_t max_bounces = (size_t)std::stoul(max_bounces_string);
+        arguments.MaxBounces = max_bounces;
     }
     
     const std::string resolution_x_string = parser.GetCommandOption("-x");
@@ -118,22 +129,27 @@ static void parse_command_line_arguments(int argc, char** argv, CommandLineArgum
     bool gpu_debug = parser.CommandOptionExists("-dg");
     arguments.GPUDebugEnabled = gpu_debug;
 
+    bool trace_performance = parser.CommandOptionExists("-t");
+    arguments.TracePerformance = trace_performance;
+
     bool show_help = parser.CommandOptionExists("-h");
     arguments.ShowHelp = show_help;
 }
 
 static void help()
 {
-    std::cout << "RayTracer.exe" << std::endl
-        << "\tArguments:" << std::endl
-        << "\t\t-h : show help" << std::endl
-        << "\t\t-c : render on CPU" << std::endl
-        << "\t\t-g : render on GPU" << std::endl
-        << "\t\t-dg : enable GPU debug messages" << std::endl
-        << "\t\t-s <samples> : set sample count [ default 1 ]" << std::endl
-        << "\t\t-x <x resolution> : set image width (pixels) [ default 1920 ]" << std::endl
-        << "\t\t-y <y resolution> : set image height (pixels) [ default 1080 ]" << std::endl
-        << "\t\t-m <max threads> : set the max number of threads the cpu renderer can use [ default inf ]" << std::endl;
+    std::cout << "RayTracer.exe\n"
+        << "\tArguments:\n"
+        << "\t\t-h : show help\n"
+        << "\t\t-c : render on CPU\n"
+        << "\t\t-g : render on GPU\n"
+        << "\t\t-dg : enable GPU debug messages\n"
+        << "\t\t-t : enable performance tracing\n"
+        << "\t\t-s <samples> : set sample count [ default 1 ]\n"
+        << "\t\t-b <bounces> : set max bounces [ default 4 ]\n"
+        << "\t\t-x <x resolution> : set image width (pixels) [ default 1920 ]\n"
+        << "\t\t-y <y resolution> : set image height (pixels) [ default 1080 ]\n"
+        << "\t\t-m <max threads> : set the max number of threads the cpu renderer can use [ default inf ]\n";
 }
 
 static bool write_png_file(const std::string &file_name, const std::vector<std::vector<png_byte>> &color_values)
@@ -308,8 +324,8 @@ int main(int argc, char **argv)
         std::cout << std::endl << "Rendering on GPU" << std::endl;
         GPURenderer::GPURendererInitParameters init_params(*camera, *scene);
         init_params.samples = arguments.Samples;
-        init_params.max_bounces = 2;
-        init_params.trace_performance = false;
+        init_params.max_bounces = arguments.MaxBounces;
+        init_params.trace_performance = arguments.TracePerformance;
         GPURenderer gpu_renderer(init_params);
         gpu_renderer.Render(out_image);
     }

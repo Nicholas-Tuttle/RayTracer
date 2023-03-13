@@ -215,11 +215,16 @@ void GPUComputeShader::Execute(uint32_t compute_queue_index, size_t total_comput
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = commandBuffers.data();
 
-	vk::Result queue_submit_result = queue.submit(1, &submitInfo, VK_NULL_HANDLE);
-	if (vk::Result::eSuccess == queue_submit_result)
 	{
-		queue.waitIdle();
+		// TODO: This takes a long time (relatively) so it should be batched where possible
+		TRACE_SCOPE(performance_session, queue_submission);
+		vk::Result queue_submit_result = queue.submit(1, &submitInfo, VK_NULL_HANDLE);
+		if (vk::Result::eSuccess == queue_submit_result)
+		{
+			queue.waitIdle();
+		}
 	}
 
+	Device.freeCommandBuffers(commandPool, commandBuffers);
 	Device.destroyCommandPool(commandPool);
 }

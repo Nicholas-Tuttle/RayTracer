@@ -60,6 +60,9 @@
     <Filter Include="Source Files\GPU Rendering\Shader Files\SampleFinalizing">
       <UniqueIdentifier>{0b0688c0-1814-438d-8e40-e3ea3debcca1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\TinyOBJLoader">
+      <UniqueIdentifier>{69c77d30-541c-4bb2-aa17-6e1853ac006e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Camera.h">
@@ -167,6 +170,9 @@
     <ClInclude Include="..\include\GPUSampleFinalizer.h">
       <Filter>Source Files\GPU Rendering\Shader Files\SampleFinalizing</Filter>
     </ClInclude>
+    <ClInclude Include="..\dependencies\tinyobjloader\tiny_obj_loader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PrincipledBSDF.cpp">
@@ -216,6 +222,9 @@
     </ClCompile>
     <ClCompile Include="GPUSampleFinalizer.cpp">
       <Filter>Source Files\GPU Rendering\Shader Files\SampleFinalizing</Filter>
+    </ClCompile>
+    <ClCompile Include="TinyOBJLoader.cpp">
+      <Filter>Source Files\TinyOBJLoader</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

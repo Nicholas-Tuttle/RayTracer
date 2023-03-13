@@ -40,12 +40,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)\lib\</OutDir>
-    <IncludePath>$(SOLUTIONDIR)\include;$(LIBPNG);$(VULKAN_SDK)\Include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SOLUTIONDIR)\include;$(LIBPNG);$(VULKAN_SDK)\Include;$(SOLUTIONDIR)\dependencies\tinyobjloader;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <EnableClangTidyCodeAnalysis>false</EnableClangTidyCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SOLUTIONDIR)\include;$(LIBPNG);$(VULKAN_SDK)\Include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SOLUTIONDIR)\include;$(LIBPNG);$(VULKAN_SDK)\Include;$(SOLUTIONDIR)\dependencies\tinyobjloader;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <OutDir>$(solutiondir)\lib\</OutDir>
     <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
@@ -95,8 +95,10 @@
     <ClCompile Include="PixelRenderTask.cpp" />
     <ClCompile Include="PrincipledBSDF.cpp" />
     <ClCompile Include="ThreadPool.cpp" />
+    <ClCompile Include="TinyOBJLoader.cpp" />
     <ClCompile Include="VulkanUtils.cpp" />
     <ClCompile Include="World.cpp" />
+    <ClInclude Include="..\dependencies\tinyobjloader\tiny_obj_loader.h" />
     <ClInclude Include="..\include\Camera.h" />
     <ClInclude Include="..\include\Color.h" />
     <ClInclude Include="..\include\CPURenderer.h" />
