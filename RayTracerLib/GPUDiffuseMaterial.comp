@@ -6,7 +6,7 @@
 layout (push_constant) uniform material_data
 {
 	uint ID;
-	float RandomSeed;
+	uint RandomSeed;
 } MaterialData;
 
 struct Intersection
@@ -57,6 +57,36 @@ float noise(float seed)
 	return fract(cos(seed));
 }
 
+vec3 random()
+{
+	uint gID = gl_GlobalInvocationID.x;
+	float one_over_max_uint = float(1) / float(0xFFFFFFFF);
+	
+	uint x = MaterialData.RandomSeed + gID * 2;
+
+	x = ((x >> 16) ^ x) * 0x45D9F3b;
+	x = ((x >> 16) ^ x) * 0x45D9F3b;
+	x = (x >> 16) ^ x;
+	
+	float random1 = x * one_over_max_uint * 2.0 - 1.0;
+
+	x = MaterialData.RandomSeed + gID * 3;
+	x = ((x >> 16) ^ x) * 0x45D9F3b;
+	x = ((x >> 16) ^ x) * 0x45D9F3b;
+	x = (x >> 16) ^ x;
+
+	float random2 = x * one_over_max_uint * 2.0 - 1.0;
+
+	x = MaterialData.RandomSeed + gID * 5;
+	x = ((x >> 16) ^ x) * 0x45D9F3b;
+	x = ((x >> 16) ^ x) * 0x45D9F3b;
+	x = (x >> 16) ^ x;
+
+	float random3 = x * one_over_max_uint * 2.0 - 1.0;
+
+	return normalize(vec3(random1, random2, random3));
+}
+
 Ray ReflectionRay(MaterialParameter material_parameters, Intersection intersection)
 {
 	uint gID = gl_GlobalInvocationID.x;
@@ -79,12 +109,9 @@ Ray ReflectionRay(MaterialParameter material_parameters, Intersection intersecti
 
 	if(material_parameters.roughness > 0)
 	{
-		// TODO: jitter based on sample, right now this is the same for every sample
-		float random1 = MaterialData.RandomSeed * 2.0 - 1.0;
-		float random2 = MaterialData.RandomSeed * 2.0 - 1.0;
-		float random3 = MaterialData.RandomSeed * 2.0 - 1.0;
-	
-		vec4 jittered_refraction_ray = normalize(vec4(random1 + intersection_normal.x, random2 + intersection_normal.y, random3 + intersection_normal.z, 0.0f));
+		vec3 random = random();
+
+		vec4 jittered_refraction_ray = normalize(vec4(random.x + intersection_normal.x, random.y + intersection_normal.y, random.z + 0.0f, 0.0f));
 		
 		reflection_ray.direction = normalize(mix(r, jittered_refraction_ray, material_parameters.roughness));
 	}

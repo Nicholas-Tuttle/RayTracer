@@ -57,7 +57,7 @@ void GPUMaterialCalculator::GPUDiffuseMaterial::Execute(uint32_t compute_queue_i
 {
 	TRACE_FUNCTION(performance_session);
 
-	DiffuseMaterialPushConstants.random_seed = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+	DiffuseMaterialPushConstants.random_seed = static_cast<uint32_t>(rand());
 
 	GPUComputeShader::Execute(compute_queue_index, incoming_ray_count, std::vector<vk::Buffer>{input_gpu_intersection_buffer, output_gpu_ray_buffer, input_gpu_material_parameters}, static_cast<void *>(&DiffuseMaterialPushConstants));
 }
