@@ -3,8 +3,6 @@ This project is a CPU and GPU ray tracer using the Vulkan API. It is a heavy wor
 ## Rendering Example:
 ![image](./image.png)
 ## Roadmap:
-![image](./doc/Roadmap.png)
-
 ```mermaid
   journey
     title Roadmap
@@ -22,7 +20,6 @@ This project is a CPU and GPU ray tracer using the Vulkan API. It is a heavy wor
       Volumes: 4: Materials
       Animations: 2: External Interfaces
 ```
-
 # Dependencies:
 ## LibPNG:
 http://www.libpng.org/pub/png/libpng.html
