@@ -4,6 +4,25 @@ This project is a CPU and GPU ray tracer using the Vulkan API. It is a heavy wor
 ![image](./image.png)
 ## Roadmap:
 ![image](./doc/Roadmap.png)
+
+```mermaid
+  journey
+    title Roadmap
+    section The Basics
+      Basic Materials: 5: Materials
+      Lights: 5: Lighting And Shadows
+      Scene Importing And Rendering: 5: External Interfaces
+      Blender Integration: 3: External Interfaces
+    section More Advanced
+      HDRI: 4: Lighting And Shadows
+      Textures: 5: Materials
+      Advanced Surface Materials: 3: Materials
+    section Future
+      Performance Improvements And Refactors: 3: Performance
+      Volumes: 4: Materials
+      Animations: 2: External Interfaces
+```
+
 # Dependencies:
 ## LibPNG:
 http://www.libpng.org/pub/png/libpng.html
