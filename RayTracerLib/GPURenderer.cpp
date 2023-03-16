@@ -351,11 +351,11 @@ void GPURenderer::Render(std::shared_ptr<IImage> &out_image)
 
 	std::cout << "[RENDER STARTED]: line " << __LINE__ << ": time (ms): " << performance_timer.Poll().count() << "\n";
 
-	GPURayInitializer ray_initializer(device, performance_session);
-	GPURayIntersector ray_intersector(device, scene, performance_session);
-	GPUMaterialCalculator material_calculator(device, performance_session);
-	GPUSampleAccumulator sample_accumulator(device, performance_session);
-	GPUSampleFinalizer sample_finalizer(device, performance_session);
+	GPURayInitializer ray_initializer(device, ComputeQueueIndex, performance_session);
+	GPURayIntersector ray_intersector(device, ComputeQueueIndex, scene, performance_session);
+	GPUMaterialCalculator material_calculator(device, ComputeQueueIndex, performance_session);
+	GPUSampleAccumulator sample_accumulator(device, ComputeQueueIndex, performance_session);
+	GPUSampleFinalizer sample_finalizer(device, ComputeQueueIndex, performance_session);
 
 	for (size_t i = 0; i < samples; i++)
 	{
@@ -363,19 +363,19 @@ void GPURenderer::Render(std::shared_ptr<IImage> &out_image)
 
 		std::cout << "############## CALCULATING SAMPLE " << i + 1 << " OF " << samples << " ##############\n";
 
-		ray_initializer.Execute(ComputeQueueIndex, camera, i, BufferData[(int)GPUBufferBindings::ray_buffer].buffer, BufferData[(int)GPUBufferBindings::intersection_buffer].buffer);
+		ray_initializer.Execute(camera, i, BufferData[(int)GPUBufferBindings::ray_buffer].buffer, BufferData[(int)GPUBufferBindings::intersection_buffer].buffer);
 
 		bool ray_calculation_needed = true;
 		size_t current_bounce_index = 0;
 
 		while (current_bounce_index < max_bounces)
 		{
-			ray_intersector.Execute(ComputeQueueIndex, RayBufferSize,
+			ray_intersector.Execute(RayBufferSize,
 				BufferData[(int)GPUBufferBindings::ray_buffer].buffer,
 				BufferData[(int)GPUBufferBindings::intersection_buffer].buffer,
 				BufferData[(int)GPUBufferBindings::sphere_buffer].buffer);
 
-			material_calculator.Execute(ComputeQueueIndex, RayBufferSize,
+			material_calculator.Execute(RayBufferSize,
 				BufferData[(int)GPUBufferBindings::intersection_buffer].buffer,
 				BufferData[(int)GPUBufferBindings::ray_buffer].buffer,
 				BufferData[(int)GPUBufferBindings::diffuse_material_parameters].buffer,
@@ -384,12 +384,12 @@ void GPURenderer::Render(std::shared_ptr<IImage> &out_image)
 			current_bounce_index++;
 		}
 
-		sample_accumulator.Execute(ComputeQueueIndex, RayBufferSize,
+		sample_accumulator.Execute(RayBufferSize,
 			BufferData[(int)GPUBufferBindings::intersection_buffer].buffer,
 			BufferData[(int)GPUBufferBindings::sample_buffer].buffer);
 	}
 
-	sample_finalizer.Execute(ComputeQueueIndex, RayBufferSize, 
+	sample_finalizer.Execute(RayBufferSize, 
 		BufferData[(int)GPUBufferBindings::sample_buffer].buffer,
 		BufferData[(int)GPUBufferBindings::colors_buffer].buffer, samples);
 

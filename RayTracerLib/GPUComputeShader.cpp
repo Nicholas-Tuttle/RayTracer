@@ -7,8 +7,8 @@ using RayTracer::PerformanceTracking::PerformanceSession;
 
 const static size_t shader_local_size_x = 1024;
 
-GPUComputeShader::GPUComputeShader(const std::string &shader_file_name, size_t buffer_count, size_t push_constants_size, vk::Device device, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session)
-	: ShaderFileName(shader_file_name), BufferCount(buffer_count), PushConstantsSize(push_constants_size), Device(device), performance_session(session)
+GPUComputeShader::GPUComputeShader(const std::string &shader_file_name, uint32_t compute_queue_index, size_t buffer_count, size_t push_constants_size, vk::Device device, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session)
+	: ShaderFileName(shader_file_name), ComputeQueueIndex(compute_queue_index), BufferCount(buffer_count), PushConstantsSize(push_constants_size), Device(device), performance_session(session)
 {
 	TRACE_FUNCTION(performance_session);
 
@@ -30,12 +30,16 @@ GPUComputeShader::GPUComputeShader(const std::string &shader_file_name, size_t b
 	}
 
 	DescriptorSets = AllocateDescriptorSets();
+
+	CommandPool = CreateCommandPool();
+
+	CommandBuffers = CreateCommandBuffers();
+
+	ComputeQueue = Device.getQueue(ComputeQueueIndex, 0);
 }
 
 vk::ShaderModule GPUComputeShader::CreateShaderModule()
 {
-	TRACE_FUNCTION(performance_session);
-
 	std::vector<uint8_t> shaderCode = VKUtils::ReadShaderFileToBytes(ShaderFileName);
 	if (0 == shaderCode.size())
 	{
@@ -51,8 +55,6 @@ vk::ShaderModule GPUComputeShader::CreateShaderModule()
 
 vk::DescriptorSetLayout GPUComputeShader::DescribeShader()
 {
-	TRACE_FUNCTION(performance_session);
-
 	std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings;
 	descriptorSetLayoutBindings.resize(BufferCount, vk::DescriptorSetLayoutBinding());
 
@@ -73,8 +75,6 @@ vk::DescriptorSetLayout GPUComputeShader::DescribeShader()
 
 vk::Result GPUComputeShader::CreatePipeline(size_t push_constants_size)
 {
-	TRACE_FUNCTION(performance_session);
-
 	vk::PushConstantRange push_constants;
 	push_constants.offset = 0;
 	
@@ -112,8 +112,6 @@ vk::Result GPUComputeShader::CreatePipeline(size_t push_constants_size)
 
 std::vector<vk::DescriptorSet> GPUComputeShader::AllocateDescriptorSets()
 {
-	TRACE_FUNCTION(performance_session);
-
 	std::vector<vk::DescriptorPoolSize> descriptorPoolSizes;
 	descriptorPoolSizes.resize(BufferCount, vk::DescriptorPoolSize());
 
@@ -140,6 +138,25 @@ std::vector<vk::DescriptorSet> GPUComputeShader::AllocateDescriptorSets()
 	descriptorSetAllocateInfo.pSetLayouts = &DescriptorSetLayout;
 
 	return Device.allocateDescriptorSets(descriptorSetAllocateInfo);
+}
+
+vk::CommandPool GPUComputeShader::CreateCommandPool()
+{
+	vk::CommandPoolCreateInfo commandPoolCreateInfo = {};
+	commandPoolCreateInfo.queueFamilyIndex = ComputeQueueIndex;
+	commandPoolCreateInfo.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
+
+	return Device.createCommandPool(commandPoolCreateInfo);
+}
+
+std::vector<vk::CommandBuffer> GPUComputeShader::CreateCommandBuffers()
+{
+	vk::CommandBufferAllocateInfo commandBufferAllocateInfo = {};
+	commandBufferAllocateInfo.commandPool = CommandPool;
+	commandBufferAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
+	commandBufferAllocateInfo.commandBufferCount = 1;
+
+	return Device.allocateCommandBuffers(commandBufferAllocateInfo);
 }
 
 void GPUComputeShader::UpdateDescriptorSets(const std::vector<vk::DescriptorSet> &descriptor_set, const std::vector<vk::Buffer> &buffers)
@@ -176,55 +193,47 @@ void GPUComputeShader::UpdateDescriptorSets(const std::vector<vk::DescriptorSet>
 	Device.updateDescriptorSets(static_cast<uint32_t>(writeDescriptorSetBufferInfo.size()), writeDescriptorSet.data(), 0, nullptr);
 }
 
-void GPUComputeShader::Execute(uint32_t compute_queue_index, size_t total_compute_count, const std::vector<vk::Buffer> &buffers, void *push_constants)
+void GPUComputeShader::Execute(size_t total_compute_count, const std::vector<vk::Buffer> &buffers, void *push_constants)
 {
 	TRACE_FUNCTION(performance_session);
 
 	UpdateDescriptorSets(DescriptorSets, buffers);
 	
-	vk::CommandPoolCreateInfo commandPoolCreateInfo = {};
-	commandPoolCreateInfo.queueFamilyIndex = compute_queue_index;
-
-	vk::CommandPool commandPool = Device.createCommandPool(commandPoolCreateInfo);;
-
-	vk::CommandBufferAllocateInfo commandBufferAllocateInfo = {};
-	commandBufferAllocateInfo.commandPool = commandPool;
-	commandBufferAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
-	commandBufferAllocateInfo.commandBufferCount = 1;
-
-	std::vector<vk::CommandBuffer> commandBuffers = Device.allocateCommandBuffers(commandBufferAllocateInfo);
-
 	vk::CommandBufferBeginInfo commandBufferBeginInfo = {};
 	commandBufferBeginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 
 	uint32_t group_count_x = (uint32_t)std::ceil((float)(total_compute_count) / (float)shader_local_size_x);
-	commandBuffers[0].begin(commandBufferBeginInfo);
-	commandBuffers[0].bindPipeline(vk::PipelineBindPoint::eCompute, Pipeline);
-	commandBuffers[0].bindDescriptorSets(vk::PipelineBindPoint::eCompute, PipelineLayout, 0, static_cast<uint32_t>(DescriptorSets.size()), DescriptorSets.data(), 0, 0);
+	CommandBuffers[0].begin(commandBufferBeginInfo);
+	CommandBuffers[0].bindPipeline(vk::PipelineBindPoint::eCompute, Pipeline);
+	CommandBuffers[0].bindDescriptorSets(vk::PipelineBindPoint::eCompute, PipelineLayout, 0, static_cast<uint32_t>(DescriptorSets.size()), DescriptorSets.data(), 0, 0);
 	if (PushConstantsSize > 0)
 	{
-		commandBuffers[0].pushConstants(PipelineLayout, vk::ShaderStageFlagBits::eCompute, 0,
+		CommandBuffers[0].pushConstants(PipelineLayout, vk::ShaderStageFlagBits::eCompute, 0,
 			static_cast<uint32_t>(PushConstantsSize), push_constants);
 	}
-	commandBuffers[0].dispatch(group_count_x, 1, 1);
-	commandBuffers[0].end();
-
-	vk::Queue queue = Device.getQueue(compute_queue_index, 0);
+	CommandBuffers[0].dispatch(group_count_x, 1, 1);
+	CommandBuffers[0].end();
 
 	vk::SubmitInfo submitInfo = {};
 	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = commandBuffers.data();
+	submitInfo.pCommandBuffers = CommandBuffers.data();
 
 	{
 		// TODO: This takes a long time (relatively) so it should be batched where possible
 		TRACE_SCOPE(performance_session, queue_submission);
-		vk::Result queue_submit_result = queue.submit(1, &submitInfo, VK_NULL_HANDLE);
+		vk::Result queue_submit_result = ComputeQueue.submit(1, &submitInfo, VK_NULL_HANDLE);
 		if (vk::Result::eSuccess == queue_submit_result)
 		{
-			queue.waitIdle();
+			ComputeQueue.waitIdle();
 		}
 	}
+}
 
-	Device.freeCommandBuffers(commandPool, commandBuffers);
-	Device.destroyCommandPool(commandPool);
+GPUComputeShader::~GPUComputeShader()
+{
+	Device.freeCommandBuffers(CommandPool, CommandBuffers);
+	Device.destroyCommandPool(CommandPool);
+	Device.destroyPipeline(Pipeline);
+	Device.destroyDescriptorSetLayout(DescriptorSetLayout);
+	Device.destroyShaderModule(ShaderModule);
 }

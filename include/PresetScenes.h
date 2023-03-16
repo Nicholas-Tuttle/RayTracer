@@ -42,6 +42,8 @@ namespace RayTracer
             std::make_shared<const DiffuseBSDF>(RandomColor(), RandomRoughness(0.0f, 0.3f))));
         scene->AddObject(new Sphere(Vector3<float>( 12,    0,     4),   1.0f,   
             std::make_shared<const EmissiveBSDF>(RandomColor(), 10.0f)));
+        scene->AddObject(new Sphere(Vector3<float>(0, -1002, 0), 1000.0f,
+            std::make_shared<const DiffuseBSDF>(Color(0.5f, 0.5f, 0.5f, 1.0f), 0.5f)));
         out_scene = scene;
 	}
 

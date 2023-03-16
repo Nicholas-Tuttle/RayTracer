@@ -9,13 +9,15 @@ namespace RayTracer
 	class GPUComputeShader
 	{
 	protected:
-		GPUComputeShader(const std::string &shader_file_name, size_t buffer_count, size_t push_constants_size, vk::Device device, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session);
-		void Execute(uint32_t compute_queue_index, size_t total_compute_count, const std::vector<vk::Buffer> &buffers, void *push_constants = nullptr);
+		GPUComputeShader(const std::string &shader_file_name, uint32_t compute_queue_index, size_t buffer_count, size_t push_constants_size, vk::Device device, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session);
+		~GPUComputeShader();
+		void Execute(size_t total_compute_count, const std::vector<vk::Buffer> &buffers, void *push_constants = nullptr);
 
 	private:
 		const std::string ShaderFileName;
 		size_t BufferCount;
 		size_t PushConstantsSize;
+		uint32_t ComputeQueueIndex;
 		vk::DescriptorSetLayout DescriptorSetLayout = nullptr;
 		vk::Device Device = nullptr;
 		vk::PhysicalDevice PhysicalDevice = nullptr;
@@ -23,12 +25,16 @@ namespace RayTracer
 		std::vector<vk::DescriptorSet> DescriptorSets;
 		vk::PipelineLayout PipelineLayout = nullptr;
 		vk::Pipeline Pipeline = nullptr;
+		vk::CommandPool CommandPool = nullptr;
+		std::vector<vk::CommandBuffer> CommandBuffers;
+		vk::Queue ComputeQueue = nullptr;
 
 		vk::ShaderModule CreateShaderModule();
 		vk::DescriptorSetLayout DescribeShader();
 		vk::Result CreatePipeline(size_t push_constants_size);
-
 		std::vector<vk::DescriptorSet> AllocateDescriptorSets();
+		vk::CommandPool CreateCommandPool();
+		std::vector<vk::CommandBuffer> CreateCommandBuffers();
 		void UpdateDescriptorSets(const std::vector<vk::DescriptorSet> &descriptor_set, const std::vector<vk::Buffer> &buffers);
 		
 		GPUComputeShader(const GPUComputeShader &other) = delete;

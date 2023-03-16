@@ -13,8 +13,8 @@ namespace RayTracer
 	class GPURayInitializer : protected GPUComputeShader
 	{
 	public:
-		GPURayInitializer(vk::Device device, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session);
-		void Execute(uint32_t ComputeQueueIndex, Camera camera, size_t seed, vk::Buffer output_gpu_ray_buffer, vk::Buffer output_gpu_intersection_buffer);
+		GPURayInitializer(vk::Device device, uint32_t compute_queue_index, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session);
+		void Execute(Camera camera, size_t seed, vk::Buffer output_gpu_ray_buffer, vk::Buffer output_gpu_intersection_buffer);
 	private:
 		GPURayInitializer(const GPURayInitializer &other) = delete;
 		GPURayInitializer(const GPURayInitializer &&other) = delete;

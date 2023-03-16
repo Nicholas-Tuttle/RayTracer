@@ -8,11 +8,11 @@ using RayTracer::PerformanceTracking::PerformanceSession;
 
 const static size_t shader_local_size_x = 1024;
 
-GPURayInitializer::GPURayInitializer(vk::Device device, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session)
-	: CameraDataPushConstants(), GPUComputeShader("GPURayInitializer.comp.spv", 2, sizeof(GPURayInitializer::CameraDataPushConstants), device, session), performance_session(session)
+GPURayInitializer::GPURayInitializer(vk::Device device, uint32_t compute_queue_index, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session)
+	: CameraDataPushConstants(), GPUComputeShader("GPURayInitializer.comp.spv", compute_queue_index, 2, sizeof(GPURayInitializer::CameraDataPushConstants), device, session), performance_session(session)
 {}
 
-void GPURayInitializer::Execute(uint32_t compute_queue_index, Camera camera, size_t seed, vk::Buffer output_gpu_ray_buffer, vk::Buffer output_gpu_intersection_buffer)
+void GPURayInitializer::Execute(Camera camera, size_t seed, vk::Buffer output_gpu_ray_buffer, vk::Buffer output_gpu_intersection_buffer)
 {
 	TRACE_FUNCTION(performance_session);
 
@@ -38,5 +38,5 @@ void GPURayInitializer::Execute(uint32_t compute_queue_index, Camera camera, siz
 	CameraDataPushConstants.resolution_y = static_cast<unsigned int>(camera.Resolution().Y);
 	CameraDataPushConstants.seed = static_cast<unsigned int>(seed);
 
-	GPUComputeShader::Execute(compute_queue_index, camera.Resolution().X * camera.Resolution().Y, std::vector<vk::Buffer>{output_gpu_ray_buffer, output_gpu_intersection_buffer}, static_cast<void *>(&CameraDataPushConstants));
+	GPUComputeShader::Execute(camera.Resolution().X * camera.Resolution().Y, std::vector<vk::Buffer>{output_gpu_ray_buffer, output_gpu_intersection_buffer}, static_cast<void *>(&CameraDataPushConstants));
 }
