@@ -16,7 +16,7 @@ This project is a CPU and GPU ray tracer using the Vulkan API. It is a heavy wor
       Textures: 5: Materials
       Advanced Surface Materials: 3: Materials
     section Future
-      Performance Improvements And Refactors: 3: Performance
+      Performance Improvements: 3: Performance
       Volumes: 4: Materials
       Animations: 2: Interfaces
 ```
