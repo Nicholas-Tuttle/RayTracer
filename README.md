@@ -8,17 +8,17 @@ This project is a CPU and GPU ray tracer using the Vulkan API. It is a heavy wor
     title Roadmap
     section The Basics
       Basic Materials: 5: Materials
-      Lights: 5: Lighting And Shadows
-      Scene Importing And Rendering: 5: External Interfaces
-      Blender Integration: 3: External Interfaces
+      Lights: 5: Lighting
+      Scene Importing And Rendering: 5: Interfaces
+      Blender Integration: 3: Interfaces
     section More Advanced
-      HDRI: 4: Lighting And Shadows
+      HDRI: 4: Lighting
       Textures: 5: Materials
       Advanced Surface Materials: 3: Materials
     section Future
       Performance Improvements And Refactors: 3: Performance
       Volumes: 4: Materials
-      Animations: 2: External Interfaces
+      Animations: 2: Interfaces
 ```
 # Dependencies:
 ## LibPNG:
