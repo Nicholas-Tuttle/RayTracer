@@ -43,6 +43,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="CameraTests.cpp" />
+    <ClCompile Include="MeshTests.cpp" />
     <ClCompile Include="SphereTests.cpp" />
     <ClCompile Include="UtilitiesTests.cpp" />
   </ItemGroup>

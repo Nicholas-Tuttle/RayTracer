@@ -1,12 +1,13 @@
 #pragma once
 
-#include <IScene.h>
-#include <Camera.h>
-#include <Scene.h>
-#include <EmissiveBSDF.h>
-#include <GlossyBSDF.h>
-#include <DiffuseBSDF.h>
-#include <Sphere.h>
+#include "IScene.h"
+#include "Camera.h"
+#include "Scene.h"
+#include "EmissiveBSDF.h"
+#include "GlossyBSDF.h"
+#include "DiffuseBSDF.h"
+#include "Sphere.h"
+#include "Mesh.h"
 
 namespace RayTracer
 {
@@ -76,4 +77,45 @@ namespace RayTracer
         }
         out_scene = scene;
 	}
+
+    static void CreatePresetSceneCube(IScene *&out_scene, Camera *&out_camera, ImageResolution resolution)
+    {
+        out_camera = new Camera(resolution, Vector3<float>(-1, 1, 1), Vector3<float>(1, -1, -1), 50, 18);
+        Scene *scene = new Scene();
+
+        // This is a cube
+        scene->AddObject(new Mesh(std::make_shared<const DiffuseBSDF>(Color(1.0f, 0, 0, 1), RandomRoughness(0.0f, 0.3f)),
+            {
+                Vector3<float>(-0.25f, -0.25f, 0.25f), //  [0] : bottom-left front
+                Vector3<float>(0.25f, -0.25f, 0.25f), //   [1] : bottom-right front
+                Vector3<float>(-0.25f, 0.25f, 0.25f), //   [2] : top-left front
+                Vector3<float>(0.25f, 0.25f, 0.25f), //    [3] : top-right front
+                Vector3<float>(-0.25f, -0.25f, -0.25f), // [4] : bottom-left back
+                Vector3<float>(0.25f, -0.25f, -0.25f), //  [5] : bottom-right back
+                Vector3<float>(-0.25f, 0.25f, -0.25f), //  [6] : top-left back
+                Vector3<float>(0.25f, 0.25f, -0.25f), //   [7] : top-right back
+            },
+            {
+                Vector3<size_t>(0, 1, 2), // bottom-front
+                Vector3<size_t>(2, 1, 3), // top-front
+                Vector3<size_t>(4, 0, 2), // bottom-left
+                Vector3<size_t>(2, 6, 4), // top-left
+                Vector3<size_t>(5, 3, 1), // bottom-right
+                Vector3<size_t>(5, 7, 3), // top-right
+                Vector3<size_t>(5, 4, 6), // bottom-back
+                Vector3<size_t>(6, 7, 5), // top-back
+                Vector3<size_t>(6, 2, 3), // front-top
+                Vector3<size_t>(3, 7, 6), // back-top
+                Vector3<size_t>(1, 0, 4), // front-bottom
+                Vector3<size_t>(4, 5, 1), // back-bottom
+            }));
+        // Add a sphere inside the cube (that won't be seen)
+        scene->AddObject(new Sphere(Vector3<float>(), 0.2f, std::make_shared<const EmissiveBSDF>(RandomColor(), 10.0f)));
+        // Add a sphere behind the cube
+        scene->AddObject(new Sphere(Vector3<float>(0.5f, 0, 0), 0.2f, std::make_shared<const EmissiveBSDF>(Color(0, 1.0f, 0, 1), 1.0f)));
+        // Add a sphere to the side of the cube
+        scene->AddObject(new Sphere(Vector3<float>(0, 0, 0.5f), 0.2f, std::make_shared<const EmissiveBSDF>(Color(0, 0, 1.0f, 1), 1.0f)));
+
+        out_scene = scene;
+    }
 }

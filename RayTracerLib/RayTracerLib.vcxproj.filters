@@ -173,6 +173,9 @@
     <ClInclude Include="..\dependencies\tinyobjloader\tiny_obj_loader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\Mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PrincipledBSDF.cpp">
@@ -251,6 +254,9 @@
     </CustomBuild>
     <CustomBuild Include="GPUSampleFinalizer.comp">
       <Filter>Source Files\GPU Rendering\Shader Files\SampleFinalizing</Filter>
+    </CustomBuild>
+    <CustomBuild Include="GPUMeshIntersector.comp">
+      <Filter>Source Files\GPU Rendering\Shader Files\RayIntersection</Filter>
     </CustomBuild>
   </ItemGroup>
 </Project>
