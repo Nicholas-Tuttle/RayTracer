@@ -306,7 +306,7 @@ int main(int argc, char **argv)
     IScene *scene = nullptr;
     Camera *camera = nullptr;
 
-    CreatePresetScene1(scene, camera, resolution);
+    CreatePresetSceneCube(scene, camera, resolution);
 
     // Provide an output pointer for the image
     std::shared_ptr<IImage> out_image = nullptr;

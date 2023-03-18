@@ -1,7 +1,8 @@
 #pragma once
 
-#include <math.h>
 #include "Utilities.h"
+
+#include <math.h>
 
 namespace RayTracer
 {
@@ -11,7 +12,7 @@ namespace RayTracer
 	public:
 		Vector3() : Vector3<T>((T)1.0, (T)1.0, (T)1.0) {};
 		Vector3(const T &x, const T &y, const T &z) : X(x), Y(y), Z(z), 
-			CalculatedNormalized(false), XNormalized(0), YNormalized(0), ZNormalized(0) {};
+			CalculatedNormalized(false), XNormalized(T()), YNormalized(T()), ZNormalized(T()) {};
 		T X;
 		T Y;
 		T Z;
@@ -55,6 +56,21 @@ namespace RayTracer
 		inline bool operator!=(const Vector3<T> &vector) const
 		{
 			return vector.X != X || vector.Y != Y || vector.Z != Z;
+		}
+
+		inline T operator[](int i) const
+		{
+			switch (i)
+			{
+			case 0:
+				return X;
+			case 1:
+				return Y;
+			case 2:
+				return Z;
+			default:
+				return T();
+			}
 		}
 
 		inline T MagnitudeSquared() const

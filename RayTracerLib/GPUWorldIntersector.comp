@@ -1,7 +1,3 @@
-// glslangValidator.exe -V -e main %(FullPath) -o $(OutDir)\..\bin\%(Filename).comp.spv
-
-// TODO: this could be threaded per-ray per-object
-
 #version 450
 #extension GL_EXT_debug_printf : enable
 #define FLOAT_MAX 0x7f7fffff
