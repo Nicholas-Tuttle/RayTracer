@@ -13,16 +13,13 @@ const static size_t shader_local_size_x = 1024;
 
 #pragma region GPURayIntersector
 
-GPURayIntersector::GPURayIntersector(vk::Device device, uint32_t compute_queue_index, const IScene &scene, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session)
-	: world_intersector(device, compute_queue_index, session), sphere_intersector(device, compute_queue_index, scene, session), performance_session(session)
+GPURayIntersector::GPURayIntersector(vk::Device device, uint32_t compute_queue_index, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session)
+	: world_intersector(device, compute_queue_index, session), sphere_intersector(device, compute_queue_index, session), mesh_intersector(device, compute_queue_index, session), performance_session(session)
 {}
 
-void GPURayIntersector::Execute(size_t incoming_ray_count, vk::Buffer input_gpu_ray_buffer, vk::Buffer output_gpu_intersection_buffer, vk::Buffer input_gpu_sphere_buffer)
+void GPURayIntersector::Execute(size_t incoming_ray_count, vk::Buffer input_gpu_ray_buffer, vk::Buffer output_gpu_intersection_buffer, vk::Buffer input_gpu_sphere_buffer, vk::Buffer input_vertex_buffer, vk::Buffer input_face_buffer)
 {
 	TRACE_FUNCTION(performance_session);
-
-	// Right now this just does the world and sphere intersector, eventually 
-	// a mesh intersector, volume intersector and others will be added
 
 	// The world intersector should be first since everything will intersect with it and
 	// it just sets up the max depth and starting color information in each intersection
@@ -30,6 +27,8 @@ void GPURayIntersector::Execute(size_t incoming_ray_count, vk::Buffer input_gpu_
 	world_intersector.Execute(incoming_ray_count, input_gpu_ray_buffer, output_gpu_intersection_buffer);
 
 	sphere_intersector.Execute(incoming_ray_count, input_gpu_ray_buffer, output_gpu_intersection_buffer, input_gpu_sphere_buffer);
+
+	mesh_intersector.Execute(incoming_ray_count, input_gpu_ray_buffer, output_gpu_intersection_buffer, input_vertex_buffer, input_face_buffer);
 }
 
 #pragma endregion
@@ -51,7 +50,7 @@ void GPURayIntersector::GPUWorldIntersector::Execute(size_t incoming_ray_count, 
 
 #pragma region GPUSphereIntersector
 
-GPURayIntersector::GPUSphereIntersector::GPUSphereIntersector(vk::Device device, uint32_t compute_queue_index, const IScene &scene, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session)
+GPURayIntersector::GPUSphereIntersector::GPUSphereIntersector(vk::Device device, uint32_t compute_queue_index, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session)
 	: GPUComputeShader("GPUSphereIntersector.comp.spv", compute_queue_index, 3, 0, device, session), performance_session(session)
 {}
 
@@ -64,3 +63,19 @@ void GPURayIntersector::GPUSphereIntersector::Execute(size_t incoming_ray_count,
 }
 
 #pragma endregion
+
+#pragma region GPUMeshIntersector
+
+GPURayIntersector::GPUMeshIntersector::GPUMeshIntersector(vk::Device device, uint32_t compute_queue_index, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session)
+	: GPUComputeShader("GPUMeshIntersector.comp.spv", compute_queue_index, 4, 0, device, session), performance_session(session)
+{}
+
+void GPURayIntersector::GPUMeshIntersector::Execute(size_t incoming_ray_count, vk::Buffer input_gpu_ray_buffer, vk::Buffer output_gpu_intersection_buffer, vk::Buffer input_vertex_buffer, vk::Buffer input_face_buffer)
+{
+	TRACE_FUNCTION(performance_session);
+
+	GPUComputeShader::Execute(incoming_ray_count, std::vector<vk::Buffer>{input_gpu_ray_buffer, output_gpu_intersection_buffer, input_vertex_buffer, input_face_buffer});
+}
+
+#pragma endregion
+

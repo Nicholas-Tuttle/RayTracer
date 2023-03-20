@@ -84,7 +84,7 @@ namespace RayTracer
         Scene *scene = new Scene();
 
         // This is a cube
-        scene->AddObject(new Mesh(std::make_shared<const DiffuseBSDF>(Color(1.0f, 0, 0, 1), RandomRoughness(0.0f, 0.3f)),
+        scene->AddObject(new Mesh(std::make_shared<const DiffuseBSDF>(Color(1.0f, 0, 0, 1), 0.1f),
             {
                 Vector3<float>(-0.25f, -0.25f, 0.25f), //  [0] : bottom-left front
                 Vector3<float>(0.25f, -0.25f, 0.25f), //   [1] : bottom-right front

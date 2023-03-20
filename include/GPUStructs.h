@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Sphere.h"
+#include "Mesh.h"
 #include "DiffuseBSDF.h"
 #include "EmissiveBSDF.h"
 
@@ -47,6 +48,7 @@ namespace RayTracer
 			position[3] = 0;
 			radius = 0;
 			material_id = 0;
+			material_index = -1;
 		}
 
 		GPUSphere(const Sphere &sphere)
@@ -91,6 +93,37 @@ namespace RayTracer
 	struct GPUColor
 	{
 		float color[4];
+	};
+
+	struct GPUVertex
+	{
+		float position[4];
+
+		GPUVertex(const Vector3<float> positions)
+		{
+			position[0] = positions.X;
+			position[1] = positions.Y;
+			position[2] = positions.Z;
+			position[3] = 0;
+		}
+	};
+
+	struct GPUFace
+	{
+		uint32_t vertex_indices[3];
+		uint32_t material_id;
+		int32_t material_index;
+		//GPU_PADDING_BYTES(12);
+
+		GPUFace(const Vector3<size_t> indices)
+		{
+			vertex_indices[0] = static_cast<uint32_t>(indices.X);
+			vertex_indices[1] = static_cast<uint32_t>(indices.Y);
+			vertex_indices[2] = static_cast<uint32_t>(indices.Z);
+
+			material_id = 0;
+			material_index = -1;
+		}
 	};
 
 #pragma endregion

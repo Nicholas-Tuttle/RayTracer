@@ -9,7 +9,7 @@ namespace RayTracer
 	{
 	public:
 		Mesh(std::shared_ptr<const IMaterial> material, const std::vector<Vector3<float>> &vertices, const std::vector<Vector3<size_t>> &face_vertex_indices)
-			: material(material)
+			: material(material), VertexData(vertices), VertexIndices(face_vertex_indices)
 		{
 			for (const auto &indicies : face_vertex_indices)
 			{
@@ -46,6 +46,9 @@ namespace RayTracer
 			return material;
 		}
 
+		const std::vector<Vector3<float>> VertexData;
+		std::vector<Vector3<size_t>> VertexIndices;
+
 	private:
 		// TODO: move material to individual faces
 		std::shared_ptr<const IMaterial> material;
@@ -61,13 +64,13 @@ namespace RayTracer
 			}
 
 			// See https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
-			// TODO: Add normal calculations
 			bool IntersectsRay(const Ray &incoming_ray, Intersection &out_intersection_info) const
 			{
 				Vector3<float> edge_1 = vertices[1].position - vertices[0].position;
 				Vector3<float> edge_2 = vertices[2].position - vertices[0].position;
 
-				Vector3<float> h = incoming_ray.Direction().Cross(edge_2);
+				Vector3<float> ray_direction_normalized = incoming_ray.Direction().Normalize();
+				Vector3<float> h = ray_direction_normalized.Cross(edge_2);
 				float a = edge_1.Dot(h);
 
 				if (0 == a)
@@ -86,7 +89,7 @@ namespace RayTracer
 				}
 
 				Vector3<float> q = s.Cross(edge_1);
-				float v = f * incoming_ray.Direction().Dot(q);
+				float v = f * ray_direction_normalized.Dot(q);
 
 				if (0.0f > v || 1.0f < (u + v))
 				{
@@ -100,7 +103,7 @@ namespace RayTracer
 				// (the intersection is behind the ray)
 				if (0 < t)
 				{
-					Intersection new_intersection(sqrt((incoming_ray.Direction() * t).MagnitudeSquared()), edge_1.Cross(edge_2), incoming_ray.Origin() + incoming_ray.Direction() * t);
+					Intersection new_intersection(sqrt((ray_direction_normalized * t).MagnitudeSquared()), edge_1.Cross(edge_2), incoming_ray.Origin() + ray_direction_normalized * t);
 					out_intersection_info = new_intersection;
 					return true;
 				}

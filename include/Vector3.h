@@ -82,7 +82,7 @@ namespace RayTracer
 		{
 			if (CalculatedNormalized)
 			{
-				return Vector3<T>(XNormalized, YNormalized, ZNormalized);
+				return Vector3<T>(true, XNormalized, YNormalized, ZNormalized);
 			}
 			else
 			{
@@ -133,5 +133,17 @@ namespace RayTracer
 		mutable T XNormalized;
 		mutable T YNormalized;
 		mutable T ZNormalized;
+
+		Vector3<T>(bool normalized, float X, float Y, float Z)
+			: X(X), Y(Y), Z(Z)
+		{
+			CalculatedNormalized = normalized;
+			if (normalized)
+			{
+				XNormalized = X;
+				YNormalized = Y;
+				ZNormalized = Z;
+			}
+		}
 	};
 }

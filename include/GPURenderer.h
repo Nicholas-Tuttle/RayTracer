@@ -53,6 +53,8 @@ namespace RayTracer
 			colors_buffer,
 			diffuse_material_parameters,
 			emissive_material_parameters,
+			vertex_buffer,
+			face_buffer,
 			GPUBufferBindingCount
 		};
 
@@ -80,8 +82,12 @@ namespace RayTracer
 		void *gpu_diffuse_material_parameters_buffer;
 		// Pointers are of type GPUEmissiveMaterialParameters*
 		void *gpu_emissive_material_parameters_buffer;
+		// Pointers are of type GPUVertex*
+		void *gpu_vertex_buffer;
+		// Pointers are of type GPUFace*
+		void *gpu_face_buffer;
 		
-		void ParseSceneData(const IScene &scene, std::vector<GPUSphere> &out_gpu_spheres, std::vector<GPUDiffuseMaterialParameters> &out_diffuse_material_parameters, std::vector<GPUEmissiveMaterialParameters> &out_emissive_material_parameters);
+		void ParseSceneData(const IScene &scene, std::vector<GPUSphere> &out_gpu_spheres, std::vector<GPUDiffuseMaterialParameters> &out_diffuse_material_parameters, std::vector<GPUEmissiveMaterialParameters> &out_emissive_material_parameters, std::vector<GPUVertex> &out_gpu_vertices, std::vector<GPUFace> &out_gpu_faces);
 		void *CreateAndMapMemory(uint32_t queueFamilyIndex, GPURenderer::BufferCreationAndMappingData &buffer_data);
 		vk::Result CreateAndMapMemories(uint32_t queueFamilyIndex);
 
