@@ -33,8 +33,143 @@ layout(std430, set = 0, binding = 1) buffer out_intersections
 	Intersection intersections[];
 } Intersections;
 
+struct Vertex
+{
+	vec4 position;
+};
+
+layout(std430, set = 0, binding = 2) buffer in_vertices
+{
+	Vertex vertices[];
+} Vertices;
+
+struct Face
+{
+	uint vertex_index_0;
+	uint vertex_index_1;
+	uint vertex_index_2;
+	uint material_id;
+	int material_index;
+};
+
+layout(std430, set = 0, binding = 3) buffer in_faces
+{
+	Face faces[];
+} Faces;
+
+struct RayIntersectionInfo
+{
+	bool intersects;
+	float depth;
+	vec3 normal;
+};
+
+// See https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
+RayIntersectionInfo ray_intersects_face(vec3 ray_direction_normalized, vec3 ray_origin, Face face)
+{
+	RayIntersectionInfo info;
+	info.intersects = false;
+
+	vec3 vertex_0_position = Vertices.vertices[face.vertex_index_0].position.xyz;
+	vec3 vertex_1_position = Vertices.vertices[face.vertex_index_1].position.xyz;
+	vec3 vertex_2_position = Vertices.vertices[face.vertex_index_2].position.xyz;
+
+	vec3 edge_1 = vertex_1_position - vertex_0_position;
+	vec3 edge_2 = vertex_2_position - vertex_0_position;
+
+	vec3 h = cross(ray_direction_normalized, edge_2);
+	float a = dot(edge_1, h);
+
+	if(0 == a)
+	{
+		// The ray is parallel to the triangle
+		return info;
+	}
+
+	float f = 1.0f / a;
+	vec3 s = ray_origin - vertex_0_position;
+	float u = f * dot(s, h);
+
+	if (0.0f > u || 1.0f < u)
+	{
+		return info;
+	}
+
+	vec3 q = cross(s, edge_1);
+	float v = f * dot(ray_direction_normalized, q);
+	
+	if (0.0f > v || 1.0f < (u + v))
+	{
+		return info;
+	}
+
+	// Find where the intersection point lies on the line
+	float t = f * dot(edge_2, q);
+	
+	// If "t" is negative there is a line intersection but not a ray
+	// (the intersection is behind the ray)
+
+	if(0 < t)
+	{
+		info.intersects = true;
+		info.depth = length(ray_direction_normalized * t);
+		info.normal = normalize(cross(edge_1, edge_2));
+	}
+
+	return info;
+}
+
 layout(local_size_x = 1024, local_size_y = 1, local_size_z = 1) in;
 void main()
 {
+	uint gID = gl_GlobalInvocationID.x;
+	
+#ifdef DEBUG
+	if(gID == 0)
+	{
+		debugPrintfEXT("Mesh Intersector: Faces: %u, Vertices: %u", Faces.faces.length(), Vertices.vertices.length());
 
+		for(int i = 0; i < Vertices.vertices.length(); i++)
+		{
+			debugPrintfEXT("[%3.2v3f]", Vertices.vertices[i].position.xyz);
+		}
+
+		for(int i = 0; i < Faces.faces.length(); i++)
+		{
+			debugPrintfEXT("%u, %u, %u", Faces.faces[i].vertex_index_0, Faces.faces[i].vertex_index_1, Faces.faces[i].vertex_index_2);
+		}
+	}
+#endif
+
+	if (gID >= Rays.rays.length())
+	{
+		return;
+	}
+	
+	// If the ray is inactive don't do anything
+	if(Rays.rays[gID].direction.x == 0 && Rays.rays[gID].direction.y == 0 && Rays.rays[gID].direction.z == 0)
+	{
+		return;
+	}
+
+	vec3 ray_origin = Rays.rays[gID].origin.xyz;
+	vec3 ray_direction_normalized = normalize(Rays.rays[gID].direction.xyz);
+
+	for(int i = 0; i < Faces.faces.length(); i++)
+	{
+		RayIntersectionInfo info = ray_intersects_face(ray_direction_normalized, ray_origin, Faces.faces[i]);
+
+		if(info.intersects && info.depth < Intersections.intersections[gID].depth)
+		{
+			vec3 intersection_location = ray_origin + ray_direction_normalized * info.depth;
+
+			// Fill in all the intersection info
+			Intersections.intersections[gID].depth = info.depth;
+			// Offset a little bit from the face
+			Intersections.intersections[gID].intersection_location = vec4(intersection_location + 0.00001f * info.normal, 0.0);
+			Intersections.intersections[gID].intersection_normal = vec4(info.normal, 0.0);
+			Intersections.intersections[gID].material_id = Faces.faces[i].material_id;
+			Intersections.intersections[gID].material_index = Faces.faces[i].material_index;
+		}
+	}
 }

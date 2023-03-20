@@ -4,6 +4,7 @@
 #include "ElapsedTimer.h"
 #include "VulkanUtils.h"
 #include "GPUStructs.h"
+#include "Mesh.h"
 
 #include "GPURayInitializer.h"
 #include "GPURayIntersector.h"
@@ -23,6 +24,7 @@ using RayTracer::IImage;
 using RayTracer::IMaterial;
 using RayTracer::ElapsedTimer;
 using RayTracer::Sphere;
+using RayTracer::Mesh;
 
 using RayTracer::GPURayInitializer;
 using RayTracer::GPURayIntersector;
@@ -36,6 +38,8 @@ using RayTracer::GPUSample;
 using RayTracer::GPUColor;
 using RayTracer::GPUDiffuseMaterialParameters;
 using RayTracer::GPUEmissiveMaterialParameters;
+using RayTracer::GPUVertex;
+using RayTracer::GPUFace;
 
 using RayTracer::DiffuseBSDF;
 using RayTracer::EmissiveBSDF;
@@ -61,7 +65,9 @@ GPURenderer::GPURenderer(const GPURendererInitParameters &params)
 	std::vector<GPUSphere> gpu_spheres;
 	std::vector<GPUDiffuseMaterialParameters> diffuse_material_parameters;
 	std::vector<GPUEmissiveMaterialParameters> emissive_material_parameters;
-	ParseSceneData(scene, gpu_spheres, diffuse_material_parameters, emissive_material_parameters);
+	std::vector<GPUVertex> gpu_vertices;
+	std::vector<GPUFace> gpu_faces;
+	ParseSceneData(scene, gpu_spheres, diffuse_material_parameters, emissive_material_parameters, gpu_vertices, gpu_faces);
 
 	if (!VKUtils::VerifyInstanceLayers(VKUtils::DebugInstanceLayers) ||
 		!VKUtils::VerifyInstanceExtensions(VKUtils::DebugInstanceExtensions))
@@ -100,16 +106,13 @@ GPURenderer::GPURenderer(const GPURendererInitParameters &params)
 	BufferData.resize((size_t)GPUBufferBindings::GPUBufferBindingCount);
 
 	BufferData[(int)GPUBufferBindings::ray_buffer].buffer_size = sizeof(GPURay) * RayBufferSize;
-	BufferData[(int)GPUBufferBindings::ray_buffer].data_pointer = nullptr;
 
 	BufferData[(int)GPUBufferBindings::intersection_buffer].buffer_size = sizeof(GPUIntersection) * RayBufferSize;
-	BufferData[(int)GPUBufferBindings::intersection_buffer].data_pointer = nullptr;
 
 	BufferData[(int)GPUBufferBindings::sphere_buffer].buffer_size = sizeof(GPUSphere) * gpu_spheres.size();
 	BufferData[(int)GPUBufferBindings::sphere_buffer].data_pointer = &gpu_sphere_buffer;
 
 	BufferData[(int)GPUBufferBindings::sample_buffer].buffer_size = sizeof(GPUSample) * RayBufferSize;
-	BufferData[(int)GPUBufferBindings::sample_buffer].data_pointer = nullptr;
 
 	BufferData[(int)GPUBufferBindings::colors_buffer].buffer_size = sizeof(GPUColor) * RayBufferSize;
 	BufferData[(int)GPUBufferBindings::colors_buffer].data_pointer = &gpu_color_buffer;
@@ -119,6 +122,12 @@ GPURenderer::GPURenderer(const GPURendererInitParameters &params)
 	
 	BufferData[(int)GPUBufferBindings::emissive_material_parameters].buffer_size = sizeof(GPUEmissiveMaterialParameters) * emissive_material_parameters.size();
 	BufferData[(int)GPUBufferBindings::emissive_material_parameters].data_pointer = &gpu_emissive_material_parameters_buffer;
+
+	BufferData[(int)GPUBufferBindings::vertex_buffer].buffer_size = sizeof(GPUVertex) * gpu_vertices.size();
+	BufferData[(int)GPUBufferBindings::vertex_buffer].data_pointer = &gpu_vertex_buffer;
+
+	BufferData[(int)GPUBufferBindings::face_buffer].buffer_size = sizeof(GPUFace) * gpu_faces.size();
+	BufferData[(int)GPUBufferBindings::face_buffer].data_pointer = &gpu_face_buffer;
 	
 	if (vk::Result::eSuccess != CreateAndMapMemories(ComputeQueueIndex))
 	{
@@ -145,12 +154,24 @@ GPURenderer::GPURenderer(const GPURendererInitParameters &params)
 		throw std::exception("Emissive material parameters for GPU compute failed to allocate");
 	}
 
+	if (nullptr == gpu_vertex_buffer)
+	{
+		throw std::exception("Vertex buffer data for GPU compute failed to allocate");
+	}
+
+	if (nullptr == gpu_face_buffer)
+	{
+		throw std::exception("Face buffer data for GPU compute failed to allocate");
+	}
+
 	memcpy(gpu_sphere_buffer, gpu_spheres.data(), gpu_spheres.size() * sizeof(GPUSphere));
 	memcpy(gpu_diffuse_material_parameters_buffer, diffuse_material_parameters.data(), diffuse_material_parameters.size() * sizeof(GPUDiffuseMaterialParameters));
 	memcpy(gpu_emissive_material_parameters_buffer, emissive_material_parameters.data(), emissive_material_parameters.size() * sizeof(GPUEmissiveMaterialParameters));
+	memcpy(gpu_vertex_buffer, gpu_vertices.data(), gpu_vertices.size() * sizeof(GPUVertex));
+	memcpy(gpu_face_buffer, gpu_faces.data(), gpu_faces.size() * sizeof(GPUFace));
 }
 
-void GPURenderer::ParseSceneData(const IScene &scene, std::vector<GPUSphere> &out_gpu_spheres, std::vector<GPUDiffuseMaterialParameters> &out_diffuse_material_parameters, std::vector<GPUEmissiveMaterialParameters> &out_emissive_material_parameters)
+void GPURenderer::ParseSceneData(const IScene &scene, std::vector<GPUSphere> &out_gpu_spheres, std::vector<GPUDiffuseMaterialParameters> &out_diffuse_material_parameters, std::vector<GPUEmissiveMaterialParameters> &out_emissive_material_parameters, std::vector<GPUVertex> &out_gpu_vertices, std::vector<GPUFace> &out_gpu_faces)
 {
 	TRACE_FUNCTION(performance_session);
 
@@ -220,15 +241,27 @@ void GPURenderer::ParseSceneData(const IScene &scene, std::vector<GPUSphere> &ou
 			}
 		}
 
-
-		// TODO: Add more object types
-		const Sphere *sphere = dynamic_cast<const Sphere *>(object);
-		if (nullptr != sphere)
+		if (const Sphere *const sphere = dynamic_cast<const Sphere *const>(object))
 		{
 			out_gpu_spheres.emplace_back(sphere);
 			GPUSphere &back = out_gpu_spheres.back();
 			back.material_id = material_id;
 			back.material_index = material_index;
+		}
+		else if (const Mesh *const mesh = dynamic_cast<const Mesh *const>(object))
+		{
+			for (const auto &vertex : mesh->VertexData)
+			{
+				out_gpu_vertices.emplace_back(vertex);
+			}
+
+			for (const auto &index : mesh->VertexIndices)
+			{
+				out_gpu_faces.emplace_back(index);
+				GPUFace &back = out_gpu_faces.back();
+				back.material_id = material_id;
+				back.material_index = material_index;
+			}
 		}
 	}
 
@@ -352,7 +385,7 @@ void GPURenderer::Render(std::shared_ptr<IImage> &out_image)
 	std::cout << "[RENDER STARTED]: line " << __LINE__ << ": time (ms): " << performance_timer.Poll().count() << "\n";
 
 	GPURayInitializer ray_initializer(device, ComputeQueueIndex, performance_session);
-	GPURayIntersector ray_intersector(device, ComputeQueueIndex, scene, performance_session);
+	GPURayIntersector ray_intersector(device, ComputeQueueIndex, performance_session);
 	GPUMaterialCalculator material_calculator(device, ComputeQueueIndex, performance_session);
 	GPUSampleAccumulator sample_accumulator(device, ComputeQueueIndex, performance_session);
 	GPUSampleFinalizer sample_finalizer(device, ComputeQueueIndex, performance_session);
@@ -373,7 +406,9 @@ void GPURenderer::Render(std::shared_ptr<IImage> &out_image)
 			ray_intersector.Execute(RayBufferSize,
 				BufferData[(int)GPUBufferBindings::ray_buffer].buffer,
 				BufferData[(int)GPUBufferBindings::intersection_buffer].buffer,
-				BufferData[(int)GPUBufferBindings::sphere_buffer].buffer);
+				BufferData[(int)GPUBufferBindings::sphere_buffer].buffer,
+				BufferData[(int)GPUBufferBindings::vertex_buffer].buffer, 
+				BufferData[(int)GPUBufferBindings::face_buffer].buffer);
 
 			material_calculator.Execute(RayBufferSize,
 				BufferData[(int)GPUBufferBindings::intersection_buffer].buffer,
