@@ -12,17 +12,22 @@ namespace RayTracer
 	class GPUMaterialCalculator
 	{
 	public:
-		GPUMaterialCalculator(vk::Device device, uint32_t compute_queue_index, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session);
-		void Execute(size_t incoming_ray_count, vk::Buffer input_gpu_intersection_buffer, vk::Buffer output_gpu_ray_buffer, vk::Buffer input_diffuse_material_parameters, vk::Buffer input_emissive_material_parameters);
+		GPUMaterialCalculator(vk::Device device, uint32_t compute_queue_index, vk::Buffer input_gpu_intersection_buffer, vk::Buffer output_gpu_ray_buffer, vk::Buffer input_diffuse_material_parameters, vk::Buffer input_emissive_material_parameters, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session);
+		void WriteCommandBuffers(std::vector<std::reference_wrapper<vk::CommandBuffer>> buffers, size_t incoming_ray_count);
+
+		uint32_t RequiredCommandBuffers() const
+		{
+			return 4;
+		}
 
 	private:
-		vk::Device device;
+		vk::Device Device;
 
 		class GPUWorldMaterial : protected GPUComputeShader
 		{
 		public:
-			GPUWorldMaterial(vk::Device device, uint32_t compute_queue_index, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session);
-			void Execute(size_t incoming_ray_count, vk::Buffer input_gpu_intersection_buffer, vk::Buffer output_gpu_ray_buffer);
+			GPUWorldMaterial(vk::Device device, uint32_t compute_queue_index, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session, vk::Buffer input_gpu_intersection_buffer, vk::Buffer output_gpu_ray_buffer);
+			void WriteCommandBuffer(vk::CommandBuffer &buffer, size_t incoming_ray_count);
 		private:
 			GPUWorldMaterial(const GPUWorldMaterial &other) = delete;
 			GPUWorldMaterial(const GPUWorldMaterial &&other) = delete;
@@ -43,8 +48,8 @@ namespace RayTracer
 		class GPUDiffuseMaterial : protected GPUComputeShader
 		{
 		public:
-			GPUDiffuseMaterial(vk::Device device, uint32_t compute_queue_index, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session);
-			void Execute(size_t incoming_ray_count, vk::Buffer input_gpu_intersection_buffer, vk::Buffer output_gpu_ray_buffer, vk::Buffer input_gpu_material_parameters);
+			GPUDiffuseMaterial(vk::Device device, uint32_t compute_queue_index, vk::Buffer input_gpu_intersection_buffer, vk::Buffer output_gpu_ray_buffer, vk::Buffer input_gpu_material_parameters, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session);
+			void WriteCommandBuffer(vk::CommandBuffer &buffer, size_t incoming_ray_count);
 		private:
 			GPUDiffuseMaterial(const GPUDiffuseMaterial &other) = delete;
 			GPUDiffuseMaterial(const GPUDiffuseMaterial &&other) = delete;
@@ -67,8 +72,8 @@ namespace RayTracer
 		class GPUEmissiveMaterial : protected GPUComputeShader
 		{
 		public:
-			GPUEmissiveMaterial(vk::Device device, uint32_t compute_queue_index, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session);
-			void Execute(size_t incoming_ray_count, vk::Buffer input_gpu_intersection_buffer, vk::Buffer output_gpu_ray_buffer, vk::Buffer input_emissive_material_parameters);
+			GPUEmissiveMaterial(vk::Device device, uint32_t compute_queue_index, vk::Buffer input_gpu_intersection_buffer, vk::Buffer output_gpu_ray_buffer, vk::Buffer input_emissive_material_parameters, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session);
+			void WriteCommandBuffer(vk::CommandBuffer &buffer, size_t incoming_ray_count);
 		private:
 			GPUEmissiveMaterial(const GPUEmissiveMaterial &other) = delete;
 			GPUEmissiveMaterial(const GPUEmissiveMaterial &&other) = delete;
