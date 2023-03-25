@@ -7,7 +7,7 @@ using RayTracer::PerformanceTracking::PerformanceSession;
 
 const static size_t shader_local_size_x = 1024;
 
-GPUComputeShader::GPUComputeShader(const std::string &shader_file_name, uint32_t compute_queue_index, size_t buffer_count, size_t push_constants_size, vk::Device device, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session)
+GPUComputeShader::GPUComputeShader(const std::string &shader_file_name, uint32_t compute_queue_index, size_t buffer_count, size_t push_constants_size, vk::Device device, const std::vector<vk::Buffer> &buffers, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session)
 	: ShaderFileName(shader_file_name), ComputeQueueIndex(compute_queue_index), BufferCount(buffer_count), PushConstantsSize(push_constants_size), Device(device), performance_session(session)
 {
 	TRACE_FUNCTION(performance_session);
@@ -31,11 +31,7 @@ GPUComputeShader::GPUComputeShader(const std::string &shader_file_name, uint32_t
 
 	DescriptorSets = AllocateDescriptorSets();
 
-	CommandPool = CreateCommandPool();
-
-	CommandBuffers = CreateCommandBuffers();
-
-	ComputeQueue = Device.getQueue(ComputeQueueIndex, 0);
+	UpdateDescriptorSets(DescriptorSets, buffers);
 }
 
 vk::ShaderModule GPUComputeShader::CreateShaderModule()
@@ -126,37 +122,18 @@ std::vector<vk::DescriptorSet> GPUComputeShader::AllocateDescriptorSets()
 	descriptorPoolCreateInfo.poolSizeCount = static_cast<uint32_t>(descriptorPoolSizes.size());
 	descriptorPoolCreateInfo.pPoolSizes = descriptorPoolSizes.data();
 
-	vk::DescriptorPool descriptorPool = Device.createDescriptorPool(descriptorPoolCreateInfo);
-	if (descriptorPool == static_cast<vk::DescriptorPool>(nullptr))
+	DescriptorPool = Device.createDescriptorPool(descriptorPoolCreateInfo);
+	if (DescriptorPool == static_cast<vk::DescriptorPool>(nullptr))
 	{
 		return std::vector<vk::DescriptorSet>();
 	}
 
 	vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo = {};
-	descriptorSetAllocateInfo.descriptorPool = descriptorPool;
+	descriptorSetAllocateInfo.descriptorPool = DescriptorPool;
 	descriptorSetAllocateInfo.descriptorSetCount = 1;
 	descriptorSetAllocateInfo.pSetLayouts = &DescriptorSetLayout;
 
 	return Device.allocateDescriptorSets(descriptorSetAllocateInfo);
-}
-
-vk::CommandPool GPUComputeShader::CreateCommandPool()
-{
-	vk::CommandPoolCreateInfo commandPoolCreateInfo = {};
-	commandPoolCreateInfo.queueFamilyIndex = ComputeQueueIndex;
-	commandPoolCreateInfo.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
-
-	return Device.createCommandPool(commandPoolCreateInfo);
-}
-
-std::vector<vk::CommandBuffer> GPUComputeShader::CreateCommandBuffers()
-{
-	vk::CommandBufferAllocateInfo commandBufferAllocateInfo = {};
-	commandBufferAllocateInfo.commandPool = CommandPool;
-	commandBufferAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
-	commandBufferAllocateInfo.commandBufferCount = 1;
-
-	return Device.allocateCommandBuffers(commandBufferAllocateInfo);
 }
 
 void GPUComputeShader::UpdateDescriptorSets(const std::vector<vk::DescriptorSet> &descriptor_set, const std::vector<vk::Buffer> &buffers)
@@ -193,45 +170,44 @@ void GPUComputeShader::UpdateDescriptorSets(const std::vector<vk::DescriptorSet>
 	Device.updateDescriptorSets(static_cast<uint32_t>(writeDescriptorSetBufferInfo.size()), writeDescriptorSet.data(), 0, nullptr);
 }
 
-void GPUComputeShader::Execute(size_t total_compute_count, const std::vector<vk::Buffer> &buffers, void *push_constants)
+void GPUComputeShader::WriteCommandBuffer(vk::CommandBuffer &command_buffer, size_t total_compute_count, void *push_constants)
 {
 	TRACE_FUNCTION(performance_session);
 
-	UpdateDescriptorSets(DescriptorSets, buffers);
-	
-	vk::CommandBufferBeginInfo commandBufferBeginInfo = {};
-	commandBufferBeginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+	vk::CommandBufferBeginInfo command_buffer_begin_info = {};
+	command_buffer_begin_info.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 
 	uint32_t group_count_x = (uint32_t)std::ceil((float)(total_compute_count) / (float)shader_local_size_x);
-	CommandBuffers[0].begin(commandBufferBeginInfo);
-	CommandBuffers[0].bindPipeline(vk::PipelineBindPoint::eCompute, Pipeline);
-	CommandBuffers[0].bindDescriptorSets(vk::PipelineBindPoint::eCompute, PipelineLayout, 0, static_cast<uint32_t>(DescriptorSets.size()), DescriptorSets.data(), 0, 0);
+	command_buffer.begin(command_buffer_begin_info);
+	command_buffer.bindPipeline(vk::PipelineBindPoint::eCompute, Pipeline);
+	command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, PipelineLayout, 0, static_cast<uint32_t>(DescriptorSets.size()), DescriptorSets.data(), 0, 0);
 	if (PushConstantsSize > 0)
 	{
-		CommandBuffers[0].pushConstants(PipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, static_cast<uint32_t>(PushConstantsSize), push_constants);
+		command_buffer.pushConstants(PipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, static_cast<uint32_t>(PushConstantsSize), push_constants);
 	}
-	CommandBuffers[0].dispatch(group_count_x, 1, 1);
-	CommandBuffers[0].end();
+	command_buffer.dispatch(group_count_x, 1, 1);
+	command_buffer.end();
+}
 
-	vk::SubmitInfo submitInfo = {};
-	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = CommandBuffers.data();
+void GPUComputeShader::WriteCalculationCompleteEvent(vk::Device device, vk::CommandBuffer &command_buffer)
+{
+	vk::EventCreateInfo event_create_info = {};
+	event_create_info.flags = vk::EventCreateFlagBits::eDeviceOnly;
 
-	{
-		// TODO: This takes a long time (relatively) so it should be batched where possible
-		TRACE_SCOPE(performance_session, queue_submission);
-		vk::Result queue_submit_result = ComputeQueue.submit(1, &submitInfo, VK_NULL_HANDLE);
-		if (vk::Result::eSuccess == queue_submit_result)
-		{
-			ComputeQueue.waitIdle();
-		}
-	}
+	vk::Event calculation_complete_event = device.createEvent(event_create_info);
+
+	vk::CommandBufferBeginInfo command_buffer_begin_info = {};
+	command_buffer_begin_info.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+
+	command_buffer.begin(command_buffer_begin_info);
+	command_buffer.setEvent(calculation_complete_event, vk::PipelineStageFlagBits::eComputeShader);
+	command_buffer.waitEvents(1, &calculation_complete_event, vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, 0, nullptr, 0, nullptr, 0, nullptr);
+	command_buffer.end();
 }
 
 GPUComputeShader::~GPUComputeShader()
 {
-	Device.freeCommandBuffers(CommandPool, CommandBuffers);
-	Device.destroyCommandPool(CommandPool);
+	Device.destroyDescriptorPool(DescriptorPool);
 	Device.destroyPipeline(Pipeline);
 	Device.destroyDescriptorSetLayout(DescriptorSetLayout);
 	Device.destroyShaderModule(ShaderModule);

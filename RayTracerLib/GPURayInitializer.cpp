@@ -8,13 +8,18 @@ using RayTracer::PerformanceTracking::PerformanceSession;
 
 const static size_t shader_local_size_x = 1024;
 
-GPURayInitializer::GPURayInitializer(vk::Device device, uint32_t compute_queue_index, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session)
-	: CameraDataPushConstants(), GPUComputeShader("GPURayInitializer.comp.spv", compute_queue_index, 2, sizeof(GPURayInitializer::CameraDataPushConstants), device, session), performance_session(session)
+GPURayInitializer::GPURayInitializer(vk::Device device, uint32_t compute_queue_index, vk::Buffer output_gpu_ray_buffer, vk::Buffer output_gpu_intersection_buffer, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session)
+	: Device(device), CameraDataPushConstants(), GPUComputeShader("GPURayInitializer.comp.spv", compute_queue_index, 2, sizeof(GPURayInitializer::CameraDataPushConstants), device, std::vector<vk::Buffer>{output_gpu_ray_buffer, output_gpu_intersection_buffer}, session), performance_session(session)
 {}
 
-void GPURayInitializer::Execute(Camera camera, size_t seed, vk::Buffer output_gpu_ray_buffer, vk::Buffer output_gpu_intersection_buffer)
+void GPURayInitializer::WriteCommandBuffers(const std::vector<std::reference_wrapper<vk::CommandBuffer>> &buffers, Camera camera, size_t seed)
 {
 	TRACE_FUNCTION(performance_session);
+
+	if (RequiredCommandBuffers() != buffers.size())
+	{
+		return;
+	}
 
 	CameraDataPushConstants.camera_origin[0] = camera.Position().X;
 	CameraDataPushConstants.camera_origin[1] = camera.Position().Y;
@@ -38,5 +43,7 @@ void GPURayInitializer::Execute(Camera camera, size_t seed, vk::Buffer output_gp
 	CameraDataPushConstants.resolution_y = static_cast<unsigned int>(camera.Resolution().Y);
 	CameraDataPushConstants.seed = static_cast<unsigned int>(seed);
 
-	GPUComputeShader::Execute(camera.Resolution().X * camera.Resolution().Y, std::vector<vk::Buffer>{output_gpu_ray_buffer, output_gpu_intersection_buffer}, static_cast<void *>(&CameraDataPushConstants));
+	GPUComputeShader::WriteCommandBuffer(buffers[0].get(), camera.Resolution().X * camera.Resolution().Y, static_cast<void *>(&CameraDataPushConstants));
+
+	GPUComputeShader::WriteCalculationCompleteEvent(Device, buffers[buffers.size() - 1].get());
 }

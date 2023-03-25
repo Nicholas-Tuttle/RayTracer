@@ -384,11 +384,27 @@ void GPURenderer::Render(std::shared_ptr<IImage> &out_image)
 
 	std::cout << "[RENDER STARTED]: line " << __LINE__ << ": time (ms): " << performance_timer.Poll().count() << "\n";
 
-	GPURayInitializer ray_initializer(device, ComputeQueueIndex, performance_session);
-	GPURayIntersector ray_intersector(device, ComputeQueueIndex, performance_session);
-	GPUMaterialCalculator material_calculator(device, ComputeQueueIndex, performance_session);
-	GPUSampleAccumulator sample_accumulator(device, ComputeQueueIndex, performance_session);
-	GPUSampleFinalizer sample_finalizer(device, ComputeQueueIndex, performance_session);
+	GPURayInitializer ray_initializer(device, ComputeQueueIndex, BufferData[(int)GPUBufferBindings::ray_buffer].buffer, BufferData[(int)GPUBufferBindings::intersection_buffer].buffer, performance_session);
+	GPURayIntersector ray_intersector(device, ComputeQueueIndex, BufferData[(int)GPUBufferBindings::ray_buffer].buffer, BufferData[(int)GPUBufferBindings::intersection_buffer].buffer, BufferData[(int)GPUBufferBindings::sphere_buffer].buffer, BufferData[(int)GPUBufferBindings::vertex_buffer].buffer, BufferData[(int)GPUBufferBindings::face_buffer].buffer, performance_session);
+	GPUMaterialCalculator material_calculator(device, ComputeQueueIndex, BufferData[(int)GPUBufferBindings::intersection_buffer].buffer, BufferData[(int)GPUBufferBindings::ray_buffer].buffer, BufferData[(int)GPUBufferBindings::diffuse_material_parameters].buffer, BufferData[(int)GPUBufferBindings::emissive_material_parameters].buffer, performance_session);
+	GPUSampleAccumulator sample_accumulator(device, ComputeQueueIndex, BufferData[(int)GPUBufferBindings::intersection_buffer].buffer, BufferData[(int)GPUBufferBindings::sample_buffer].buffer, performance_session);
+
+	vk::CommandPoolCreateInfo command_pool_create_info = {};
+	command_pool_create_info.queueFamilyIndex = ComputeQueueIndex;
+	command_pool_create_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
+
+	vk::CommandPool command_pool = device.createCommandPool(command_pool_create_info);
+	
+	uint32_t command_buffer_count = ray_initializer.RequiredCommandBuffers() + static_cast<uint32_t>(static_cast<size_t>(ray_intersector.RequiredCommandBuffers() + material_calculator.RequiredCommandBuffers()) * max_bounces) + sample_accumulator.RequiredCommandBuffers();
+
+	vk::CommandBufferAllocateInfo command_buffer_allocate_info = {};
+	command_buffer_allocate_info.commandPool = command_pool;
+	command_buffer_allocate_info.level = vk::CommandBufferLevel::ePrimary;
+	command_buffer_allocate_info.commandBufferCount = command_buffer_count;
+
+	std::vector<vk::CommandBuffer> command_buffers = device.allocateCommandBuffers(command_buffer_allocate_info);
+
+	vk::Queue compute_queue = device.getQueue(ComputeQueueIndex, 0);
 
 	for (size_t i = 0; i < samples; i++)
 	{
@@ -396,32 +412,81 @@ void GPURenderer::Render(std::shared_ptr<IImage> &out_image)
 
 		std::cout << "############## CALCULATING SAMPLE " << i + 1 << " OF " << samples << " ##############\n";
 
-		ray_initializer.Execute(camera, i, BufferData[(int)GPUBufferBindings::ray_buffer].buffer, BufferData[(int)GPUBufferBindings::intersection_buffer].buffer);
+		size_t write_buffer_index = 0;
+
+		std::vector<std::reference_wrapper<vk::CommandBuffer>> ray_initializer_command_buffers;
+		for (size_t j = 0; j < ray_initializer.RequiredCommandBuffers(); j++)
+		{
+			ray_initializer_command_buffers.emplace_back(command_buffers.at(write_buffer_index));
+			write_buffer_index++;
+		}
+		ray_initializer.WriteCommandBuffers(ray_initializer_command_buffers, camera, i);
 
 		for (size_t current_bounce_index = 0; current_bounce_index < max_bounces; current_bounce_index++)
 		{
-			ray_intersector.Execute(RayBufferSize,
-				BufferData[(int)GPUBufferBindings::ray_buffer].buffer,
-				BufferData[(int)GPUBufferBindings::intersection_buffer].buffer,
-				BufferData[(int)GPUBufferBindings::sphere_buffer].buffer,
-				BufferData[(int)GPUBufferBindings::vertex_buffer].buffer, 
-				BufferData[(int)GPUBufferBindings::face_buffer].buffer);
+			std::vector<std::reference_wrapper<vk::CommandBuffer>> ray_intersector_command_buffers;
+			for (size_t j = 0; j < ray_intersector.RequiredCommandBuffers(); j++)
+			{
+				ray_intersector_command_buffers.emplace_back(command_buffers.at(write_buffer_index));
+				write_buffer_index++;
+			}
 
-			material_calculator.Execute(RayBufferSize,
-				BufferData[(int)GPUBufferBindings::intersection_buffer].buffer,
-				BufferData[(int)GPUBufferBindings::ray_buffer].buffer,
-				BufferData[(int)GPUBufferBindings::diffuse_material_parameters].buffer,
-				BufferData[(int)GPUBufferBindings::emissive_material_parameters].buffer);
+			ray_intersector.WriteCommandBuffers(ray_intersector_command_buffers, RayBufferSize);
+
+			std::vector<std::reference_wrapper<vk::CommandBuffer>> material_calculator_command_buffers;
+			for (size_t j = 0; j < material_calculator.RequiredCommandBuffers(); j++)
+			{
+				material_calculator_command_buffers.emplace_back(command_buffers.at(write_buffer_index));
+				write_buffer_index++;
+			}
+
+			material_calculator.WriteCommandBuffers(material_calculator_command_buffers, RayBufferSize);
 		}
 
-		sample_accumulator.Execute(RayBufferSize,
-			BufferData[(int)GPUBufferBindings::intersection_buffer].buffer,
-			BufferData[(int)GPUBufferBindings::sample_buffer].buffer);
+		std::vector<std::reference_wrapper<vk::CommandBuffer>> sample_accumulator_command_buffers;
+		for (size_t j = 0; j < sample_accumulator.RequiredCommandBuffers(); j++)
+		{
+			sample_accumulator_command_buffers.emplace_back(command_buffers.at(write_buffer_index));
+			write_buffer_index++;
+		}
+
+		sample_accumulator.WriteCommandBuffer(sample_accumulator_command_buffers, RayBufferSize);
+
+		vk::SubmitInfo submit_info = {};
+		submit_info.commandBufferCount = static_cast<uint32_t>(command_buffers.size());
+		submit_info.pCommandBuffers = command_buffers.data();
+
+		TRACE_SCOPE(performance_session, queue_submission_1);
+		vk::Result queue_submit_result = compute_queue.submit(1, &submit_info, VK_NULL_HANDLE);
+		if (vk::Result::eSuccess == queue_submit_result)
+		{
+			compute_queue.waitIdle();
+		}
 	}
 
-	sample_finalizer.Execute(RayBufferSize, 
-		BufferData[(int)GPUBufferBindings::sample_buffer].buffer,
-		BufferData[(int)GPUBufferBindings::colors_buffer].buffer, samples);
+	GPUSampleFinalizer sample_finalizer(device, ComputeQueueIndex, BufferData[(int)GPUBufferBindings::sample_buffer].buffer, BufferData[(int)GPUBufferBindings::colors_buffer].buffer, performance_session);
+
+	device.freeCommandBuffers(command_pool, command_buffers);
+	command_buffer_allocate_info.commandBufferCount = sample_finalizer.RequiredCommandBuffers();
+	command_buffers = device.allocateCommandBuffers(command_buffer_allocate_info);
+
+	sample_finalizer.WriteCommandBuffer(command_buffers.at(0), RayBufferSize, samples);
+
+	vk::SubmitInfo submit_info = {};
+	submit_info.commandBufferCount = static_cast<uint32_t>(command_buffers.size());
+	submit_info.pCommandBuffers = command_buffers.data();
+
+	{
+		TRACE_SCOPE(performance_session, queue_submission_2);
+		vk::Result queue_submit_result = compute_queue.submit(1, &submit_info, VK_NULL_HANDLE);
+		if (vk::Result::eSuccess == queue_submit_result)
+		{
+			compute_queue.waitIdle();
+		}
+	}
+
+	device.freeCommandBuffers(command_pool, command_buffers);
+	device.destroyCommandPool(command_pool);
 
 	std::cout << "[RENDER TIME]" << ": line " << __LINE__ << ": time (ms): " << performance_timer.Poll().count() << "\n";
 
