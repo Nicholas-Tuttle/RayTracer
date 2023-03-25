@@ -208,8 +208,7 @@ void GPUComputeShader::Execute(size_t total_compute_count, const std::vector<vk:
 	CommandBuffers[0].bindDescriptorSets(vk::PipelineBindPoint::eCompute, PipelineLayout, 0, static_cast<uint32_t>(DescriptorSets.size()), DescriptorSets.data(), 0, 0);
 	if (PushConstantsSize > 0)
 	{
-		CommandBuffers[0].pushConstants(PipelineLayout, vk::ShaderStageFlagBits::eCompute, 0,
-			static_cast<uint32_t>(PushConstantsSize), push_constants);
+		CommandBuffers[0].pushConstants(PipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, static_cast<uint32_t>(PushConstantsSize), push_constants);
 	}
 	CommandBuffers[0].dispatch(group_count_x, 1, 1);
 	CommandBuffers[0].end();

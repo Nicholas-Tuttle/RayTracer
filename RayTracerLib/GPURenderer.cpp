@@ -398,10 +398,7 @@ void GPURenderer::Render(std::shared_ptr<IImage> &out_image)
 
 		ray_initializer.Execute(camera, i, BufferData[(int)GPUBufferBindings::ray_buffer].buffer, BufferData[(int)GPUBufferBindings::intersection_buffer].buffer);
 
-		bool ray_calculation_needed = true;
-		size_t current_bounce_index = 0;
-
-		while (current_bounce_index < max_bounces)
+		for (size_t current_bounce_index = 0; current_bounce_index < max_bounces; current_bounce_index++)
 		{
 			ray_intersector.Execute(RayBufferSize,
 				BufferData[(int)GPUBufferBindings::ray_buffer].buffer,
@@ -415,8 +412,6 @@ void GPURenderer::Render(std::shared_ptr<IImage> &out_image)
 				BufferData[(int)GPUBufferBindings::ray_buffer].buffer,
 				BufferData[(int)GPUBufferBindings::diffuse_material_parameters].buffer,
 				BufferData[(int)GPUBufferBindings::emissive_material_parameters].buffer);
-
-			current_bounce_index++;
 		}
 
 		sample_accumulator.Execute(RayBufferSize,
