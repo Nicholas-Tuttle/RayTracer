@@ -155,7 +155,8 @@ void main()
 		material_parameters = MaterialParameters.params[intersection.material_index];
 	}
 
-	intersection.ray_color *= material_parameters.color;
+	float modularity = 0.5f;
+	intersection.ray_color = intersection.ray_color * (1.0f - modularity) + material_parameters.color * modularity;
 	
 	Rays.rays[gID] = ReflectionRay(material_parameters, intersection);
 	Intersections.intersections[gID] = intersection;
