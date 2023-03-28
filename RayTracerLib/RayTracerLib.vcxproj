@@ -131,6 +131,7 @@
     <ClInclude Include="..\include\Scene.h" />
     <ClInclude Include="..\include\Sphere.h" />
     <ClInclude Include="..\include\ThreadPool.h" />
+    <ClInclude Include="..\include\TinyOBJLoader.h" />
     <ClInclude Include="..\include\Utilities.h" />
     <ClInclude Include="..\include\Vector3.h" />
     <ClInclude Include="..\include\VulkanUtils.h" />

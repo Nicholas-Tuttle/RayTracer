@@ -12,6 +12,7 @@
 #include <Utilities.h>
 
 #include <PresetScenes.h>
+#include "TinyOBJLoader.h"
 
 using RayTracer::IScene;
 using RayTracer::Camera;
@@ -25,7 +26,7 @@ using RayTracer::Color;
 class InputParser 
 {
 public:
-    InputParser(int& argc, char** argv) 
+    InputParser(int argc, char **argv) 
     {
         arguments.reserve((size_t)argc - 1);
         for (int i = 1; i < argc; ++i)
@@ -34,7 +35,7 @@ public:
         }
     }
 
-    const std::string GetCommandOption(const std::string& option) const 
+    const std::string GetCommandOption(const std::string &option) const 
     {
         auto itr = std::find(arguments.begin(), arguments.end(), option);
         if (itr != arguments.end() && ++itr != arguments.end()) 
@@ -44,7 +45,7 @@ public:
         return std::string();
     }
 
-    bool CommandOptionExists(const std::string& option) const 
+    bool CommandOptionExists(const std::string &option) const 
     {
         return std::find(arguments.begin(), arguments.end(), option) != arguments.end();
     }
@@ -67,6 +68,8 @@ struct CommandLineArguments
         ResolutionY = 1080;
         MaxThreads = 0;
         ShowHelp = false;
+        output_file_path = "";
+        input_file_path = "";
     }
 
     bool RenderCPU;
@@ -79,6 +82,8 @@ struct CommandLineArguments
     size_t ResolutionY;
     size_t MaxThreads;
     bool ShowHelp;
+    std::string output_file_path;
+    std::string input_file_path;
 };
 
 static void parse_command_line_arguments(int argc, char** argv, CommandLineArguments& arguments)
@@ -120,6 +125,18 @@ static void parse_command_line_arguments(int argc, char** argv, CommandLineArgum
         arguments.MaxThreads = max_threads;
     }
 
+    const std::string output_file_path_string = parser.GetCommandOption("-o");
+    if (0 != output_file_path_string.compare(""))
+    {
+        arguments.output_file_path = output_file_path_string;
+    }
+
+    const std::string input_file_path_string = parser.GetCommandOption("-i");
+    if (0 != input_file_path_string.compare(""))
+    {
+        arguments.input_file_path = input_file_path_string;
+    }
+
     bool render_cpu = parser.CommandOptionExists("-c");
     arguments.RenderCPU = render_cpu;
 
@@ -145,6 +162,8 @@ static void help()
         << "\t\t-g : render on GPU\n"
         << "\t\t-dg : enable GPU debug messages\n"
         << "\t\t-t : enable performance tracing\n"
+        << "\t\t-o <path> : output file path\n"
+        << "\t\t-i <path> : input file path\n"
         << "\t\t-s <samples> : set sample count [ default 1 ]\n"
         << "\t\t-b <bounces> : set max bounces [ default 4 ]\n"
         << "\t\t-x <x resolution> : set image width (pixels) [ default 1920 ]\n"
@@ -292,7 +311,7 @@ int main(int argc, char **argv)
     CommandLineArguments arguments;
     parse_command_line_arguments(argc, argv, arguments);
 
-    if (arguments.ShowHelp)
+    if (arguments.ShowHelp || arguments.output_file_path == "")
     {
         help();
         exit(0);
@@ -306,7 +325,15 @@ int main(int argc, char **argv)
     IScene *scene = nullptr;
     Camera *camera = nullptr;
 
-    CreatePresetSceneCube(scene, camera, resolution);
+    if (0 == arguments.input_file_path.compare(""))
+    {
+        // Create a sample scene if things are empty
+        RayTracer::CreatePresetSceneCube(scene, camera, resolution);
+    }
+    else
+    {
+        RayTracer::CreateSceneFromOBJFile(arguments.input_file_path, resolution, camera, scene);
+    }
 
     // Provide an output pointer for the image
     std::shared_ptr<IImage> out_image = nullptr;
@@ -334,7 +361,14 @@ int main(int argc, char **argv)
     std::chrono::duration<double, std::milli> total_time = tm1 - tm0;
     std::cout << "Total Render Time (ms): " << total_time.count() << std::endl;
 
-    write_png_file("..\\image.png", out_image->GetColorRGBAValues());
+    if (nullptr != out_image)
+    {
+        write_png_file(arguments.output_file_path, out_image->GetColorRGBAValues());
+    }
+    else
+    {
+        std::cout << "Failed to create output image" << std::endl;
+    }
 
     std::cout << std::endl;
 
