@@ -40,12 +40,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)\lib\</OutDir>
-    <IncludePath>$(SOLUTIONDIR)\include;$(LIBPNG);$(VULKAN_SDK)\Include;$(SOLUTIONDIR)\dependencies\tinyobjloader;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SOLUTIONDIR)\include;$(VULKAN_SDK)\Include;$(SOLUTIONDIR)\dependencies\libpng;$(SOLUTIONDIR)\dependencies\tinyobjloader;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <EnableClangTidyCodeAnalysis>false</EnableClangTidyCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SOLUTIONDIR)\include;$(LIBPNG);$(VULKAN_SDK)\Include;$(SOLUTIONDIR)\dependencies\tinyobjloader;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SOLUTIONDIR)\include;$(VULKAN_SDK)\Include;$(SOLUTIONDIR)\dependencies\libpng;$(SOLUTIONDIR)\dependencies\tinyobjloader;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <OutDir>$(solutiondir)\lib\</OutDir>
     <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>

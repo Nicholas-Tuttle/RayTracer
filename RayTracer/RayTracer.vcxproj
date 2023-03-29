@@ -38,12 +38,12 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SOLUTIONDIR)\include;$(VULKAN_SDK)\Include;$(LIBPNG);$(SOLUTIONDIR)\dependencies\tinyobjloader;$(IncludePath)</IncludePath>
+    <IncludePath>$(SOLUTIONDIR)\include;$(VULKAN_SDK)\Include;$(SOLUTIONDIR)\dependencies\libpng;$(SOLUTIONDIR)\dependencies\tinyobjloader;$(IncludePath)</IncludePath>
     <LibraryPath>$(VULKAN_SDK)\Lib;$(SolutionDir)\lib;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)\bin\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SOLUTIONDIR)\include;$(VULKAN_SDK)\Include;$(LIBPNG);$(SOLUTIONDIR)\dependencies\tinyobjloader;$(IncludePath)</IncludePath>
+    <IncludePath>$(SOLUTIONDIR)\include;$(VULKAN_SDK)\Include;$(SOLUTIONDIR)\dependencies\libpng;$(SOLUTIONDIR)\dependencies\tinyobjloader;$(IncludePath)</IncludePath>
     <LibraryPath>$(VULKAN_SDK)\Lib;$(SolutionDir)\lib;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)\bin\</OutDir>
   </PropertyGroup>

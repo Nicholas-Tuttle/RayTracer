@@ -81,6 +81,12 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <CustomBuildStep>
+      <Command>copy $(SOLUTIONDIR)\dependencies\libpng\scripts\pnglibconf.h.prebuilt $(SOLUTIONDIR)\dependencies\libpng\pnglibconf.h</Command>
+      <Message>Generating pnglibconf.h</Message>
+      <Outputs>$(SOLUTIONDIR)\dependencies\libpng\pnglibconf.h</Outputs>
+      <Inputs>$(SOLUTIONDIR)\dependencies\libpng\scripts\pnglibconf.h.prebuilt</Inputs>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -97,6 +103,12 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <CustomBuildStep>
+      <Command>copy $(SOLUTIONDIR)\dependencies\libpng\scripts\pnglibconf.h.prebuilt $(SOLUTIONDIR)\dependencies\libpng\pnglibconf.h</Command>
+      <Message>Generating pnglibconf.h</Message>
+      <Outputs>$(SOLUTIONDIR)\dependencies\libpng\pnglibconf.h</Outputs>
+      <Inputs>$(SOLUTIONDIR)\dependencies\libpng\scripts\pnglibconf.h.prebuilt</Inputs>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -111,9 +123,9 @@
     </Link>
     <CustomBuildStep>
       <Message>Generating pnglibconf.h</Message>
-      <Command>copy $(LIBPNG)\scripts\pnglibconf.h.prebuilt $(LIBPNG)\pnglibconf.h</Command>
-      <Outputs>$(LIBPNG)\pnglibconf.h</Outputs>
-      <Inputs>$(LIBPNG)\scripts\pnglibconf.h.prebuilt</Inputs>
+      <Command>copy $(SOLUTIONDIR)\dependencies\libpng\scripts\pnglibconf.h.prebuilt $(SOLUTIONDIR)\dependencies\libpng\pnglibconf.h</Command>
+      <Outputs>$(SOLUTIONDIR)\dependencies\libpng\pnglibconf.h</Outputs>
+      <Inputs>$(SOLUTIONDIR)\dependencies\libpng\scripts\pnglibconf.h.prebuilt</Inputs>
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -131,6 +143,12 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <CustomBuildStep>
+      <Command>copy $(SOLUTIONDIR)\dependencies\libpng\scripts\pnglibconf.h.prebuilt $(SOLUTIONDIR)\dependencies\libpng\pnglibconf.h</Command>
+      <Message>Generating pnglibconf.h</Message>
+      <Outputs>$(SOLUTIONDIR)\dependencies\libpng\pnglibconf.h</Outputs>
+      <Inputs>$(SOLUTIONDIR)\dependencies\libpng\scripts\pnglibconf.h.prebuilt</Inputs>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
   </ItemGroup>
