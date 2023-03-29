@@ -4,3 +4,6 @@
 [submodule "dependencies/zlib"]
 	path = dependencies/zlib
 	url = https://github.com/madler/zlib.git
+[submodule "dependencies/libpng"]
+	path = dependencies/libpng
+	url = https://github.com/glennrp/libpng.git
