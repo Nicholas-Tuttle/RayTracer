@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{fe3c3d95-e5f4-48e7-80a9-91870a0664e9}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>KingRenderEngine.py</StartupFile>
+    <StartupFile>CosmicRenderEngine.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -14,6 +14,7 @@
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <InterpreterId />
     <PublishUrl>C:\Users\nicke\AppData\Roaming\Blender Foundation\Blender\3.2\scripts\addons\KingRenderEngine</PublishUrl>
+    <Name>CosmicRenderEngine</Name>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
@@ -21,7 +22,7 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="KingRenderEngine.py" />
+    <Compile Include="CosmicRenderEngine.py" />
     <Compile Include="__init__.py" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />

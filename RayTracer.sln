@@ -15,8 +15,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RayTracer", "RayTracer\RayT
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RayTracerLibTests", "RayTracerLibTests\RayTracerLibTests.vcxproj", "{5949FE9D-8B77-4064-993F-BD518FF37666}"
 EndProject
-Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "KingRenderEngine", "KingRenderEngine\KingRenderEngine.pyproj", "{FE3C3D95-E5F4-48E7-80A9-91870A0664E9}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LibPNG", "LibPNG", "{42B60DA9-9804-4388-A4AF-D9CB3804457A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ZLib", "ZLib", "{F070CABF-B93A-4B64-92A8-C37391CE7B04}"
@@ -26,41 +24,75 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pnglibconf", "dependencies\VisualStudioProjects\pnglibconf\pnglibconf.vcxproj", "{8AD8DBA7-62AC-49E1-BBBF-F95D665369EF}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libpng", "dependencies\VisualStudioProjects\libpng\libpng.vcxproj", "{9D353CBA-7700-4E5D-8455-07CFDBD9E0C7}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8AD8DBA7-62AC-49E1-BBBF-F95D665369EF} = {8AD8DBA7-62AC-49E1-BBBF-F95D665369EF}
+		{E366787B-5DF2-48B7-88FA-7CA8C35E1299} = {E366787B-5DF2-48B7-88FA-7CA8C35E1299}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "dependencies\VisualStudioProjects\zlib\zlib.vcxproj", "{E366787B-5DF2-48B7-88FA-7CA8C35E1299}"
 EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "CosmicRenderEngine", "CosmicRenderEngine\CosmicRenderEngine.pyproj", "{FE3C3D95-E5F4-48E7-80A9-91870A0664E9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
 		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BA2C4A3A-C400-4E3F-AC51-6E8E0EB8997B}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{BA2C4A3A-C400-4E3F-AC51-6E8E0EB8997B}.Debug|Any CPU.Build.0 = Debug|x64
 		{BA2C4A3A-C400-4E3F-AC51-6E8E0EB8997B}.Debug|x64.ActiveCfg = Debug|x64
 		{BA2C4A3A-C400-4E3F-AC51-6E8E0EB8997B}.Debug|x64.Build.0 = Debug|x64
+		{BA2C4A3A-C400-4E3F-AC51-6E8E0EB8997B}.Release|Any CPU.ActiveCfg = Release|x64
+		{BA2C4A3A-C400-4E3F-AC51-6E8E0EB8997B}.Release|Any CPU.Build.0 = Release|x64
 		{BA2C4A3A-C400-4E3F-AC51-6E8E0EB8997B}.Release|x64.ActiveCfg = Release|x64
 		{BA2C4A3A-C400-4E3F-AC51-6E8E0EB8997B}.Release|x64.Build.0 = Release|x64
+		{14718667-7C54-4BCF-AE4E-83E75184DFCE}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{14718667-7C54-4BCF-AE4E-83E75184DFCE}.Debug|Any CPU.Build.0 = Debug|x64
 		{14718667-7C54-4BCF-AE4E-83E75184DFCE}.Debug|x64.ActiveCfg = Debug|x64
 		{14718667-7C54-4BCF-AE4E-83E75184DFCE}.Debug|x64.Build.0 = Debug|x64
+		{14718667-7C54-4BCF-AE4E-83E75184DFCE}.Release|Any CPU.ActiveCfg = Release|x64
+		{14718667-7C54-4BCF-AE4E-83E75184DFCE}.Release|Any CPU.Build.0 = Release|x64
 		{14718667-7C54-4BCF-AE4E-83E75184DFCE}.Release|x64.ActiveCfg = Release|x64
 		{14718667-7C54-4BCF-AE4E-83E75184DFCE}.Release|x64.Build.0 = Release|x64
+		{5949FE9D-8B77-4064-993F-BD518FF37666}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{5949FE9D-8B77-4064-993F-BD518FF37666}.Debug|Any CPU.Build.0 = Debug|x64
 		{5949FE9D-8B77-4064-993F-BD518FF37666}.Debug|x64.ActiveCfg = Debug|x64
 		{5949FE9D-8B77-4064-993F-BD518FF37666}.Debug|x64.Build.0 = Debug|x64
+		{5949FE9D-8B77-4064-993F-BD518FF37666}.Release|Any CPU.ActiveCfg = Release|x64
+		{5949FE9D-8B77-4064-993F-BD518FF37666}.Release|Any CPU.Build.0 = Release|x64
 		{5949FE9D-8B77-4064-993F-BD518FF37666}.Release|x64.ActiveCfg = Release|x64
 		{5949FE9D-8B77-4064-993F-BD518FF37666}.Release|x64.Build.0 = Release|x64
-		{FE3C3D95-E5F4-48E7-80A9-91870A0664E9}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{FE3C3D95-E5F4-48E7-80A9-91870A0664E9}.Release|x64.ActiveCfg = Release|Any CPU
+		{8AD8DBA7-62AC-49E1-BBBF-F95D665369EF}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{8AD8DBA7-62AC-49E1-BBBF-F95D665369EF}.Debug|Any CPU.Build.0 = Debug|x64
 		{8AD8DBA7-62AC-49E1-BBBF-F95D665369EF}.Debug|x64.ActiveCfg = Debug|x64
 		{8AD8DBA7-62AC-49E1-BBBF-F95D665369EF}.Debug|x64.Build.0 = Debug|x64
+		{8AD8DBA7-62AC-49E1-BBBF-F95D665369EF}.Release|Any CPU.ActiveCfg = Release|x64
+		{8AD8DBA7-62AC-49E1-BBBF-F95D665369EF}.Release|Any CPU.Build.0 = Release|x64
 		{8AD8DBA7-62AC-49E1-BBBF-F95D665369EF}.Release|x64.ActiveCfg = Release|x64
 		{8AD8DBA7-62AC-49E1-BBBF-F95D665369EF}.Release|x64.Build.0 = Release|x64
+		{9D353CBA-7700-4E5D-8455-07CFDBD9E0C7}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{9D353CBA-7700-4E5D-8455-07CFDBD9E0C7}.Debug|Any CPU.Build.0 = Debug|x64
 		{9D353CBA-7700-4E5D-8455-07CFDBD9E0C7}.Debug|x64.ActiveCfg = Debug|x64
 		{9D353CBA-7700-4E5D-8455-07CFDBD9E0C7}.Debug|x64.Build.0 = Debug|x64
+		{9D353CBA-7700-4E5D-8455-07CFDBD9E0C7}.Release|Any CPU.ActiveCfg = Release|x64
+		{9D353CBA-7700-4E5D-8455-07CFDBD9E0C7}.Release|Any CPU.Build.0 = Release|x64
 		{9D353CBA-7700-4E5D-8455-07CFDBD9E0C7}.Release|x64.ActiveCfg = Release|x64
 		{9D353CBA-7700-4E5D-8455-07CFDBD9E0C7}.Release|x64.Build.0 = Release|x64
+		{E366787B-5DF2-48B7-88FA-7CA8C35E1299}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{E366787B-5DF2-48B7-88FA-7CA8C35E1299}.Debug|Any CPU.Build.0 = Debug|x64
 		{E366787B-5DF2-48B7-88FA-7CA8C35E1299}.Debug|x64.ActiveCfg = Debug|x64
 		{E366787B-5DF2-48B7-88FA-7CA8C35E1299}.Debug|x64.Build.0 = Debug|x64
+		{E366787B-5DF2-48B7-88FA-7CA8C35E1299}.Release|Any CPU.ActiveCfg = Release|x64
+		{E366787B-5DF2-48B7-88FA-7CA8C35E1299}.Release|Any CPU.Build.0 = Release|x64
 		{E366787B-5DF2-48B7-88FA-7CA8C35E1299}.Release|x64.ActiveCfg = Release|x64
 		{E366787B-5DF2-48B7-88FA-7CA8C35E1299}.Release|x64.Build.0 = Release|x64
+		{FE3C3D95-E5F4-48E7-80A9-91870A0664E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE3C3D95-E5F4-48E7-80A9-91870A0664E9}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FE3C3D95-E5F4-48E7-80A9-91870A0664E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE3C3D95-E5F4-48E7-80A9-91870A0664E9}.Release|x64.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

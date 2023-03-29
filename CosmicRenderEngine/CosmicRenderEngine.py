@@ -1,11 +1,11 @@
 import bpy
 import bgl
 
-class KingRenderEngine(bpy.types.RenderEngine):
+class CosmicRenderEngine(bpy.types.RenderEngine):
     # These three members are used by blender to set up the
     # RenderEngine; define its internal name, visible name and capabilities.
-    bl_idname = "KING"
-    bl_label = "King"
+    bl_idname = "COSMIC"
+    bl_label = "Cosmic"
     bl_use_preview = True
 
     # Init is called whenever a new render engine instance is created. Multiple
@@ -232,14 +232,14 @@ def get_panels():
 
 def register():
     # Register the Render Engine
-    bpy.utils.register_class(KingRenderEngine)
+    bpy.utils.register_class(CosmicRenderEngine)
 
     for panel in get_panels():
-        panel.COMPAT_ENGINES.add('KING')
+        panel.COMPAT_ENGINES.add('COSMIC')
 
 def unregister():
-    bpy.utils.unregister_class(KingRenderEngine)
+    bpy.utils.unregister_class(CosmicRenderEngine)
 
     for panel in get_panels():
-        if 'KING' in panel.COMPAT_ENGINES:
-            panel.COMPAT_ENGINES.remove('KING')
+        if 'COSMIC' in panel.COMPAT_ENGINES:
+            panel.COMPAT_ENGINES.remove('COSMIC')
