@@ -28,13 +28,13 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -73,18 +73,29 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)\lib\</OutDir>
-    <IncludePath>$(ZLIB);$(IncludePath);</IncludePath>
+    <IncludePath>$(SOLUTIONDIR)\dependencies\zlib;$(SOLUTIONDIR)\dependencies\libpng</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)\lib\</OutDir>
-    <IncludePath>$(ZLIB);$(IncludePath);</IncludePath>
+    <IncludePath>$(SOLUTIONDIR)\dependencies\zlib;$(SOLUTIONDIR)\dependencies\libpng</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)\lib\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <IncludePath>$(SOLUTIONDIR)\dependencies\zlib;$(SOLUTIONDIR)\dependencies\libpng</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)\lib\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <IncludePath>$(SOLUTIONDIR)\dependencies\zlib;$(SOLUTIONDIR)\dependencies\libpng</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
+      <ConformanceMode>Default</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -98,7 +109,8 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
+      <ConformanceMode>Default</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -144,24 +156,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="$(LIBPNG)\png.c" />
-    <ClCompile Include="$(LIBPNG)\pngerror.c" />
-    <ClCompile Include="$(LIBPNG)\pngget.c" />
-    <ClCompile Include="$(LIBPNG)\pngmem.c" />
-    <ClCompile Include="$(LIBPNG)\pngpread.c" />
-    <ClCompile Include="$(LIBPNG)\pngread.c" />
-    <ClCompile Include="$(LIBPNG)\pngrio.c" />
-    <ClCompile Include="$(LIBPNG)\pngrtran.c" />
-    <ClCompile Include="$(LIBPNG)\pngrutil.c" />
-    <ClCompile Include="$(LIBPNG)\pngset.c" />
-    <ClCompile Include="$(LIBPNG)\pngtrans.c" />
-    <ClCompile Include="$(LIBPNG)\pngwio.c" />
-    <ClCompile Include="$(LIBPNG)\pngwrite.c" />
-    <ClCompile Include="$(LIBPNG)\pngwtran.c" />
-    <ClCompile Include="$(LIBPNG)\pngwutil.c" />
+    <ClCompile Include="..\..\libpng\png.c" />
+    <ClCompile Include="..\..\libpng\pngerror.c" />
+    <ClCompile Include="..\..\libpng\pngget.c" />
+    <ClCompile Include="..\..\libpng\pngmem.c" />
+    <ClCompile Include="..\..\libpng\pngpread.c" />
+    <ClCompile Include="..\..\libpng\pngread.c" />
+    <ClCompile Include="..\..\libpng\pngrio.c" />
+    <ClCompile Include="..\..\libpng\pngrtran.c" />
+    <ClCompile Include="..\..\libpng\pngrutil.c" />
+    <ClCompile Include="..\..\libpng\pngset.c" />
+    <ClCompile Include="..\..\libpng\pngtrans.c" />
+    <ClCompile Include="..\..\libpng\pngwio.c" />
+    <ClCompile Include="..\..\libpng\pngwrite.c" />
+    <ClCompile Include="..\..\libpng\pngwtran.c" />
+    <ClCompile Include="..\..\libpng\pngwutil.c" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="$(LIBPNG)\scripts\pngwin.rc" />
+    <ResourceCompile Include="..\..\libpng\scripts\pngwin.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

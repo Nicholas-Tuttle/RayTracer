@@ -7,37 +7,37 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="$(ZLIB)\adler32.c">
+    <ClCompile Include="..\..\zlib\adler32.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="$(ZLIB)\compress.c">
+    <ClCompile Include="..\..\zlib\compress.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="$(ZLIB)\crc32.c">
+    <ClCompile Include="..\..\zlib\crc32.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="$(ZLIB)\deflate.c">
+    <ClCompile Include="..\..\zlib\deflate.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="$(ZLIB)\infback.c">
+    <ClCompile Include="..\..\zlib\infback.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="$(ZLIB)\inffast.c">
+    <ClCompile Include="..\..\zlib\inffast.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="$(ZLIB)\inflate.c">
+    <ClCompile Include="..\..\zlib\inflate.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="$(ZLIB)\inftrees.c">
+    <ClCompile Include="..\..\zlib\inftrees.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="$(ZLIB)\trees.c">
+    <ClCompile Include="..\..\zlib\trees.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="$(ZLIB)\uncompr.c">
+    <ClCompile Include="..\..\zlib\uncompr.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="$(ZLIB)\zutil.c">
+    <ClCompile Include="..\..\zlib\zutil.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

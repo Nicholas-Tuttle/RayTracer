@@ -20,20 +20,13 @@ This project is a CPU and GPU ray tracer using the Vulkan API. It is a heavy wor
       Volumes: 4: Materials
       Animations: 2: Interfaces
 ```
-# Dependencies:
-## LibPNG:
-http://www.libpng.org/pub/png/libpng.html
-## ZLib:
-http://www.zlib.net/
 ## Vulkan SDK:
 https://www.lunarg.com/vulkan-sdk/
 # Installaton
 ## Required Environment Variables for Visual Studio solution:
-ZLIB - zlib library source directory
+VULKAN_SDK - Vulkan SDK installation location
 
-LIBPNG - lpng1637 library source directory 
-
-VULKAN_SDK - Vulkan SDK
+All other dependencies are included as submodules, use "git clone --recursive" to get them
 
 ## Compatibility
 
