@@ -328,7 +328,7 @@ int main(int argc, char **argv)
     if (0 == arguments.input_file_path.compare(""))
     {
         // Create a sample scene if things are empty
-        RayTracer::CreatePresetSceneCube(scene, camera, resolution);
+        RayTracer::CreatePresetScene1(scene, camera, resolution);
     }
     else
     {
