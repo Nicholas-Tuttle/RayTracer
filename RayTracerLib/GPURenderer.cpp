@@ -46,6 +46,18 @@ using RayTracer::EmissiveBSDF;
 
 using RayTracer::PerformanceTracking::PerformanceSession;
 
+static vk::DeviceSize AlignedMemorySize(vk::DeviceSize non_aligned_size)
+{
+	// If the memory doesn't align to 16 bit sizing, expand it a bit to fit 16 bits
+	constexpr vk::DeviceSize alignment = 16;
+	if (non_aligned_size % alignment > 0)
+	{
+		return (alignment * (non_aligned_size / alignment)) + alignment;
+	}
+
+	return non_aligned_size;
+}
+
 GPURenderer::GPURenderer(const GPURendererInitParameters &params)
 	: camera(params.camera), samples(params.samples), scene(params.scene), max_bounces(params.max_bounces)
 {
@@ -105,28 +117,28 @@ GPURenderer::GPURenderer(const GPURendererInitParameters &params)
 
 	BufferData.resize((size_t)GPUBufferBindings::GPUBufferBindingCount);
 
-	BufferData[(int)GPUBufferBindings::ray_buffer].buffer_size = sizeof(GPURay) * max(RayBufferSize, 1);
+	BufferData[(int)GPUBufferBindings::ray_buffer].buffer_size = AlignedMemorySize(sizeof(GPURay) * max(RayBufferSize, 1));
 
-	BufferData[(int)GPUBufferBindings::intersection_buffer].buffer_size = sizeof(GPUIntersection) * max(RayBufferSize, 1);
+	BufferData[(int)GPUBufferBindings::intersection_buffer].buffer_size = AlignedMemorySize(sizeof(GPUIntersection) * max(RayBufferSize, 1));
 
-	BufferData[(int)GPUBufferBindings::sphere_buffer].buffer_size = sizeof(GPUSphere) * max(gpu_spheres.size(), 1);
+	BufferData[(int)GPUBufferBindings::sphere_buffer].buffer_size = AlignedMemorySize(sizeof(GPUSphere) * max(gpu_spheres.size(), 1));
 	BufferData[(int)GPUBufferBindings::sphere_buffer].data_pointer = &gpu_sphere_buffer;
 
-	BufferData[(int)GPUBufferBindings::sample_buffer].buffer_size = sizeof(GPUSample) * max(RayBufferSize, 1);
+	BufferData[(int)GPUBufferBindings::sample_buffer].buffer_size = AlignedMemorySize(sizeof(GPUSample) * max(RayBufferSize, 1));
 
-	BufferData[(int)GPUBufferBindings::colors_buffer].buffer_size = sizeof(GPUColor) * max(RayBufferSize, 1);
+	BufferData[(int)GPUBufferBindings::colors_buffer].buffer_size = AlignedMemorySize(sizeof(GPUColor) * max(RayBufferSize, 1));
 	BufferData[(int)GPUBufferBindings::colors_buffer].data_pointer = &gpu_color_buffer;
 
-	BufferData[(int)GPUBufferBindings::diffuse_material_parameters].buffer_size = sizeof(GPUDiffuseMaterialParameters) * max(diffuse_material_parameters.size(), 1);
+	BufferData[(int)GPUBufferBindings::diffuse_material_parameters].buffer_size = AlignedMemorySize(sizeof(GPUDiffuseMaterialParameters) * max(diffuse_material_parameters.size(), 1));
 	BufferData[(int)GPUBufferBindings::diffuse_material_parameters].data_pointer = &gpu_diffuse_material_parameters_buffer;
 	
-	BufferData[(int)GPUBufferBindings::emissive_material_parameters].buffer_size = sizeof(GPUEmissiveMaterialParameters) * max(emissive_material_parameters.size(), 1);
+	BufferData[(int)GPUBufferBindings::emissive_material_parameters].buffer_size = AlignedMemorySize(sizeof(GPUEmissiveMaterialParameters) * max(emissive_material_parameters.size(), 1));
 	BufferData[(int)GPUBufferBindings::emissive_material_parameters].data_pointer = &gpu_emissive_material_parameters_buffer;
 
-	BufferData[(int)GPUBufferBindings::vertex_buffer].buffer_size = sizeof(GPUVertex) * max(gpu_vertices.size(), 1);
+	BufferData[(int)GPUBufferBindings::vertex_buffer].buffer_size = AlignedMemorySize(sizeof(GPUVertex) * max(gpu_vertices.size(), 1));
 	BufferData[(int)GPUBufferBindings::vertex_buffer].data_pointer = &gpu_vertex_buffer;
 
-	BufferData[(int)GPUBufferBindings::face_buffer].buffer_size = sizeof(GPUFace) * max(gpu_faces.size(), 1);
+	BufferData[(int)GPUBufferBindings::face_buffer].buffer_size = AlignedMemorySize(sizeof(GPUFace) * max(gpu_faces.size(), 1));
 	BufferData[(int)GPUBufferBindings::face_buffer].data_pointer = &gpu_face_buffer;
 	
 	if (vk::Result::eSuccess != CreateAndMapMemories(ComputeQueueIndex))

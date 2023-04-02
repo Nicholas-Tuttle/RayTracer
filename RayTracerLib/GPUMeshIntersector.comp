@@ -113,6 +113,7 @@ RayIntersectionInfo ray_intersects_face(vec3 ray_direction_normalized, vec3 ray_
 	{
 		info.intersects = true;
 		info.depth = length(ray_direction_normalized * t);
+		// Clockwise ordering expected
 		info.normal = normalize(cross(edge_1, edge_2));
 	}
 

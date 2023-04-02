@@ -29,22 +29,27 @@ namespace RayTracer
         out_camera = new Camera(resolution, Vector3<float>(0, 0.25f, 0), Vector3<float>(1, 0, 0), 50, 18);
 
         Scene *scene = new Scene();
-        scene->AddObject(new Sphere(Vector3<float>(  9,    0,    -3),   1.0f,   
-            std::make_shared<const DiffuseBSDF>(RandomColor(), RandomRoughness(0.0f, 0.3f))));
-        scene->AddObject(new Sphere(Vector3<float>( 14,    1,    -3),   1.0f, 
-            std::make_shared<const DiffuseBSDF>(RandomColor(), RandomRoughness(0.0f, 0.3f))));
-        scene->AddObject(new Sphere(Vector3<float>( 10,   -1,     0),   1.0f,   
-            std::make_shared<const DiffuseBSDF>(RandomColor(), RandomRoughness(0.0f, 0.3f))));
-        scene->AddObject(new Sphere(Vector3<float>( 14,    0,     1),   1.0f,   
-            std::make_shared<const DiffuseBSDF>(RandomColor(), RandomRoughness(0.0f, 0.3f))));
-        scene->AddObject(new Sphere(Vector3<float>( 18,    1,     2),   1.0f,   
-            std::make_shared<const DiffuseBSDF>(RandomColor(), RandomRoughness(0.0f, 0.3f))));
-        scene->AddObject(new Sphere(Vector3<float>( 16,   -1,     4),   1.0f,   
-            std::make_shared<const DiffuseBSDF>(RandomColor(), RandomRoughness(0.0f, 0.3f))));
-        scene->AddObject(new Sphere(Vector3<float>( 12,    0,     4),   1.0f,   
-            std::make_shared<const EmissiveBSDF>(RandomColor(), 10.0f)));
-        scene->AddObject(new Sphere(Vector3<float>(0, -1002, 0), 1000.0f,
-            std::make_shared<const DiffuseBSDF>(Color(0.5f, 0.5f, 0.5f, 1.0f), 0.5f)));
+        scene->AddObject(new Sphere(Vector3<float>( 9,  0, -3), 1.0f, std::make_shared<const DiffuseBSDF>(Color(1.0f, 0.0f, 0.0f, 1.0f), 0.2f)));
+        scene->AddObject(new Sphere(Vector3<float>(14,  1, -3), 1.0f, std::make_shared<const DiffuseBSDF>(Color(0.7f, 0.7f, 0.7f, 1.0f), 0.3f)));
+        scene->AddObject(new Sphere(Vector3<float>(10, -1,  0), 1.0f, std::make_shared<const DiffuseBSDF>(Color(1.0f, 0.0f, 0.0f, 1.0f), 0.6f)));
+        scene->AddObject(new Sphere(Vector3<float>(14,  0,  1), 1.0f, std::make_shared<const DiffuseBSDF>(Color(0.0f, 1.0f, 0.0f, 1.0f), 0.25f)));
+        scene->AddObject(new Sphere(Vector3<float>(18,  1,  2), 1.0f, std::make_shared<const DiffuseBSDF>(Color(0.0f, 0.0f, 1.0f, 1.0f), 0.6f)));
+        scene->AddObject(new Sphere(Vector3<float>(16, -1,  4), 1.0f, std::make_shared<const DiffuseBSDF>(Color(1.0f, 0.5f, 0.25f, 1.0f), 0.25f)));
+        scene->AddObject(new Sphere(Vector3<float>(12,  0,  4), 1.0f, std::make_shared<const EmissiveBSDF>(Color(0.0f, 1.0f, 1.0f, 1.0f), 10.0f)));
+
+        // Add a "floor"
+        scene->AddObject(new Mesh(std::make_shared<const DiffuseBSDF>(Color(0.8f, 0.8f, 0.8f, 1.0f), 0.8f),
+            {
+                Vector3<float>(-50.0f, -2.0f, -50.0f), // [0] : bottom-left front
+                Vector3<float>(50.0f,  -2.0f, -50.0f), // [1] : bottom-right front
+                Vector3<float>(-50.0f, -2.0f, 50.0f), //  [4] : bottom-left back
+                Vector3<float>(50.0f,  -2.0f, 50.0f), //  [5] : bottom-right back
+            },
+            {
+                Vector3<size_t>(0, 2, 1), // bottom-front
+                Vector3<size_t>(1, 2, 3), // bottom-front
+            }));
+
         out_scene = scene;
 	}
 
