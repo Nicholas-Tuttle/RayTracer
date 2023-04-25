@@ -13,7 +13,7 @@
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <InterpreterId />
-    <PublishUrl>C:\Users\nicke\AppData\Roaming\Blender Foundation\Blender\3.2\scripts\addons\KingRenderEngine</PublishUrl>
+    <PublishUrl>$(SOLUTIONDIR)\bin\CosmicRenderEngine</PublishUrl>
     <Name>CosmicRenderEngine</Name>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />

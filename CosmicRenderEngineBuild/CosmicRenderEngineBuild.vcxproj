@@ -13,19 +13,23 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{14718667-7c54-4bcf-ae4e-83e75184dfce}</ProjectGuid>
-    <RootNamespace>RayTracer</RootNamespace>
+    <ProjectGuid>{6e20a8d5-600f-4a96-88e3-4967db3e18ff}</ProjectGuid>
+    <RootNamespace>CosmicRenderEngineBuild</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>Makefile</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -35,19 +39,25 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SOLUTIONDIR)\include;$(VULKAN_SDK)\Include;$(SOLUTIONDIR)\dependencies\libpng;$(SOLUTIONDIR)\dependencies\tinyobjloader;$(IncludePath)</IncludePath>
-    <LibraryPath>$(VULKAN_SDK)\Lib;$(SolutionDir)\lib;$(LibraryPath)</LibraryPath>
-    <OutDir>$(SolutionDir)\bin\</OutDir>
+    <NMakeBuildCommandLine>tar.exe -c -f $(SOLUTIONDIR)\bin\CosmicRenderEngine.zip $(SOLUTIONDIR)\bin\CosmicRenderEngine &amp;&amp; copy $(SOLUTIONDIR)\bin\CosmicRenderEngine.zip "$(APPDATA)\Blender Foundation\Blender\3.5\scripts\addons"</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>del $(SOLUTIONDIR)\bin\CosmicRenderEngine.zip &amp;&amp; tar.exe -c -f $(SOLUTIONDIR)\bin\CosmicRenderEngine.zip $(SOLUTIONDIR)\bin\CosmicRenderEngine</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>del $(SOLUTIONDIR)\bin\CosmicRenderEngine.zip</NMakeCleanCommandLine>
+    <NMakeOutput>$(SOLUTIONDIR)\bin\CosmicRenderEngine.zip</NMakeOutput>
     <IntDir>$(PROJECTDIR)$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SOLUTIONDIR)\bin</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SOLUTIONDIR)\include;$(VULKAN_SDK)\Include;$(SOLUTIONDIR)\dependencies\libpng;$(SOLUTIONDIR)\dependencies\tinyobjloader;$(IncludePath)</IncludePath>
-    <LibraryPath>$(VULKAN_SDK)\Lib;$(SolutionDir)\lib;$(LibraryPath)</LibraryPath>
-    <OutDir>$(SolutionDir)\bin\</OutDir>
+    <NMakeBuildCommandLine>tar.exe -c -f $(SOLUTIONDIR)\bin\CosmicRenderEngine.zip $(SOLUTIONDIR)\bin\CosmicRenderEngine &amp;&amp; copy $(SOLUTIONDIR)\bin\CosmicRenderEngine.zip "$(APPDATA)\Blender Foundation\Blender\3.5\scripts\addons"</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>del $(SOLUTIONDIR)\bin\CosmicRenderEngine.zip &amp;&amp; tar.exe -c -f $(SOLUTIONDIR)\bin\CosmicRenderEngine.zip $(SOLUTIONDIR)\bin\CosmicRenderEngine</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>del $(SOLUTIONDIR)\bin\CosmicRenderEngine.zip</NMakeCleanCommandLine>
+    <NMakeOutput>$(SOLUTIONDIR)\bin\CosmicRenderEngine.zip</NMakeOutput>
     <IntDir>$(PROJECTDIR)$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SOLUTIONDIR)\bin</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -55,61 +65,29 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <EnableModules>true</EnableModules>
-      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>vulkan-1.lib;zlib.lib;libpng.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <IgnoreSpecificDefaultLibraries>MSVCRT;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <Profile>true</Profile>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
-    <FxCompile>
-      <ShaderType>Compute</ShaderType>
-    </FxCompile>
-    <FxCompile>
-      <ShaderModel>6.5</ShaderModel>
-      <AssemblerOutput>
-      </AssemblerOutput>
-    </FxCompile>
-    <PostBuildEvent>
-      <Command>
-      </Command>
-    </PostBuildEvent>
-    <PostBuildEvent>
-      <Message>
-      </Message>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
-      <OmitFramePointers>true</OmitFramePointers>
-      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
-      <WholeProgramOptimization>true</WholeProgramOptimization>
-      <Optimization>MaxSpeed</Optimization>
-      <PreprocessorDefinitions>_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>vulkan-1.lib;zlib.lib;libpng.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <Profile>true</Profile>
       <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\RayTracerLib\RayTracerLib.vcxproj">
-      <Project>{ba2c4a3a-c400-4e3f-ac51-6e8e0eb8997b}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

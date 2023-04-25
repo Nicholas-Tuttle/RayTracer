@@ -39,15 +39,17 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)\lib\</OutDir>
+    <OutDir>$(SOLUTIONDIR)\lib\</OutDir>
     <IncludePath>$(SOLUTIONDIR)\include;$(VULKAN_SDK)\Include;$(SOLUTIONDIR)\dependencies\libpng;$(SOLUTIONDIR)\dependencies\tinyobjloader;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <EnableClangTidyCodeAnalysis>false</EnableClangTidyCodeAnalysis>
+    <IntDir>$(PROJECTDIR)$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SOLUTIONDIR)\include;$(VULKAN_SDK)\Include;$(SOLUTIONDIR)\dependencies\libpng;$(SOLUTIONDIR)\dependencies\tinyobjloader;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
-    <OutDir>$(solutiondir)\lib\</OutDir>
+    <OutDir>$(SOLUTIONDIR)\lib\</OutDir>
     <RunCodeAnalysis>false</RunCodeAnalysis>
+    <IntDir>$(PROJECTDIR)$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>

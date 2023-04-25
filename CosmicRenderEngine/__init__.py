@@ -3,7 +3,7 @@ bl_info = {
     "name": "Cosmic Render Engine",
     "author" : "Nicholas Tuttle",
     "description" : "Cosmic Render Engine",
-    "blender" : (3, 2, 0),
+    "blender" : (3, 5, 0),
     "category": "Render"
 }
 
