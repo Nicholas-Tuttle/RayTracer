@@ -34,7 +34,8 @@ namespace RayTracer
 		{
 			world,
 			diffuse,
-			emissive
+			emissive,
+			principled
 		};
 	private:
 		vk::Instance instance = nullptr;

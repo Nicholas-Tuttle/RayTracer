@@ -8,7 +8,7 @@ using RayTracer::PerformanceTracking::PerformanceSession;
 #pragma region Material Calculator
 
 GPUMaterialCalculator::GPUMaterialCalculator(vk::Device device, uint32_t compute_queue_index, vk::Buffer input_gpu_intersection_buffer, vk::Buffer output_gpu_ray_buffer, vk::Buffer input_diffuse_material_parameters, vk::Buffer input_emissive_material_parameters, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session)
-	: Device(device), diffuse_material(device, compute_queue_index, input_gpu_intersection_buffer, output_gpu_ray_buffer, input_diffuse_material_parameters, session), world_material(device, compute_queue_index, session, input_gpu_intersection_buffer, output_gpu_ray_buffer), emissive_material(device, compute_queue_index, input_gpu_intersection_buffer, output_gpu_ray_buffer, input_emissive_material_parameters, session), performance_session(session)
+	: Device(device), diffuse_material(device, compute_queue_index, input_gpu_intersection_buffer, output_gpu_ray_buffer, input_diffuse_material_parameters, session), world_material(device, compute_queue_index, session, input_gpu_intersection_buffer, output_gpu_ray_buffer), emissive_material(device, compute_queue_index, input_gpu_intersection_buffer, output_gpu_ray_buffer, input_emissive_material_parameters, session), principled_material(device, compute_queue_index, input_gpu_intersection_buffer, output_gpu_ray_buffer, session), performance_session(session)
 {}
 
 void GPUMaterialCalculator::WriteCommandBuffers(std::vector<std::reference_wrapper<vk::CommandBuffer>> buffers, size_t incoming_ray_count)
@@ -81,3 +81,17 @@ void GPUMaterialCalculator::GPUEmissiveMaterial::WriteCommandBuffer(vk::CommandB
 
 #pragma endregion
 
+#pragma region Principled Material
+
+GPUMaterialCalculator::GPUPrincipledMaterial::GPUPrincipledMaterial(vk::Device device, uint32_t compute_queue_index, vk::Buffer input_gpu_intersection_buffer, vk::Buffer output_gpu_ray_buffer, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session)
+	: PrincipledMaterialPushConstants(), GPUComputeShader("GPUPrincipledMaterial.comp.spv", compute_queue_index, 2, sizeof(GPUPrincipledMaterial::PrincipledMaterialPushConstants), device, std::vector<vk::Buffer>{input_gpu_intersection_buffer, output_gpu_ray_buffer}, session), performance_session(session)
+{}
+
+void GPUMaterialCalculator::GPUPrincipledMaterial::WriteCommandBuffer(vk::CommandBuffer &buffer, size_t incoming_ray_count)
+{
+	TRACE_FUNCTION(performance_session);
+
+	GPUComputeShader::WriteCommandBuffer(buffer, incoming_ray_count, static_cast<void *>(&PrincipledMaterialPushConstants));
+}
+
+#pragma endregion

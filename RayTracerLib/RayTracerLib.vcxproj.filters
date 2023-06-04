@@ -261,5 +261,8 @@
     <CustomBuild Include="GPUMeshIntersector.comp">
       <Filter>Source Files\GPU Rendering\Shader Files\RayIntersection</Filter>
     </CustomBuild>
+    <CustomBuild Include="GPUPrincipledMaterial.comp">
+      <Filter>Source Files\GPU Rendering\Shader Files\Materials</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

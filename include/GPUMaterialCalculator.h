@@ -91,9 +91,32 @@ namespace RayTracer
 			const std::unique_ptr<PerformanceTracking::PerformanceSession> &performance_session;
 		};
 
+		class GPUPrincipledMaterial : protected GPUComputeShader
+		{
+		public:
+			GPUPrincipledMaterial(vk::Device device, uint32_t compute_queue_index, vk::Buffer input_gpu_intersection_buffer, vk::Buffer output_gpu_ray_buffer, const std::unique_ptr<PerformanceTracking::PerformanceSession> &session);
+			void WriteCommandBuffer(vk::CommandBuffer &buffer, size_t incoming_ray_count);
+		private:
+			GPUPrincipledMaterial(const GPUPrincipledMaterial &other) = delete;
+			GPUPrincipledMaterial(const GPUPrincipledMaterial &&other) = delete;
+
+			struct push_constants
+			{
+				push_constants()
+				{
+					material_id = static_cast<uint32_t>(GPURenderer::MaterialTypeID::principled);
+				}
+
+				uint32_t material_id;
+			} PrincipledMaterialPushConstants;
+
+			const std::unique_ptr<PerformanceTracking::PerformanceSession> &performance_session;
+		};
+
 		GPUWorldMaterial world_material;
 		GPUDiffuseMaterial diffuse_material;
 		GPUEmissiveMaterial emissive_material;
+		GPUPrincipledMaterial principled_material;
 
 		const std::unique_ptr<PerformanceTracking::PerformanceSession> &performance_session;
 	};

@@ -1,0 +1,64 @@
+#version 450
+#extension GL_EXT_debug_printf : enable
+
+layout (push_constant) uniform material_data
+{
+	uint ID;
+} MaterialData;
+
+struct Intersection
+{
+	vec4 ray_origin;
+	vec4 ray_direction;
+	vec4 intersection_location;
+	vec4 intersection_normal;
+	vec4 ray_color;
+	float depth;
+	uint object_id;
+	uint face_id;
+	uint material_id;
+	int material_index;
+};
+
+layout(std430, set = 0, binding = 0) buffer in_intersections
+{
+	Intersection intersections[];
+} Intersections;
+
+struct Ray
+{
+	vec4 origin;
+	vec4 direction;
+	uint pixelXIndex;
+	uint pixelYIndex;
+};
+
+layout(std430, set = 0, binding = 1) buffer out_resultant_rays
+{
+	Ray rays[];
+} Rays;
+
+layout(local_size_x = 1024, local_size_y = 1, local_size_z = 1) in;
+void main()
+{
+	uint gID = gl_GlobalInvocationID.x;
+	
+#ifdef DEBUG
+	if(gID == 0)
+	{
+		debugPrintfEXT("GPU Emissive Material: %u, %u", Rays.rays.length(), Intersections.intersections.length());
+	}
+#endif
+	
+	if (gID >= Intersections.intersections.length())
+	{
+		return;
+	}
+	
+	if(Intersections.intersections[gID].material_id != MaterialData.ID)
+	{
+		return;
+	}
+
+	Intersections.intersections[gID].ray_color = vec4(0, 0, 0, 1);
+}
