@@ -44,8 +44,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <NMakeBuildCommandLine>tar.exe -c -f $(SOLUTIONDIR)\bin\CosmicRenderEngine.zip $(SOLUTIONDIR)\bin\CosmicRenderEngine &amp;&amp; copy $(SOLUTIONDIR)\bin\CosmicRenderEngine.zip "$(APPDATA)\Blender Foundation\Blender\3.5\scripts\addons"</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine>del $(SOLUTIONDIR)\bin\CosmicRenderEngine.zip &amp;&amp; tar.exe -c -f $(SOLUTIONDIR)\bin\CosmicRenderEngine.zip $(SOLUTIONDIR)\bin\CosmicRenderEngine</NMakeReBuildCommandLine>
+    <NMakeBuildCommandLine>CALL CosmicRenderEngineBuild.cmd</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>del $(SOLUTIONDIR)\bin\CosmicRenderEngine.zip &amp;&amp; CALL CosmicRenderEngineBuild.cmd</NMakeReBuildCommandLine>
     <NMakeCleanCommandLine>del $(SOLUTIONDIR)\bin\CosmicRenderEngine.zip</NMakeCleanCommandLine>
     <NMakeOutput>$(SOLUTIONDIR)\bin\CosmicRenderEngine.zip</NMakeOutput>
     <IntDir>$(PROJECTDIR)$(Platform)\$(Configuration)\</IntDir>
@@ -88,6 +88,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="CosmicRenderEngineBuild.cmd" />
+    <None Include="CosmicRenderEngineClean.cmd" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="BuildList.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

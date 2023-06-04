@@ -1,0 +1,1 @@
+del $(SOLUTIONDIR)\bin\CosmicRenderEngine.zip
